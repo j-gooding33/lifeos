@@ -4,6 +4,30 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M3 — Navigation shell (2026-08-26)
+
+### Five full tabs, not four-plus-a-nub
+**Decision:** the bottom bar renders five equal, fully-labelled tabs (Home, Plans, Tasks, Library, Stats); the `+` FAB floats above the boundary between Plans and Tasks without removing Tasks' own label.
+**Why:** §3.1's ASCII mockup shows only four text labels with no "Tasks," but the prose two lines later names all five tabs with no exception, and the design note only says the FAB floats *between* Plans and Tasks — it never says Tasks loses its label. Reducing a primary destination to an unlabelled nub seemed like reading too much into an ASCII-art approximation. Full reasoning + a code comment where the decision lives, in `shell_scaffold.dart`.
+
+### `/occurrence/:id` deep link doesn't resolve
+**Decision:** the §3.4 deep-link alias `/occurrence/:id` renders its own honest placeholder rather than redirecting into `/plans/:id/occurrence/:occId`.
+**Why:** the in-app route needs a plan id the deep link never carries; resolving "which plan does this occurrence belong to" needs a real `OccurrenceRepository` lookup, which doesn't exist until M7. Revisit then — see the comment in `deep_links.dart`.
+
+### Settings has 12 subroutes, not 11
+**Decision:** built all 12 sections §22.5 actually lists (Account, Profile, Appearance, Home, Notifications, AI, Privacy, Data, Calendar, Integrations, Subscription, About).
+**Why:** §3.2 says "+ 11 subroutes, see §22," but §22.5 numbers 12. Same category of stale cross-reference as M2's component-count issue — trusted the detailed section over the summary line.
+
+### No `IntegrationTestWidgetsFlutterBinding` route verification
+**Decision:** M3's DoD line "every route in §3.2 resolves; back behaviour correct on Android; deep links open the right screen" is verified with a `flutter_test` widget test driving `GoRouter.go()` through every path (`test/routing/route_resolution_test.dart`), not a real on-device integration test.
+**Why:** no Android emulator or physical device is available on this machine (see the M1 emulator entry above) — `integration_test` needs one. The widget-test approach catches route-definition bugs (typos, missing builders, param mismatches) but can't verify real Android back-button behaviour or OS-level deep-link delivery. Re-run properly once a device is available.
+
+### `AppConfig.instance` is `late`, not `late final`
+**Decision:** dropped `final` from the static `instance` field in `lib/core/config/flavor.dart`.
+**Why:** `flutter test` runs every test file in one isolate, so a second file's `setUp(() => AppConfig.initialize(...))` hit `LateInitializationError: already initialized`. Re-initializing app config is harmless — it's just a flavor tag, not something with side effects that compound.
+
+---
+
 ## M2 — Design system (2026-08-26)
 
 ### Golden test tooling: plain `flutter_test`, not `golden_toolkit`

@@ -3,7 +3,10 @@ enum Flavor { dev, prod }
 class AppConfig {
   const AppConfig._(this.flavor);
 
-  static late final AppConfig instance;
+  // Not `final`: re-initializing is harmless (just app config), and
+  // `flutter test` shares one isolate across test files, so a `late final`
+  // throws on the second file's `setUp`.
+  static late AppConfig instance;
 
   static void initialize(Flavor flavor) {
     instance = AppConfig._(flavor);

@@ -331,7 +331,7 @@ Bar behaviour: translucent (`surface` at 88% + 20px blur), 1px top border, hides
 /search                           (modal, from any tab)
 /ai                               (sheet, from any tab)
 /ai/conversation/:id
-/settings                         (+ 11 subroutes, see §22)
+/settings                         (+ 12 subroutes — corrected from "11", see §22.5)
 ```
 
 Everything not in that list is a sheet or dialog, not a route.
