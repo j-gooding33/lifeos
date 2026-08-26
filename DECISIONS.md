@@ -4,6 +4,31 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M2 — Design system (2026-08-26)
+
+### Golden test tooling: plain `flutter_test`, not `golden_toolkit`
+**Decision:** goldens use `flutter_test`'s built-in `matchesGoldenFile`, with a hand-written `test/flutter_test_config.dart` that loads the bundled fonts (and the Material Icons font) before any test runs, rather than `golden_toolkit`'s `loadAppFonts()`.
+**Why:** §32/§34 name `golden_toolkit`, but it's been pub.dev-flagged **discontinued** for three years — directly contradicting the spec's own package rule ("avoid anything unmaintained for over 12 months"). Per CLAUDE.md: "If a section of this spec turns out to be wrong in practice, change the spec in the same commit as the code." §32/§34 are updated accordingly in this commit.
+**How to apply:** any future golden test just needs `test/design/golden_harness.dart`'s `pumpGolden`/`goldenMatrix` helpers; no new dependency.
+
+### `statNumber` uses the Data (mono) family, not Display
+**Decision:** the big number in `LStat` (e.g. "47") renders in `IBMPlexMono`, not `InstrumentSans`.
+**Why:** §2.3 has an internal conflict — the Display-family bullet lists "big stat numbers," but the later "signature typographic move" paragraph says *any number representing a measurement* is set in mono with tabular figures "so columns align," which is a direct description of the §7.5 stats-strip mockup. The more specific, mechanism-explaining rule wins; the caption underneath (e.g. "done") was never ambiguous — it's mono either way.
+
+### Component count: 26, not "30"
+**Decision:** built exactly the components named in §2.7's list — 26, not the "all 30 components" figure in §33's M2 entry.
+**Why:** counted the §2.7 list twice; it names 26. Rather than inventing 4 more to hit a round number the spec itself doesn't specify, built what's actually listed. §33 is corrected to say 26 in this commit.
+
+### `ThemeData.textTheme` is derived from `LifeTextStyles`
+**Decision:** added `buildLifeTextTheme()` mapping our type scale onto Flutter's `TextTheme` roles, applied in both `light_theme.dart` and `dark_theme.dart`.
+**Why:** not spec-mandated explicitly, but discovered as a real bug while generating goldens — an unstyled `Text()` (which Material's own widgets like `AppBar`/`SnackBar`/`Dialog` use internally) fell back to Flutter's default Roboto-based theme instead of Inter/Instrument Sans, silently breaking rule 5 ("no raw values... everything comes from tokens") for any code path that doesn't manually apply `context.textStyles`. Confirmed via the `l_card` golden showing "tofu" boxes before the fix.
+
+### Dark-mode accent "on" colour uses pure black, not the ink token
+**Decision:** for accent/domain/semantic colours, the dark-theme `on` (text-on-fill) colour is computed against pure black/white, not the theme's `ink`/`ink2` tokens.
+**Why:** dark-theme accent bases are lightness-lifted (per §2.2) to read well against the near-black page background, which makes them light/mid-tone colours in their own right — a *different* surface than the page background, so the page's near-white `ink` token is the wrong comparison. Verified by computing WCAG contrast for every accent/domain/semantic colour in both themes; all clear 4.5:1 this way (see `test/design/contrast_test.dart`).
+
+---
+
 ## M1 — Project setup (2026-08-26)
 
 ### Toolchain install location
@@ -26,6 +51,11 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 **Decision:** `dev` / `prod` implemented as Android product flavors (`app.lifeos.life_os.dev` vs `app.lifeos.life_os`, differing `app_name` via `resValue`), with matching Dart entrypoints `lib/main_dev.dart` / `lib/main_prod.dart` and an `AppConfig`/`Flavor` class in `lib/core/config/flavor.dart`. `lib/main.dart` defaults to `dev` for plain `flutter run`.
 **iOS flavors are NOT wired up yet.** Flutter iOS flavors need matching Xcode build configurations and schemes (Debug-dev, Release-dev, etc.), which means editing `ios/Runner.xcodeproj/project.pbxproj` and Xcode scheme files. Doing that blind, on Windows, without Xcode to open and verify the result, risks corrupting the Xcode project in a way that's hard to diagnose without a Mac.
 **Follow-up:** the first time this project is opened in Xcode (a Mac, or the Codemagic macOS lane), add the `dev`/`prod` build configurations and schemes there, where they can actually be verified. Until then, `codemagic.yaml`'s iOS lane builds the single default `Runner` target using the `dev` Dart entrypoint, not a real Xcode flavor.
+
+### Lint: line length
+**Decision:** disabled `lines_longer_than_80_chars` in `analysis_options.yaml` on top of `very_good_analysis`.
+**Why:** Flutter's declarative widget syntax (nested named-parameter constructors) routinely produces well-formatted lines past 80 columns even with sensible wrapping; the rule has no configurable width, only on/off, so keeping it on meant either fighting `dart format`'s own line breaks or fragmenting simple one-line widget props for no readability gain. Surfaced in M2 once the design components made the volume of 80+-char lines obvious.
+**Rejected:** manually re-wrapping every flagged line — inspected the M2 component set and the wraps were consistently cosmetic, not clarifying.
 
 ### Sentry
 **Decision:** `sentry_flutter` is a dependency and `bootstrap.dart` initializes it only when a `SENTRY_DSN` value is passed via `--dart-define`; with no DSN (the default for every local build), it's fully inert and errors just print to the console instead.

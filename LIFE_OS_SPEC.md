@@ -2134,7 +2134,7 @@ State management: **Riverpod** with code generation. Repositories expose `Stream
 | Crash | `sentry_flutter` | Opt-in |
 | Motion | `flutter_animate` | Use sparingly, tokens still govern durations |
 | Lint | `very_good_analysis` | |
-| Test | `mocktail`, `drift_dev` (schema tests), `golden_toolkit`, `integration_test`, `patrol` | |
+| Test | `mocktail`, `drift_dev` (schema tests), plain `flutter_test` goldens (`golden_toolkit` is pub.dev-discontinued — see DECISIONS.md), `integration_test`, `patrol` | |
 
 Rules: no package for something a 40-line widget can do. Every dependency added must be recorded in `DECISIONS.md` with the reason and the alternative rejected. Avoid anything unmaintained for over 12 months or without null safety.
 
@@ -2149,7 +2149,7 @@ Each milestone is a complete, shippable increment with a Definition of Done. Do 
 **M1 — Project setup.** Flutter project, folder structure, lints, `build_runner`, flavours (dev/prod), CI on GitHub Actions (analyze + test + Android build), Codemagic macOS lane, Sentry wired but opt-in, `CLAUDE.md` and `DECISIONS.md` committed.
 *DoD:* `flutter analyze` clean, CI green, debug APK installs.
 
-**M2 — Design system.** All tokens, both themes, all 30 components, golden tests at scale 1.0 and 1.5 in both themes, a `/dev/components` gallery screen behind a debug flag.
+**M2 — Design system.** All tokens, both themes, all 26 components (§2.7 — corrected from "30", which didn't match the actual list; see DECISIONS.md), golden tests at scale 1.0 and 1.5 in both themes, a `/dev/components` gallery screen behind a debug flag.
 *DoD:* every component has a golden; contrast test passes for all token pairs.
 
 **M3 — Navigation shell.** Five tabs, FAB, route table, deep-link handling, per-tab state preservation, placeholder screens that say "Not built yet" honestly.
@@ -2220,7 +2220,7 @@ Each milestone is a complete, shippable increment with a Definition of Done. Do 
 | Migrations | Every version transition | `drift_dev` schema fixtures |
 | Controllers | Happy path + each error state | `riverpod` overrides + `mocktail` |
 | Widgets | Every component; key screens | `flutter_test` |
-| Goldens | Every design component, 2 themes × 2 text scales | `golden_toolkit` |
+| Goldens | Every design component, 2 themes × 2 text scales | `flutter_test` (`matchesGoldenFile` + a hand-rolled font-loading `flutter_test_config.dart`) |
 | Integration | 12 critical journeys | `integration_test` / `patrol` |
 | Performance | Frame timings on the 6 heavy screens | `integration_test` + `TimelineSummary` |
 

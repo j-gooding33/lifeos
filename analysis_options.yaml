@@ -25,3 +25,7 @@ linter:
     # every public class/method adds noise without a consumer to serve.
     # See DECISIONS.md.
     public_member_api_docs: false
+    # Flutter's declarative, named-parameter widget syntax routinely runs
+    # past 80 columns even when well-formatted; the rule has no
+    # configurable threshold, only on/off. See DECISIONS.md.
+    lines_longer_than_80_chars: false
