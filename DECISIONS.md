@@ -4,6 +4,31 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M4 — Local database and auth (2026-08-26)
+
+### Full 30-table Drift schema now; full Postgres/RLS mirror deferred per-table
+**Decision:** implemented all 30 SQLite tables from §23.3 in Drift now (§33 M4 explicitly says "for all tables"), but wrote the Postgres + RLS mirror in `supabase/schema.sql` for only `profiles` and `preferences` — the two tables M4's own repository scope actually covers.
+**Why:** RLS policies I can't deploy or test yet (no live Supabase project) are much more likely to be wrong than ones I write alongside the code that will actually exercise them. Writing all 30 tables' RLS blind, this far ahead of the sync work (M19) that would ever call them, seemed like exactly the kind of "no half-finished implementations" the project avoids elsewhere. Each feature milestone adds its own table's Postgres mirror + RLS when it adds that table's repository.
+
+### Supabase auth is real code, not yet a tested integration
+**Decision:** `AuthRepository`, `supabase_client.dart` (with a `flutter_secure_storage`-backed session store, not the default SharedPreferences one), and `supabase/schema.sql`'s RLS policies are all written and compile, but none of it has run against a live Supabase project — this machine doesn't have one.
+**Why:** same category as M1's GitHub/Codemagic accounts — creating and configuring a third-party project needs the project owner's account, not something this session can do unilaterally. `isSupabaseConfigured` gates every method so the app fails clearly (an `AuthFailure`) rather than silently misbehaving without one.
+**How to apply:** M4's actual DoD line — "sign up, sign out, sign in, kill app, session persists; a second account cannot read the first's rows (test against the live project)" — is **not verified**. Once a Supabase project exists: run `supabase/schema.sql`, supply `SUPABASE_URL`/`SUPABASE_ANON_KEY` via `--dart-define`, and run that exact test manually (create two accounts, confirm cross-account row access fails).
+
+### Sign-in/sign-up/reset screens stay placeholders
+**Decision:** `/auth/sign-in`, `/auth/sign-up`, `/auth/reset` still render `NotBuiltYetScreen` (from M3) rather than real forms wired to `AuthRepository`.
+**Why:** Apple and Google sign-in need their own external configuration (Apple Developer account, Google Cloud OAuth client) beyond just a Supabase project, so even a "complete" auth UI would have two of three methods non-functional regardless. Building the email form alone now, then coming back to add two buttons later, seemed more likely to produce visible rework than waiting until all three can be wired at once.
+
+### Riverpod/DI wiring deferred to the first feature that needs it (M5)
+**Decision:** `AppDatabase`/`ProfileRepository`/`PreferencesRepository`/`AuthRepository` are constructed directly in tests, not exposed through any app-wide provider yet — `bootstrap.dart` only calls `initializeSupabase()`.
+**Why:** CLAUDE.md's own conventions name Riverpod as the state-management choice, but nothing in the UI reads from these repositories yet (M4 has no UI deliverable). Adding `flutter_riverpod` and a provider tree with zero consumers is exactly the kind of premature plumbing the project's own minimalism rule warns against. M5 (Tasks + Home v1) is the first milestone that actually needs a widget to read live data, so that's where DI wiring starts for real.
+
+### Drift's reserved `tableName` identifier
+**Decision:** the `outbox.table_name` and `sync_state.table_name` columns from §23.3 are implemented as `target_table` (Dart getter *and* SQL column name) instead.
+**Why:** `Table` (Drift's base class) reserves a member literally named `tableName` to mean "override this table's own SQL name." A regular *column* named `table_name` round-trips through Drift's snake_case-to-camelCase conversion to a Dart getter also called `tableName`, which collides — and critically, renaming only the Dart-side getter (keeping the SQL column named `table_name` via `.named(...)`) does *not* fix it, because drift_dev's schema-snapshot tooling (used for migration testing, §23.4) regenerates historical table classes from the SQL column name alone. The actual SQL name had to change. First real deviation from the spec's literal DDL, forced by tooling rather than a judgment call.
+
+---
+
 ## M3 — Navigation shell (2026-08-26)
 
 ### Five full tabs, not four-plus-a-nub

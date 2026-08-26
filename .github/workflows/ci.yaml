@@ -15,6 +15,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter analyze
       - run: flutter test
 
@@ -32,6 +33,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
       - uses: actions/upload-artifact@v4
         with:

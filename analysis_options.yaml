@@ -18,6 +18,9 @@ analyzer:
     - linux/**
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+    # drift_dev schema-snapshot output (`schema dump` / `schema generate`)
+    # — vendored, regenerated whenever schemaVersion bumps, never hand-edited.
+    - "test/**/generated_migrations/**"
 
 linter:
   rules:
