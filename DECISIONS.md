@@ -36,6 +36,11 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 **Why:** creating a GitHub repo, pushing code, and connecting a third-party CI account are all actions visible to others / requiring credentials this session doesn't have; that needs the project owner to do or explicitly authorize.
 **Follow-up:** once a GitHub remote exists, push and confirm the Actions run goes green — that's the actual M1 DoD check for "CI green," not just the workflow file existing.
 
+### Android emulator (debug APK "installs" check)
+**Decision:** an AVD (`life_os_test`, Pixel 6 profile, Android 15 x86_64 google_apis) was created under `D:\dev\avd`, but it was never booted successfully and M1's "debug APK installs" DoD line is verified only as "the debug APK builds," not as an actual install/run.
+**Why:** the emulator refused to boot — "x86_64 emulation currently requires hardware acceleration... Android Emulator hypervisor driver is not installed on this machine." Fixing that means enabling the Windows Hypervisor Platform optional feature, which needs admin rights and a reboot. That's a system-settings change, and the project owner chose to skip the emulator rather than have it made on their behalf.
+**Follow-up:** either enable Windows Hypervisor Platform (Turn Windows features on or off → check it → reboot) and retry `emulator -avd life_os_test`, or just test on a physical Android device over USB (`adb install build/app/outputs/flutter-apk/app-dev-debug.apk` once a device shows up in `adb devices`).
+
 ### Folder structure
 **Decision:** only `lib/core/config/` exists so far, plus `lib/main.dart`, `app.dart`, `bootstrap.dart`. The full §31 tree (`design/`, `data/`, `features/`, `services/`, `routing/`, per-feature subfolders) is **not** pre-created empty.
 **Why:** git doesn't track empty directories, so "creating" ~100 empty folders now would mean either committing a pile of `.gitkeep` placeholders for code that doesn't exist yet, or directories that silently vanish on clone — both read as scaffolding theatre for milestones that haven't started (rule 1: nothing fake). Each milestone creates its own real subtree when it adds real files.
