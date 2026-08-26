@@ -1,0 +1,27 @@
+workflows:
+  ios-smoke-build:
+    name: iOS smoke build (dev, unsigned)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Analyze
+        script: flutter analyze
+      - name: Unit tests
+        script: flutter test
+      - name: iOS build (no codesign)
+        script: |
+          flutter build ios --debug --no-codesign -t lib/main_dev.dart
+    # iOS flavor-specific Xcode schemes (Debug-dev/Debug-prod etc.) are not
+    # wired up yet — see DECISIONS.md. This lane builds the default Runner
+    # target with the dev Dart entrypoint until someone with Xcode access
+    # adds the per-flavor schemes/configurations.
+    # No publishing section: this lane exists to catch iOS-only compile
+    # failures on every milestone (§36 risk 16) while developing on Windows.
+    # Real signing/TestFlight publishing is configured in M21 once there is
+    # an Apple Developer account and certificates to wire in.
