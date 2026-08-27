@@ -11,6 +11,13 @@ import 'package:life_os/features/library/presentation/screens/film_search_screen
 import 'package:life_os/features/library/presentation/screens/film_top5_screen.dart';
 import 'package:life_os/features/library/presentation/screens/films_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_home_screen.dart';
+import 'package:life_os/features/library/presentation/screens/season_episodes_screen.dart';
+import 'package:life_os/features/library/presentation/screens/tv_episode_ratings_screen.dart';
+import 'package:life_os/features/library/presentation/screens/tv_ratings_screen.dart';
+import 'package:life_os/features/library/presentation/screens/tv_search_screen.dart';
+import 'package:life_os/features/library/presentation/screens/tv_show_detail_screen.dart';
+import 'package:life_os/features/library/presentation/screens/tv_shows_screen.dart';
+import 'package:life_os/features/library/presentation/screens/tv_top5_screen.dart';
 import 'package:life_os/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_calendar_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
@@ -165,8 +172,39 @@ GoRouter buildRouter() {
                 path: Routes.libraryFilmDetail,
                 builder: (context, state) => FilmDetailScreen(filmId: state.pathParameters['id']!),
               ),
-              _placeholderRoute(Routes.libraryTv, 'TV'),
-              _placeholderRoute(Routes.libraryTvDetail, 'TV detail'),
+              GoRoute(
+                path: Routes.libraryTv,
+                builder: (context, state) => const TvShowsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryTvSearch,
+                builder: (context, state) => const TvSearchScreen(),
+              ),
+              // Static siblings of libraryTvDetail (`/library/tv/:id`) must
+              // come before it — see the same note by libraryFilmDetail.
+              GoRoute(
+                path: Routes.libraryTvShowRatings,
+                builder: (context, state) => const TvRatingsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryTvEpisodeRatings,
+                builder: (context, state) => const TvEpisodeRatingsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryTvTop5,
+                builder: (context, state) => const TvTop5Screen(),
+              ),
+              GoRoute(
+                path: Routes.libraryTvSeason,
+                builder: (context, state) => SeasonEpisodesScreen(
+                  showId: state.pathParameters['id']!,
+                  seasonNumber: int.parse(state.pathParameters['seasonNumber']!),
+                ),
+              ),
+              GoRoute(
+                path: Routes.libraryTvDetail,
+                builder: (context, state) => TvShowDetailScreen(showId: state.pathParameters['id']!),
+              ),
               _placeholderRoute(Routes.libraryBooks, 'Books'),
               _placeholderRoute(Routes.libraryBooksSearch, 'Search books'),
               _placeholderRoute(Routes.libraryBookDetail, 'Book detail'),

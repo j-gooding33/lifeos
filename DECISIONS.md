@@ -4,6 +4,23 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M8.7-M8.11 — TV Shows (2026-08-27)
+
+Same vertical slice as Films (search → library → detail → ratings → Top 5), plus per-episode tracking, which films don't need.
+
+### Season import runs through a provider, not a widget `initState` side effect
+**Decision:** `seasonImportProvider(showId, seasonNumber)` (a `Future<Result<void, Failure>>` provider) does the "fetch episodes from TMDB, then `TvEpisodeRepository.importSeason`" work; `SeasonEpisodesScreen` just `ref.watch`es it alongside the real episode list from the local DB.
+**Why:** a provider is naturally keyed/cached per `(showId, seasonNumber)` and re-runs correctly on `ref.invalidate` or a fresh navigation, without the widget needing its own "have I already imported this?" flag. It also means the episode list (read straight from the DB stream) never blocks on the import finishing — episodes already tracked from a previous visit show immediately even if TMDB is slow or down.
+**How to apply:** the same "provider does the fetch-then-write, screen just watches the local stream" split is the template for any future "sync from a remote provider into local state" screen.
+
+### Episode ratings get their own history screen, not folded into the show's
+**Decision:** `TvRatingsScreen` (1-5★ show ratings) and `TvEpisodeRatingsScreen` (1-6★ episode ratings, across every show) are two separate screens, cross-linked by an app bar icon.
+**Why:** Part 42 is explicit that the two scales are never averaged or compared — a single sorted list mixing 1-5 and 1-6 values would misrepresent one or the other. Keeping them as separate screens is more honest than a combined list with two different star-scales rendered side by side.
+
+### TV's own long-press quick-actions menu reuses `showLibraryItemMenu` unchanged
+**Decision:** `TvShowsScreen`'s grid tile calls the exact same `showLibraryItemMenu` Films uses, passing `doneVerb: 'Watched'` (the default). No TV-specific menu was written.
+**Why:** the menu's actions (mark done, rate, favourite, Top list, remove) are identical across every media type by construction — see the M8 Films decision that built it that way. Confirms that decision paid off: zero new menu code needed for TV.
+
 ## Onboarding, Home/Tasks polish, and a first-run gate (2026-08-27)
 
 A batch of UI bugs found by actually using the app on the emulator, plus a first-run onboarding flow, done as one item-per-commit sequence.

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_os/core/errors/failure.dart';
 import 'package:life_os/core/providers/app_providers.dart';
+import 'package:life_os/core/utils/result.dart';
 import 'package:life_os/data/local/daos/library_item_dao.dart';
 import 'package:life_os/data/local/daos/top_list_dao.dart';
 import 'package:life_os/data/local/daos/tv_episode_dao.dart';
@@ -91,4 +93,35 @@ Stream<List<AppTvEpisode>> ratedEpisodes(Ref ref) async* {
 Stream<List<TopListEntry>> topList(Ref ref, MediaType type) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
   yield* ref.watch(topListRepositoryProvider).watch(userId, type);
+}
+
+/// TMDB's search results don't include season count — only `detail()` does
+/// — so the TV show detail screen needs one extra round trip the first
+/// time it's opened to know how many season rows to offer.
+@riverpod
+Future<Result<MediaDetail, Failure>> tvShowMetadata(Ref ref, String externalId) {
+  return ref.watch(tmdbMetadataProviderProvider).detail(externalId, MediaType.tv);
+}
+
+/// Fetches a season's episode list from the provider and imports it
+/// (`TvEpisodeRepository.importSeason` never overwrites existing
+/// watched/rating/log state) the first time that season's screen opens.
+/// Silently a no-op — not an error — for a manually-added show or an
+/// unconfigured provider, matching §16.7's "missing data, not a crash".
+@riverpod
+Future<Result<void, Failure>> seasonImport(Ref ref, String libraryItemId, int seasonNumber) async {
+  final item = await ref.watch(libraryItemByIdProvider(libraryItemId).future);
+  if (item == null || item.externalId == null) return const Ok(null);
+
+  final tmdb = ref.watch(tmdbMetadataProviderProvider);
+  if (!tmdb.isConfigured) return const Ok(null);
+
+  final episodesResult = await tmdb.seasonEpisodes(item.externalId!, seasonNumber);
+  if (episodesResult case Err(:final failure)) return Err(failure);
+  final episodes = (episodesResult as Ok<List<EpisodeSummary>, Failure>).value;
+
+  final userId = await ref.watch(currentUserIdProvider.future);
+  return ref
+      .watch(tvEpisodeRepositoryProvider)
+      .importSeason(userId: userId, libraryItemId: libraryItemId, episodes: episodes);
 }

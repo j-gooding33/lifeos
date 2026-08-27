@@ -917,3 +917,216 @@ final class TopListFamily extends $Family
   @override
   String toString() => r'topListProvider';
 }
+
+/// TMDB's search results don't include season count — only `detail()` does
+/// — so the TV show detail screen needs one extra round trip the first
+/// time it's opened to know how many season rows to offer.
+
+@ProviderFor(tvShowMetadata)
+const tvShowMetadataProvider = TvShowMetadataFamily._();
+
+/// TMDB's search results don't include season count — only `detail()` does
+/// — so the TV show detail screen needs one extra round trip the first
+/// time it's opened to know how many season rows to offer.
+
+final class TvShowMetadataProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Result<MediaDetail, Failure>>,
+          Result<MediaDetail, Failure>,
+          FutureOr<Result<MediaDetail, Failure>>
+        >
+    with
+        $FutureModifier<Result<MediaDetail, Failure>>,
+        $FutureProvider<Result<MediaDetail, Failure>> {
+  /// TMDB's search results don't include season count — only `detail()` does
+  /// — so the TV show detail screen needs one extra round trip the first
+  /// time it's opened to know how many season rows to offer.
+  const TvShowMetadataProvider._({
+    required TvShowMetadataFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'tvShowMetadataProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$tvShowMetadataHash();
+
+  @override
+  String toString() {
+    return r'tvShowMetadataProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Result<MediaDetail, Failure>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Result<MediaDetail, Failure>> create(Ref ref) {
+    final argument = this.argument as String;
+    return tvShowMetadata(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TvShowMetadataProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$tvShowMetadataHash() => r'21a5f15973d9fb7ef9a80c4bd476675f6ffaba62';
+
+/// TMDB's search results don't include season count — only `detail()` does
+/// — so the TV show detail screen needs one extra round trip the first
+/// time it's opened to know how many season rows to offer.
+
+final class TvShowMetadataFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<Result<MediaDetail, Failure>>,
+          String
+        > {
+  const TvShowMetadataFamily._()
+    : super(
+        retry: null,
+        name: r'tvShowMetadataProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// TMDB's search results don't include season count — only `detail()` does
+  /// — so the TV show detail screen needs one extra round trip the first
+  /// time it's opened to know how many season rows to offer.
+
+  TvShowMetadataProvider call(String externalId) =>
+      TvShowMetadataProvider._(argument: externalId, from: this);
+
+  @override
+  String toString() => r'tvShowMetadataProvider';
+}
+
+/// Fetches a season's episode list from the provider and imports it
+/// (`TvEpisodeRepository.importSeason` never overwrites existing
+/// watched/rating/log state) the first time that season's screen opens.
+/// Silently a no-op — not an error — for a manually-added show or an
+/// unconfigured provider, matching §16.7's "missing data, not a crash".
+
+@ProviderFor(seasonImport)
+const seasonImportProvider = SeasonImportFamily._();
+
+/// Fetches a season's episode list from the provider and imports it
+/// (`TvEpisodeRepository.importSeason` never overwrites existing
+/// watched/rating/log state) the first time that season's screen opens.
+/// Silently a no-op — not an error — for a manually-added show or an
+/// unconfigured provider, matching §16.7's "missing data, not a crash".
+
+final class SeasonImportProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Result<void, Failure>>,
+          Result<void, Failure>,
+          FutureOr<Result<void, Failure>>
+        >
+    with
+        $FutureModifier<Result<void, Failure>>,
+        $FutureProvider<Result<void, Failure>> {
+  /// Fetches a season's episode list from the provider and imports it
+  /// (`TvEpisodeRepository.importSeason` never overwrites existing
+  /// watched/rating/log state) the first time that season's screen opens.
+  /// Silently a no-op — not an error — for a manually-added show or an
+  /// unconfigured provider, matching §16.7's "missing data, not a crash".
+  const SeasonImportProvider._({
+    required SeasonImportFamily super.from,
+    required (String, int) super.argument,
+  }) : super(
+         retry: null,
+         name: r'seasonImportProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$seasonImportHash();
+
+  @override
+  String toString() {
+    return r'seasonImportProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Result<void, Failure>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Result<void, Failure>> create(Ref ref) {
+    final argument = this.argument as (String, int);
+    return seasonImport(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SeasonImportProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$seasonImportHash() => r'9dc5ac13e5f97a2238a70c7a60f15a599d0a407f';
+
+/// Fetches a season's episode list from the provider and imports it
+/// (`TvEpisodeRepository.importSeason` never overwrites existing
+/// watched/rating/log state) the first time that season's screen opens.
+/// Silently a no-op — not an error — for a manually-added show or an
+/// unconfigured provider, matching §16.7's "missing data, not a crash".
+
+final class SeasonImportFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          FutureOr<Result<void, Failure>>,
+          (String, int)
+        > {
+  const SeasonImportFamily._()
+    : super(
+        retry: null,
+        name: r'seasonImportProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Fetches a season's episode list from the provider and imports it
+  /// (`TvEpisodeRepository.importSeason` never overwrites existing
+  /// watched/rating/log state) the first time that season's screen opens.
+  /// Silently a no-op — not an error — for a manually-added show or an
+  /// unconfigured provider, matching §16.7's "missing data, not a crash".
+
+  SeasonImportProvider call(String libraryItemId, int seasonNumber) =>
+      SeasonImportProvider._(
+        argument: (libraryItemId, seasonNumber),
+        from: this,
+      );
+
+  @override
+  String toString() => r'seasonImportProvider';
+}

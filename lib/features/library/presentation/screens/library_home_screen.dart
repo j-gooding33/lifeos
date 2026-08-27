@@ -27,6 +27,7 @@ class LibraryHomeScreen extends StatelessWidget {
           LListTile(
             leading: const Icon(Icons.tv_outlined),
             title: 'TV Shows',
+            subtitle: 'Episodes, ratings, Top 5',
             onTap: () => context.push(Routes.libraryTv),
           ),
           LListTile(
