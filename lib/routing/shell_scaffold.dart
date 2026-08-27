@@ -37,10 +37,13 @@ class _ShellScaffoldState extends State<ShellScaffold> {
     (icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
     (icon: Icons.repeat_outlined, selectedIcon: Icons.repeat, label: 'Plans'),
   ];
+  // Stats isn't built yet (§22's placeholder) — left off the bar until it
+  // is, per the same "nothing fake" rule as everywhere else, but its
+  // StatefulShellBranch in router.dart is untouched so `Routes.stats` still
+  // resolves for a deep link or a direct `context.push`.
   static const _rightTabs = [
     (icon: Icons.check_circle_outline, selectedIcon: Icons.check_circle, label: 'Tasks'),
     (icon: Icons.video_library_outlined, selectedIcon: Icons.video_library, label: 'Library'),
-    (icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart, label: 'Stats'),
   ];
   static const _tabs = [..._leftTabs, ..._rightTabs];
 
