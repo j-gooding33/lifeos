@@ -29,13 +29,20 @@ class ShellScaffold extends StatefulWidget {
 class _ShellScaffoldState extends State<ShellScaffold> {
   bool _barVisible = true;
 
-  static const _tabs = [
+  // Split either side of the FAB rather than indexed into one flat list —
+  // the FAB gets its own equal-width slot in the row (see _buildBar), so it
+  // never shares horizontal space with a tab's label no matter how many
+  // tabs end up on either side.
+  static const _leftTabs = [
     (icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'Home'),
     (icon: Icons.repeat_outlined, selectedIcon: Icons.repeat, label: 'Plans'),
+  ];
+  static const _rightTabs = [
     (icon: Icons.check_circle_outline, selectedIcon: Icons.check_circle, label: 'Tasks'),
     (icon: Icons.video_library_outlined, selectedIcon: Icons.video_library, label: 'Library'),
     (icon: Icons.bar_chart_outlined, selectedIcon: Icons.bar_chart, label: 'Stats'),
   ];
+  static const _tabs = [..._leftTabs, ..._rightTabs];
 
   bool _handleScrollNotification(UserScrollNotification notification) {
     if (notification.direction == ScrollDirection.reverse && _barVisible) {
@@ -74,8 +81,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
                     children: [
                       _buildBar(context, barHeight),
                       Positioned(
-                        // Between Tabs 1 (Plans) and 2 (Tasks) of 5.
-                        left: MediaQuery.sizeOf(context).width * (2 / 5) - 28,
+                        left: _fabSlotCenterX(context) - 28,
                         bottom: barHeight - 12,
                         child: _buildFab(context),
                       ),
@@ -88,6 +94,16 @@ class _ShellScaffoldState extends State<ShellScaffold> {
         ),
       ),
     );
+  }
+
+  /// The FAB's own equal-width slot sits between `_leftTabs` and
+  /// `_rightTabs` as one more `Expanded` share of the row, so its centre is
+  /// simple to compute in lockstep with `_buildBar`'s layout: slot index
+  /// `_leftTabs.length` out of `_tabs.length + 1` equal shares.
+  double _fabSlotCenterX(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final totalSlots = _tabs.length + 1;
+    return width * (_leftTabs.length + 0.5) / totalSlots;
   }
 
   Widget _buildBar(BuildContext context, double height) {
@@ -103,8 +119,10 @@ class _ShellScaffoldState extends State<ShellScaffold> {
           ),
           child: Row(
             children: [
-              for (var i = 0; i < _tabs.length; i++)
-                Expanded(child: _buildTabItem(context, i)),
+              for (var i = 0; i < _leftTabs.length; i++) Expanded(child: _buildTabItem(context, i)),
+              const Expanded(child: SizedBox.shrink()),
+              for (var i = 0; i < _rightTabs.length; i++)
+                Expanded(child: _buildTabItem(context, _leftTabs.length + i)),
             ],
           ),
         ),
