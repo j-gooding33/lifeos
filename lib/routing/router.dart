@@ -20,6 +20,8 @@ import 'package:life_os/features/library/presentation/screens/film_top5_screen.d
 import 'package:life_os/features/library/presentation/screens/films_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_home_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_stats_screen.dart';
+import 'package:life_os/features/library/presentation/screens/note_editor_screen.dart';
+import 'package:life_os/features/library/presentation/screens/notes_screen.dart';
 import 'package:life_os/features/library/presentation/screens/season_episodes_screen.dart';
 import 'package:life_os/features/library/presentation/screens/tv_episode_ratings_screen.dart';
 import 'package:life_os/features/library/presentation/screens/tv_ratings_screen.dart';
@@ -291,8 +293,14 @@ GoRouter buildRouter() {
                 path: Routes.libraryBookDetail,
                 builder: (context, state) => BookDetailScreen(bookId: state.pathParameters['id']!),
               ),
-              _placeholderRoute(Routes.libraryNotes, 'Notes'),
-              _placeholderRoute(Routes.libraryNoteDetail, 'Note'),
+              GoRoute(
+                path: Routes.libraryNotes,
+                builder: (context, state) => const NotesScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryNoteDetail,
+                builder: (context, state) => NoteEditorScreen(noteId: state.pathParameters['id']!),
+              ),
               GoRoute(
                 path: Routes.libraryCollections,
                 builder: (context, state) => const CollectionsScreen(),

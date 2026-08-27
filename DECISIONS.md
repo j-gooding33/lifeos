@@ -4,6 +4,29 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §17.1 — Notes (2026-08-28)
+
+The `notes` table existed since the original schema (M4) with every §17.1 field already present (`blocksJson` as `blocks`, `plainText`, `folderId`, `pinned`, `colour`) — this is the first repository/UI built against it.
+
+### A custom block editor, not `flutter_quill`
+**Decision:** §17.1 explicitly asks to "evaluate `flutter_quill` or a custom block editor... and record the decision" — chose custom. `NoteEditorScreen`/`_BlockEditor` render each of the fixed block types (paragraph, heading, checklist item, bullet, quote, divider, code — see below on image/linkCard) as its own small widget over a plain `TextEditingController`, no rich-text/operational-transform engine involved.
+**Why:** §17.1 itself gives the reasoning: blocks are "stored as a JSON block array, not HTML or Markdown, so future block types do not require a parser rewrite" — that design already assumes a small, closed set of typed blocks, which is a much simpler problem than the general contenteditable/rich-text-formatting problem `flutter_quill` solves. This session has also consistently avoided a new dependency where a bespoke, appropriately-scoped alternative covers the actual need (the rating-distribution bar built with a few `Container`s instead of adding `fl_chart` is the same call) — a full quill-style editor would be a much larger dependency for a "rich enough to be useful, not a Notion clone" v1.
+**How to apply:** if a future need genuinely requires inline rich text (bold/italic mid-paragraph, for instance) rather than block-level formatting, that's the point to revisit `flutter_quill` — the block-level model this pass ships doesn't preclude it, since blocks are just JSON objects keyed by `type`.
+
+### `image` and `linkCard` blocks round-trip through the model; there's no editor UI for either yet
+**Decision:** `NoteBlockType` includes all nine spec'd types and `NoteBlock.toJson`/`fromJson` handle all of them, but `NoteEditorScreen`'s "Add block" menu only offers the seven text-based types — inserting an image or a link card isn't possible from the UI.
+**Why:** an image block needs a file picker plus local storage (the same `Attachments`-table infrastructure §17.3's "documents" needs, itself unbuilt), and a link card needs the same Open Graph fetch §17.3's "Links" feature needs (also unbuilt) — both are real, separate pieces of work this pass doesn't depend on. Modelling both block types now means a note created once these exist won't need a data migration.
+
+### Editing has an explicit Save action, not autosave
+**Decision:** `NoteEditorScreen` has an AppBar checkmark that's disabled until something changed (a local `_dirty` flag) and calls `NoteRepository.updateNote` once, on tap — not a debounced or on-every-keystroke write.
+**Why:** matches every other editing screen already in this codebase (`task_detail_screen.dart`'s title field, `plan_create_screen.dart`) — an explicit Save button is the established convention here, not per-repository autosave. Keeping to it avoids inventing a second editing pattern (and the debounce-timer lifecycle it would need) for just this one screen.
+**How to apply:** §17.2's DoD ("notes survive a force-quit mid-edit") isn't met by this pass — a force-quit before tapping Save loses in-progress edits. If that DoD needs to be hit later, the fix is autosave (or a periodic local draft), not something this pass's explicit-Save model provides.
+
+### Note linking (§17.2) and Links (§17.3, saved URLs) are both untouched this pass
+**Decision:** `note_links` (the table linking a note to a task/plan/goal/etc.) isn't read or written anywhere yet — Notes ships as a standalone list/editor, with no "Notes" section added to any other detail screen. Links (a saved-URL bookmark list) has no table at all yet — unlike everything else this session, there's no pre-existing schema for it to wire up.
+**Why:** wiring `note_links` into every other detail screen (Tasks, Plans, Projects, Goals, occurrences, Films/TV/Books) is a wide, mechanical change touching most of the app's existing, already-shipped screens — real value, but a much larger and more diffuse piece of work than a single new feature, and one this pass didn't have the room to do carefully. Links needs a genuinely new table (this session's only such case — everything else reused an M4-era column or table), which is a different, first-of-its-kind risk category better done as its own deliberate pass with its own migration.
+**How to apply:** `note_links`' schema already matches exactly what a "Notes section" on another screen would need (`watchLinksForEntity(entityType, entityId)` returning note ids) — that's a `NoteDao` addition plus a small reusable widget threaded into each screen, not a redesign. Links needs `schemaVersion` bumped past 2 and an `onUpgrade` step creating the new table, following `v1_indexes.dart`/`v2_indexes.dart`'s exact pattern.
+
 ## §12 — Goals (2026-08-28)
 
 The last of the three siblings (`LIFE_OS_SPEC.md`'s own M8/M9/M10 — Goals/Projects/Habits) deferred until the custom media/school M8 shipped. The largest of the three: a full CRUD feature plus §12.4's cross-cutting automatic-progress rules, "the connective tissue of the app."

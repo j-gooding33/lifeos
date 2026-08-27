@@ -11,8 +11,8 @@ import 'package:life_os/routing/routes.dart';
 
 /// M8.15: the Library tab's landing page — a unified overview (a live
 /// count per media type) plus a hub linking to each section. Films/TV/
-/// Books are real; Notes/Links still route to their existing placeholders
-/// until their own milestones land.
+/// Books/Collections/Notes are real; Links still routes to its existing
+/// placeholder until §17.3 lands.
 class LibraryHomeScreen extends ConsumerWidget {
   const LibraryHomeScreen({super.key});
 
