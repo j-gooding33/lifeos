@@ -45,6 +45,9 @@ import 'package:life_os/features/school/presentation/screens/school_timetable_sc
 import 'package:life_os/features/settings/presentation/screens/ai_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
+import 'package:life_os/features/tasks/presentation/screens/goal_create_screen.dart';
+import 'package:life_os/features/tasks/presentation/screens/goal_detail_screen.dart';
+import 'package:life_os/features/tasks/presentation/screens/goals_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/project_detail_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/projects_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
@@ -174,9 +177,18 @@ GoRouter buildRouter() {
                 builder: (context, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!),
               ),
               _placeholderRoute(Routes.projectNewTask, 'New project task'),
-              _placeholderRoute(Routes.goals, 'Goals'),
-              _placeholderRoute(Routes.goalsNew, 'New goal'),
-              _placeholderRoute(Routes.goalDetail, 'Goal detail'),
+              GoRoute(
+                path: Routes.goals,
+                builder: (context, state) => const GoalsScreen(),
+              ),
+              GoRoute(
+                path: Routes.goalsNew,
+                builder: (context, state) => const GoalCreateScreen(),
+              ),
+              GoRoute(
+                path: Routes.goalDetail,
+                builder: (context, state) => GoalDetailScreen(goalId: state.pathParameters['id']!),
+              ),
             ],
           ),
           StatefulShellBranch(

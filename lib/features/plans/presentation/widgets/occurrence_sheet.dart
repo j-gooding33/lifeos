@@ -106,7 +106,7 @@ class OccurrenceSheet extends ConsumerWidget {
                 child: LButton(
                   label: occurrence.isCompleted ? 'Completed' : 'Complete',
                   onPressed: occurrence.isCompleted
-                      ? () => repository.uncompleteOccurrence(occurrence)
+                      ? () => repository.uncompleteOccurrence(occurrence, plan)
                       : () => _complete(context, ref, repository),
                 ),
               ),

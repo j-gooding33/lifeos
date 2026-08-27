@@ -8,11 +8,14 @@ import 'package:life_os/core/scheduling/missed_sweep.dart';
 import 'package:life_os/core/scheduling/recurrence_rule.dart';
 import 'package:life_os/core/utils/result.dart';
 import 'package:life_os/data/local/daos/activity_log_dao.dart';
+import 'package:life_os/data/local/daos/goal_dao.dart';
 import 'package:life_os/data/local/daos/library_item_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/database.dart';
 import 'package:life_os/data/media/media_types.dart';
+import 'package:life_os/data/repositories/goal_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
+import 'package:life_os/data/repositories/models/app_goal.dart';
 import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
@@ -668,6 +671,47 @@ void main() {
       final linked = (await repository.watchUpcoming(plan.id).first).firstWhere((o) => o.id == occurrence.id);
 
       final result = await repository.completeOccurrence(linked, plan);
+      expect(result.isOk, isTrue);
+    });
+  });
+
+  group('§12.4 goal contribution on completion', () {
+    test('completing an occurrence on a plan with a goalId contributes; un-completing reverses it', () async {
+      final database2 = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(database2.close);
+      final planDao = PlanDao(database2);
+      final goalRepository = GoalRepository(GoalDao(database2));
+      final repositoryWithGoal = PlanRepository(planDao, ActivityLogDao(database2), goalRepository: goalRepository);
+
+      final goal = (await goalRepository.createGoal(userId: 'u1', title: 'Study more', type: GoalType.duration, targetValue: 50))
+          .when(ok: (g) => g, err: (f) => throw StateError(f.message));
+
+      final created = await repositoryWithGoal.createPlan(
+        userId: 'u1',
+        title: 'Study session',
+        rule: IntervalDays(1, anchor: today),
+        goalId: goal.id,
+      );
+      final plan = _okPlan(created);
+      final occurrence = (await repositoryWithGoal.watchUpcoming(plan.id).first).first;
+
+      await repositoryWithGoal.completeOccurrence(occurrence, plan);
+      var reloadedGoal = await goalRepository.watchById(goal.id).first;
+      expect(reloadedGoal!.currentValue, 1);
+
+      final completed = (await repositoryWithGoal.watchUpcoming(plan.id).first).firstWhere((o) => o.id == occurrence.id);
+      await repositoryWithGoal.uncompleteOccurrence(completed, plan);
+      reloadedGoal = await goalRepository.watchById(goal.id).first;
+      expect(reloadedGoal!.currentValue, 0);
+    });
+
+    test('completing an occurrence on a plan with no goalId does nothing to any goal', () async {
+      final rule = IntervalDays(1, anchor: today);
+      final created = await repository.createPlan(userId: 'u1', title: 'No goal here', rule: rule);
+      final plan = _okPlan(created);
+      final occurrence = (await repository.watchUpcoming(plan.id).first).first;
+
+      final result = await repository.completeOccurrence(occurrence, plan);
       expect(result.isOk, isTrue);
     });
   });

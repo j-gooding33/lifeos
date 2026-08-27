@@ -73,6 +73,56 @@ final class PlanMediaRepositoryProvider
 String _$planMediaRepositoryHash() =>
     r'e5c2adf929955137412fe934358d538dbc417a1f';
 
+/// `plans/`'s own instance of `GoalRepository`, for the same rule-4 reason
+/// as `planMediaRepository` above — never `lib/features/tasks/`'s.
+
+@ProviderFor(planGoalRepository)
+const planGoalRepositoryProvider = PlanGoalRepositoryProvider._();
+
+/// `plans/`'s own instance of `GoalRepository`, for the same rule-4 reason
+/// as `planMediaRepository` above — never `lib/features/tasks/`'s.
+
+final class PlanGoalRepositoryProvider
+    extends $FunctionalProvider<GoalRepository, GoalRepository, GoalRepository>
+    with $Provider<GoalRepository> {
+  /// `plans/`'s own instance of `GoalRepository`, for the same rule-4 reason
+  /// as `planMediaRepository` above — never `lib/features/tasks/`'s.
+  const PlanGoalRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'planGoalRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$planGoalRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<GoalRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  GoalRepository create(Ref ref) {
+    return planGoalRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(GoalRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<GoalRepository>(value),
+    );
+  }
+}
+
+String _$planGoalRepositoryHash() =>
+    r'a737bc7ab6f48771fb391dd2c548f9ad5abd568d';
+
 @ProviderFor(planRepository)
 const planRepositoryProvider = PlanRepositoryProvider._();
 
@@ -112,7 +162,7 @@ final class PlanRepositoryProvider
   }
 }
 
-String _$planRepositoryHash() => r'8da958857246686ba3c67e17c65a8f83d82baa62';
+String _$planRepositoryHash() => r'f5b06bf6f27345dee0123208288def69f0f58aba';
 
 /// The library item linked to an occurrence, for `OccurrenceSheet`'s
 /// "linked film/show/book" display.

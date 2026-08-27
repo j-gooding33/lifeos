@@ -12,6 +12,7 @@ import 'package:life_os/core/utils/result.dart';
 import 'package:life_os/data/local/daos/activity_log_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/database.dart' as db;
+import 'package:life_os/data/repositories/goal_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:uuid/uuid.dart';
@@ -28,6 +29,7 @@ class PlanRepository {
     Materialiser? materialiser,
     MissedSweep? missedSweep,
     this.libraryItemRepository,
+    this.goalRepository,
   }) : _materialiser = materialiser ?? const Materialiser(),
        _missedSweep = missedSweep ?? const MissedSweep();
 
@@ -42,6 +44,10 @@ class PlanRepository {
   /// one relies on.
   final LibraryItemRepository? libraryItemRepository;
 
+  /// §12.4. Same optional-dependency shape as [libraryItemRepository] —
+  /// only the app's real singleton wires a real one in.
+  final GoalRepository? goalRepository;
+
   CivilDate get _today => CivilDate.fromDateTime(DateTime.now());
 
   Stream<List<AppPlan>> watchActive(String userId) =>
@@ -49,6 +55,9 @@ class PlanRepository {
 
   Stream<List<AppPlan>> watchHabits(String userId) =>
       _dao.watchHabits(userId).map(_toDomainList);
+
+  Stream<List<AppPlan>> watchByGoalId(String goalId) =>
+      _dao.watchByGoalId(goalId).map(_toDomainList);
 
   Stream<List<AppPlan>> watchPaused(String userId) =>
       _dao.watchPaused(userId, _today.toIso()).map(_toDomainList);
@@ -292,6 +301,17 @@ class PlanRepository {
           watchedDate: _toDateTime(occurrence.scheduledDate),
         );
       }
+      // §12.4's first automatic-progress row: "Occurrence completed on a
+      // plan with goalId, any type, increment valueAchieved or 1."
+      if (plan.goalId != null) {
+        await goalRepository?.addContribution(
+          goalId: plan.goalId!,
+          sourceType: 'occurrence',
+          sourceId: occurrence.id,
+          value: occurrence.valueAchieved ?? 1,
+          date: occurrence.scheduledDate,
+        );
+      }
       if (plan.scheduleMode == ScheduleMode.rolling) {
         final reanchored = plan.copyWith(
           rule: reanchorRule(plan.rule, CivilDate.fromDateTime(now)),
@@ -307,14 +327,18 @@ class PlanRepository {
   }
 
   Future<Result<void, Failure>> uncompleteOccurrence(
-    AppOccurrence occurrence,
-  ) async {
+    AppOccurrence occurrence, [
+    AppPlan? plan,
+  ]) async {
     try {
       await _dao.updateOccurrenceStatus(
         occurrence.id,
         status: 'pending',
         clearCompletedAt: true,
       );
+      if (plan?.goalId != null) {
+        await goalRepository?.reverseContribution(goalId: plan!.goalId!, sourceType: 'occurrence', sourceId: occurrence.id);
+      }
       return const Ok(null);
     } on Object catch (e) {
       return Err(DatabaseFailure('uncompleteOccurrence failed: $e'));

@@ -23,6 +23,14 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
     return query.watch();
   }
 
+  /// §12.3's "linked plans" list on a goal's detail screen.
+  Stream<List<Plan>> watchByGoalId(String goalId) {
+    final query = select(plans)
+      ..where((p) => p.goalId.equals(goalId) & p.deletedAt.isNull())
+      ..orderBy([(p) => OrderingTerm.asc(p.sortIndex)]);
+    return query.watch();
+  }
+
   Stream<List<Plan>> watchHabits(String userId) {
     final query = select(plans)
       ..where(

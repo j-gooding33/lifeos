@@ -16,11 +16,11 @@ class _QuickAddType {
 /// §6.2's type picker — the Layer 1/Layer 2 natural-language capture and
 /// the "Ask AI" entry point are separate, larger pieces of work (a
 /// 120-case parser suite and an AI proxy respectively) sequenced after
-/// this; see DECISIONS.md. "Task", "Plan" and "Habit" open a dedicated
-/// creation screen; "Project" opens the Projects list (its own create
-/// action is the list's own + button, not a separate screen). Every other
-/// type honestly says so rather than opening something that doesn't exist
-/// (CLAUDE.md rule 1).
+/// this; see DECISIONS.md. "Task", "Plan", "Habit" and "Goal" open a
+/// dedicated creation screen; "Project" opens the Projects list (its own
+/// create action is the list's own + button, not a separate screen).
+/// Every other type honestly says so rather than opening something that
+/// doesn't exist (CLAUDE.md rule 1).
 class QuickAddSheet extends StatelessWidget {
   const QuickAddSheet({super.key});
 
@@ -57,6 +57,9 @@ class QuickAddSheet extends StatelessWidget {
       case 'Project':
         Navigator.of(context).maybePop();
         context.push(Routes.projects);
+      case 'Goal':
+        Navigator.of(context).maybePop();
+        context.push(Routes.goalsNew);
       default:
         LToast.show(context, "$type creation is on the roadmap but hasn't shipped.");
     }

@@ -4,6 +4,37 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §12 — Goals (2026-08-28)
+
+The last of the three siblings (`LIFE_OS_SPEC.md`'s own M8/M9/M10 — Goals/Projects/Habits) deferred until the custom media/school M8 shipped. The largest of the three: a full CRUD feature plus §12.4's cross-cutting automatic-progress rules, "the connective tissue of the app."
+
+### `goals`, `goal_contributions` and `goal_milestones` — all three tables, and even the dedup index, existed since M4
+**Decision:** `AppGoal`/`AppGoalContribution`/`AppGoalMilestone` map directly onto three pre-existing tables. `GoalContributions`' own doc comment already named `idx_contrib_dedupe` (goalId+sourceType+sourceId unique) as the mechanism for §12.5's "double counting" edge case — and that index has existed since `v1_indexes.dart`, from the very first schema migration.
+**Why:** the schema was fully designed for this feature from the start; this pass is entirely "wire up what already exists," the same pattern as every other M4-dated unused column this session, just at the scale of three tables instead of one or two columns.
+
+### `linkedPlanIds[]`/`linkedProjectIds[]` (§12.2) are reverse relations, not array columns
+**Decision:** no such columns exist on `Goals` — a goal's "linked plans" is `PlanRepository.watchByGoalId(goalId)` (new), reading `plans.goalId`, which already existed. Same idea would apply to `projects.goalId` for linked projects, though that reverse-query isn't built this pass (see below).
+**Why:** SQLite/Drift has no array-column primitive; the schema's own design already put `goalId` on the Plan/Project side, matching how a foreign key normally points from the "many" side. Adding array columns to `Goals` would have fought the schema that was already there.
+
+### Automatic progress (§12.4) is wired for exactly one of its six rows this pass: Plan-occurrence completion
+**Decision:** `PlanRepository.completeOccurrence`/`uncompleteOccurrence` gained an optional `GoalRepository? goalRepository` dependency (same shape as `libraryItemRepository`) and call `addContribution`/`reverseContribution` when `plan.goalId != null`, using `occurrence.valueAchieved ?? 1` as the increment. Films marked watched, books finished, tasks completed in a linked project, and expenses saved are **not** wired — those repositories don't take a `GoalRepository` dependency yet.
+**Why:** the Plan-completion row is the one this session's own `PlanRepository` conventions were already built for (the exact same optional-dependency pattern used for §16.5's media-linking sync a few commits ago) — cheapest to wire correctly and highest-value, since Plans/Habits are the app's core recurring-action mechanism. The other four rows are real, separate pieces of work: Films/Books need the same treatment added to `LibraryItemRepository.markWatched`/whatever "book finished" method exists, "task completed in a linked project" needs `TaskRepository` to look up its project's `goalId` (a join it doesn't do today), and currency/expenses can't be wired at all — Finance (§22.2) isn't built yet, so there's no expense-save event to listen to.
+**How to apply:** each remaining row follows the same shape — add an optional `GoalRepository?` to the relevant repository's constructor, call `addContribution`/`reverseContribution` at the one write path that represents that event, using the same `(goalId, sourceType, sourceId)` dedup key convention (`sourceType` values used so far: `'occurrence'`, `'manual'`; a future one might use `'libraryItem'`, `'task'`, `'expense'`).
+**uncompleteOccurrence gained a plan parameter:** it previously took only the occurrence; reversing a goal contribution needs `plan.goalId`, which the occurrence itself doesn't carry. Made it an *optional* second positional parameter (`[AppPlan? plan]`) rather than required, so this is additive — every existing call site was updated to pass `plan` (all three already had it in scope), but the signature change itself doesn't force a rewrite of anything that didn't need to know about goals.
+
+### `currentValue` is a real cached column, updated only alongside a contribution row — never derived like Project progress
+**Decision:** unlike `AppProject` (progress always computed live from tasks), `AppGoal.currentValue` is a stored field that `GoalRepository.addContribution`/`reverseContribution` update in the same call that writes/deletes the `AppGoalContribution` row.
+**Why:** §12.4 says so explicitly — "Never mutate `currentValue` without a contribution row" — which only makes sense if `currentValue` *is* a mutable, stored field with contributions as its audit trail, the opposite of Projects' "derived, never stored" progress. Two different features, two deliberately different storage strategies, both following their own spec section's explicit instruction rather than a single "progress" convention applied uniformly.
+
+### The projection (§12.3) is pure, honest arithmetic — no target/no dates means no judgement, not a guess
+**Decision:** `computeGoalProjection` (pure, `goal_projection.dart`) returns `onTrack: null` (no verdict rendered) whenever there isn't enough information to project — no target, no start date, or today not yet past the start date — rather than defaulting to an assumed rate.
+**Why:** §12.3 is explicit: "honest arithmetic, not encouragement… if the current rate will miss the target it says so plainly." Guessing a rate from insufficient data would be exactly the kind of dishonest-optimism the spec is warning against; `null` (shown as a plain running total, no "on track"/"off track" framing) is the honest response to "not enough data yet."
+**How to apply:** the AI-computed "required rate" suggestion and the "Adjust the target"/"Increase the plan frequency" two-button offer (§12.3) are deferred — this pass shows the honest projection text and an "Edit goal" action, not those two specific buttons; see below.
+
+### Deferred this pass: the two specific off-track actions, milestone-only progress math, "start again" cloning, and the reached-goal celebration
+**Decision:** off-track goals show the projection text plus a generic "Edit goal" action, not §12.3's specific "Adjust the target" / "Increase the plan frequency" pair (the second needs picking and editing a specific linked plan's rhythm, a bigger flow). `milestone`-type goals don't yet compute progress as "milestones completed / total" (they fall back to the same `currentValue`/`targetValue` ratio, which is `null` since milestone goals have no target). §12.5's "Start again for 2027" goal-cloning and the reached-goal `celebrate` animation aren't built.
+**Why:** each is a real, separable enhancement on top of the core primitive (a real Goal, with real auditable progress, that Plans can point at) that this pass ships — consistent with every other "ship the honest core, defer the additive sugar" decision this session (Fill from watchlist, counter-habit stepper, Project Files/Activity).
+
 ## §11 — Projects (2026-08-28)
 
 Habits' spec-sequence sibling — `ProjectRepository`/`AppProject` existed since the onboarding batch (deliberately minimal then: no screen existed to use the rest of §11.2's fields). A real Projects list and detail screen now exist, so the rest of the model got wired up.

@@ -134,7 +134,7 @@ class _HabitRow extends ConsumerWidget {
               if (checked) {
                 repository.completeOccurrence(occurrence, plan);
               } else {
-                repository.uncompleteOccurrence(occurrence);
+                repository.uncompleteOccurrence(occurrence, plan);
               }
             },
           ),

@@ -252,7 +252,7 @@ class _UpcomingSection extends ConsumerWidget {
                                     plan,
                                   );
                                 } else {
-                                  repository.uncompleteOccurrence(occurrence);
+                                  repository.uncompleteOccurrence(occurrence, plan);
                                 }
                               },
                             ),

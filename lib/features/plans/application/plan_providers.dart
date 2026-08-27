@@ -1,9 +1,11 @@
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
 import 'package:life_os/data/local/daos/activity_log_dao.dart';
+import 'package:life_os/data/local/daos/goal_dao.dart';
 import 'package:life_os/data/local/daos/library_item_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/media/media_types.dart';
+import 'package:life_os/data/repositories/goal_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
@@ -22,6 +24,13 @@ LibraryItemRepository planMediaRepository(Ref ref) {
   return LibraryItemRepository(LibraryItemDao(ref.watch(appDatabaseProvider)));
 }
 
+/// `plans/`'s own instance of `GoalRepository`, for the same rule-4 reason
+/// as `planMediaRepository` above — never `lib/features/tasks/`'s.
+@Riverpod(keepAlive: true)
+GoalRepository planGoalRepository(Ref ref) {
+  return GoalRepository(GoalDao(ref.watch(appDatabaseProvider)));
+}
+
 @Riverpod(keepAlive: true)
 PlanRepository planRepository(Ref ref) {
   final database = ref.watch(appDatabaseProvider);
@@ -29,6 +38,7 @@ PlanRepository planRepository(Ref ref) {
     PlanDao(database),
     ActivityLogDao(database),
     libraryItemRepository: ref.watch(planMediaRepositoryProvider),
+    goalRepository: ref.watch(planGoalRepositoryProvider),
   );
 }
 
