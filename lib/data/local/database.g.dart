@@ -21593,32 +21593,34 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
 }
 
-typedef $$ProfilesTableCreateCompanionBuilder = ProfilesCompanion Function({
-  required String id,
-  Value<String?> displayName,
-  Value<String?> avatarPath,
-  Value<String> timezone,
-  Value<int> weekStart,
-  Value<String> currency,
-  Value<String> dateFormat,
-  Value<int?> onboardedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int> rowid,
-});
-typedef $$ProfilesTableUpdateCompanionBuilder = ProfilesCompanion Function({
-  Value<String> id,
-  Value<String?> displayName,
-  Value<String?> avatarPath,
-  Value<String> timezone,
-  Value<int> weekStart,
-  Value<String> currency,
-  Value<String> dateFormat,
-  Value<int?> onboardedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int> rowid,
-});
+typedef $$ProfilesTableCreateCompanionBuilder =
+    ProfilesCompanion Function({
+      required String id,
+      Value<String?> displayName,
+      Value<String?> avatarPath,
+      Value<String> timezone,
+      Value<int> weekStart,
+      Value<String> currency,
+      Value<String> dateFormat,
+      Value<int?> onboardedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ProfilesTableUpdateCompanionBuilder =
+    ProfilesCompanion Function({
+      Value<String> id,
+      Value<String?> displayName,
+      Value<String?> avatarPath,
+      Value<String> timezone,
+      Value<int> weekStart,
+      Value<String> currency,
+      Value<String> dateFormat,
+      Value<int?> onboardedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int> rowid,
+    });
 
 class $$ProfilesTableFilterComposer
     extends Composer<_$AppDatabase, $ProfilesTable> {
@@ -22347,52 +22349,54 @@ typedef $$DashboardCardsTableProcessedTableManager =
       DashboardCard,
       PrefetchHooks Function()
     >;
-typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
-  required String id,
-  required String userId,
-  required String title,
-  Value<String?> notes,
-  Value<String?> dueDate,
-  Value<String?> dueTime,
-  Value<String?> timezone,
-  Value<int> priority,
-  Value<String?> categoryId,
-  Value<String?> projectId,
-  Value<String?> goalId,
-  Value<String?> recurrenceRule,
-  Value<String?> parentRecurringId,
-  Value<double> sortIndex,
-  Value<int?> completedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> version,
-  Value<int> rowid,
-});
-typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> title,
-  Value<String?> notes,
-  Value<String?> dueDate,
-  Value<String?> dueTime,
-  Value<String?> timezone,
-  Value<int> priority,
-  Value<String?> categoryId,
-  Value<String?> projectId,
-  Value<String?> goalId,
-  Value<String?> recurrenceRule,
-  Value<String?> parentRecurringId,
-  Value<double> sortIndex,
-  Value<int?> completedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> version,
-  Value<int> rowid,
-});
+typedef $$TasksTableCreateCompanionBuilder =
+    TasksCompanion Function({
+      required String id,
+      required String userId,
+      required String title,
+      Value<String?> notes,
+      Value<String?> dueDate,
+      Value<String?> dueTime,
+      Value<String?> timezone,
+      Value<int> priority,
+      Value<String?> categoryId,
+      Value<String?> projectId,
+      Value<String?> goalId,
+      Value<String?> recurrenceRule,
+      Value<String?> parentRecurringId,
+      Value<double> sortIndex,
+      Value<int?> completedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> version,
+      Value<int> rowid,
+    });
+typedef $$TasksTableUpdateCompanionBuilder =
+    TasksCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> title,
+      Value<String?> notes,
+      Value<String?> dueDate,
+      Value<String?> dueTime,
+      Value<String?> timezone,
+      Value<int> priority,
+      Value<String?> categoryId,
+      Value<String?> projectId,
+      Value<String?> goalId,
+      Value<String?> recurrenceRule,
+      Value<String?> parentRecurringId,
+      Value<double> sortIndex,
+      Value<int?> completedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> version,
+      Value<int> rowid,
+    });
 
 class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
   $$TasksTableFilterComposer({
@@ -22831,30 +22835,32 @@ typedef $$TasksTableProcessedTableManager =
       Task,
       PrefetchHooks Function()
     >;
-typedef $$SubtasksTableCreateCompanionBuilder = SubtasksCompanion Function({
-  required String id,
-  required String taskId,
-  required String title,
-  Value<int?> completedAt,
-  Value<double?> sortIndex,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$SubtasksTableUpdateCompanionBuilder = SubtasksCompanion Function({
-  Value<String> id,
-  Value<String> taskId,
-  Value<String> title,
-  Value<int?> completedAt,
-  Value<double?> sortIndex,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$SubtasksTableCreateCompanionBuilder =
+    SubtasksCompanion Function({
+      required String id,
+      required String taskId,
+      required String title,
+      Value<int?> completedAt,
+      Value<double?> sortIndex,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$SubtasksTableUpdateCompanionBuilder =
+    SubtasksCompanion Function({
+      Value<String> id,
+      Value<String> taskId,
+      Value<String> title,
+      Value<int?> completedAt,
+      Value<double?> sortIndex,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$SubtasksTableFilterComposer
     extends Composer<_$AppDatabase, $SubtasksTable> {
@@ -23101,76 +23107,78 @@ typedef $$SubtasksTableProcessedTableManager =
       Subtask,
       PrefetchHooks Function()
     >;
-typedef $$PlansTableCreateCompanionBuilder = PlansCompanion Function({
-  required String id,
-  required String userId,
-  Value<String> kind,
-  required String title,
-  Value<String?> icon,
-  Value<String?> colour,
-  Value<String?> category,
-  Value<String?> mediaType,
-  required String rule,
-  Value<int> generationVersion,
-  required String anchorDate,
-  required String startDate,
-  Value<String?> endDate,
-  Value<int?> endAfterCount,
-  Value<String?> timeOfDay,
-  Value<int?> durationMinutes,
-  Value<String?> target,
-  Value<String?> reminderOffsets,
-  Value<String> missedPolicy,
-  Value<String> scheduleMode,
-  Value<int> graceDays,
-  Value<String?> pauseFrom,
-  Value<String?> pauseUntil,
-  Value<String?> goalId,
-  Value<String?> notes,
-  Value<double?> sortIndex,
-  Value<int?> archivedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> version,
-  Value<int> rowid,
-});
-typedef $$PlansTableUpdateCompanionBuilder = PlansCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> kind,
-  Value<String> title,
-  Value<String?> icon,
-  Value<String?> colour,
-  Value<String?> category,
-  Value<String?> mediaType,
-  Value<String> rule,
-  Value<int> generationVersion,
-  Value<String> anchorDate,
-  Value<String> startDate,
-  Value<String?> endDate,
-  Value<int?> endAfterCount,
-  Value<String?> timeOfDay,
-  Value<int?> durationMinutes,
-  Value<String?> target,
-  Value<String?> reminderOffsets,
-  Value<String> missedPolicy,
-  Value<String> scheduleMode,
-  Value<int> graceDays,
-  Value<String?> pauseFrom,
-  Value<String?> pauseUntil,
-  Value<String?> goalId,
-  Value<String?> notes,
-  Value<double?> sortIndex,
-  Value<int?> archivedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> version,
-  Value<int> rowid,
-});
+typedef $$PlansTableCreateCompanionBuilder =
+    PlansCompanion Function({
+      required String id,
+      required String userId,
+      Value<String> kind,
+      required String title,
+      Value<String?> icon,
+      Value<String?> colour,
+      Value<String?> category,
+      Value<String?> mediaType,
+      required String rule,
+      Value<int> generationVersion,
+      required String anchorDate,
+      required String startDate,
+      Value<String?> endDate,
+      Value<int?> endAfterCount,
+      Value<String?> timeOfDay,
+      Value<int?> durationMinutes,
+      Value<String?> target,
+      Value<String?> reminderOffsets,
+      Value<String> missedPolicy,
+      Value<String> scheduleMode,
+      Value<int> graceDays,
+      Value<String?> pauseFrom,
+      Value<String?> pauseUntil,
+      Value<String?> goalId,
+      Value<String?> notes,
+      Value<double?> sortIndex,
+      Value<int?> archivedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> version,
+      Value<int> rowid,
+    });
+typedef $$PlansTableUpdateCompanionBuilder =
+    PlansCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> kind,
+      Value<String> title,
+      Value<String?> icon,
+      Value<String?> colour,
+      Value<String?> category,
+      Value<String?> mediaType,
+      Value<String> rule,
+      Value<int> generationVersion,
+      Value<String> anchorDate,
+      Value<String> startDate,
+      Value<String?> endDate,
+      Value<int?> endAfterCount,
+      Value<String?> timeOfDay,
+      Value<int?> durationMinutes,
+      Value<String?> target,
+      Value<String?> reminderOffsets,
+      Value<String> missedPolicy,
+      Value<String> scheduleMode,
+      Value<int> graceDays,
+      Value<String?> pauseFrom,
+      Value<String?> pauseUntil,
+      Value<String?> goalId,
+      Value<String?> notes,
+      Value<double?> sortIndex,
+      Value<int?> archivedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> version,
+      Value<int> rowid,
+    });
 
 class $$PlansTableFilterComposer extends Composer<_$AppDatabase, $PlansTable> {
   $$PlansTableFilterComposer({
@@ -24313,46 +24321,48 @@ typedef $$PlanOccurrencesTableProcessedTableManager =
       PlanOccurrence,
       PrefetchHooks Function()
     >;
-typedef $$GoalsTableCreateCompanionBuilder = GoalsCompanion Function({
-  required String id,
-  required String userId,
-  required String title,
-  Value<String?> description,
-  required String type,
-  Value<double?> targetValue,
-  Value<double> currentValue,
-  Value<String?> unit,
-  Value<String?> startDate,
-  Value<String?> endDate,
-  Value<String?> colour,
-  Value<String?> icon,
-  Value<String> status,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$GoalsTableUpdateCompanionBuilder = GoalsCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> title,
-  Value<String?> description,
-  Value<String> type,
-  Value<double?> targetValue,
-  Value<double> currentValue,
-  Value<String?> unit,
-  Value<String?> startDate,
-  Value<String?> endDate,
-  Value<String?> colour,
-  Value<String?> icon,
-  Value<String> status,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$GoalsTableCreateCompanionBuilder =
+    GoalsCompanion Function({
+      required String id,
+      required String userId,
+      required String title,
+      Value<String?> description,
+      required String type,
+      Value<double?> targetValue,
+      Value<double> currentValue,
+      Value<String?> unit,
+      Value<String?> startDate,
+      Value<String?> endDate,
+      Value<String?> colour,
+      Value<String?> icon,
+      Value<String> status,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$GoalsTableUpdateCompanionBuilder =
+    GoalsCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String> type,
+      Value<double?> targetValue,
+      Value<double> currentValue,
+      Value<String?> unit,
+      Value<String?> startDate,
+      Value<String?> endDate,
+      Value<String?> colour,
+      Value<String?> icon,
+      Value<String> status,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
   $$GoalsTableFilterComposer({
@@ -25292,42 +25302,44 @@ typedef $$GoalContributionsTableProcessedTableManager =
       GoalContribution,
       PrefetchHooks Function()
     >;
-typedef $$ProjectsTableCreateCompanionBuilder = ProjectsCompanion Function({
-  required String id,
-  required String userId,
-  required String title,
-  Value<String?> description,
-  Value<String?> colour,
-  Value<String?> icon,
-  Value<String?> deadline,
-  Value<String?> goalId,
-  Value<String> status,
-  Value<double?> sortIndex,
-  Value<int?> completedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$ProjectsTableUpdateCompanionBuilder = ProjectsCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> title,
-  Value<String?> description,
-  Value<String?> colour,
-  Value<String?> icon,
-  Value<String?> deadline,
-  Value<String?> goalId,
-  Value<String> status,
-  Value<double?> sortIndex,
-  Value<int?> completedAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$ProjectsTableCreateCompanionBuilder =
+    ProjectsCompanion Function({
+      required String id,
+      required String userId,
+      required String title,
+      Value<String?> description,
+      Value<String?> colour,
+      Value<String?> icon,
+      Value<String?> deadline,
+      Value<String?> goalId,
+      Value<String> status,
+      Value<double?> sortIndex,
+      Value<int?> completedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$ProjectsTableUpdateCompanionBuilder =
+    ProjectsCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> title,
+      Value<String?> description,
+      Value<String?> colour,
+      Value<String?> icon,
+      Value<String?> deadline,
+      Value<String?> goalId,
+      Value<String> status,
+      Value<double?> sortIndex,
+      Value<int?> completedAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$ProjectsTableFilterComposer
     extends Composer<_$AppDatabase, $ProjectsTable> {
@@ -25678,52 +25690,54 @@ typedef $$ProjectsTableProcessedTableManager =
       Project,
       PrefetchHooks Function()
     >;
-typedef $$EventsTableCreateCompanionBuilder = EventsCompanion Function({
-  required String id,
-  required String userId,
-  required String title,
-  Value<String?> notes,
-  Value<String?> location,
-  Value<int?> startAt,
-  Value<int?> endAt,
-  Value<String?> startDate,
-  Value<String?> endDate,
-  Value<bool> allDay,
-  Value<String?> timezone,
-  Value<String?> colour,
-  Value<String?> recurrenceRule,
-  Value<String> source,
-  Value<String?> externalId,
-  Value<String?> externalCalendarId,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$EventsTableUpdateCompanionBuilder = EventsCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> title,
-  Value<String?> notes,
-  Value<String?> location,
-  Value<int?> startAt,
-  Value<int?> endAt,
-  Value<String?> startDate,
-  Value<String?> endDate,
-  Value<bool> allDay,
-  Value<String?> timezone,
-  Value<String?> colour,
-  Value<String?> recurrenceRule,
-  Value<String> source,
-  Value<String?> externalId,
-  Value<String?> externalCalendarId,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$EventsTableCreateCompanionBuilder =
+    EventsCompanion Function({
+      required String id,
+      required String userId,
+      required String title,
+      Value<String?> notes,
+      Value<String?> location,
+      Value<int?> startAt,
+      Value<int?> endAt,
+      Value<String?> startDate,
+      Value<String?> endDate,
+      Value<bool> allDay,
+      Value<String?> timezone,
+      Value<String?> colour,
+      Value<String?> recurrenceRule,
+      Value<String> source,
+      Value<String?> externalId,
+      Value<String?> externalCalendarId,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$EventsTableUpdateCompanionBuilder =
+    EventsCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> title,
+      Value<String?> notes,
+      Value<String?> location,
+      Value<int?> startAt,
+      Value<int?> endAt,
+      Value<String?> startDate,
+      Value<String?> endDate,
+      Value<bool> allDay,
+      Value<String?> timezone,
+      Value<String?> colour,
+      Value<String?> recurrenceRule,
+      Value<String> source,
+      Value<String?> externalId,
+      Value<String?> externalCalendarId,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$EventsTableFilterComposer
     extends Composer<_$AppDatabase, $EventsTable> {
@@ -26161,36 +26175,38 @@ typedef $$EventsTableProcessedTableManager =
       Event,
       PrefetchHooks Function()
     >;
-typedef $$RemindersTableCreateCompanionBuilder = RemindersCompanion Function({
-  required String id,
-  required String userId,
-  required String entityType,
-  required String entityId,
-  required int fireAt,
-  Value<int?> offsetMinutes,
-  Value<int?> platformId,
-  Value<int?> deliveredAt,
-  Value<int?> cancelledAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$RemindersTableUpdateCompanionBuilder = RemindersCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> entityType,
-  Value<String> entityId,
-  Value<int> fireAt,
-  Value<int?> offsetMinutes,
-  Value<int?> platformId,
-  Value<int?> deliveredAt,
-  Value<int?> cancelledAt,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$RemindersTableCreateCompanionBuilder =
+    RemindersCompanion Function({
+      required String id,
+      required String userId,
+      required String entityType,
+      required String entityId,
+      required int fireAt,
+      Value<int?> offsetMinutes,
+      Value<int?> platformId,
+      Value<int?> deliveredAt,
+      Value<int?> cancelledAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$RemindersTableUpdateCompanionBuilder =
+    RemindersCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> entityType,
+      Value<String> entityId,
+      Value<int> fireAt,
+      Value<int?> offsetMinutes,
+      Value<int?> platformId,
+      Value<int?> deliveredAt,
+      Value<int?> cancelledAt,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$RemindersTableFilterComposer
     extends Composer<_$AppDatabase, $RemindersTable> {
@@ -27934,36 +27950,38 @@ typedef $$CollectionItemsTableProcessedTableManager =
       CollectionItem,
       PrefetchHooks Function()
     >;
-typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
-  required String id,
-  required String userId,
-  Value<String?> title,
-  required String blocks,
-  Value<String?> plainText,
-  Value<String?> folderId,
-  Value<bool> pinned,
-  Value<String?> colour,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String?> title,
-  Value<String> blocks,
-  Value<String?> plainText,
-  Value<String?> folderId,
-  Value<bool> pinned,
-  Value<String?> colour,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$NotesTableCreateCompanionBuilder =
+    NotesCompanion Function({
+      required String id,
+      required String userId,
+      Value<String?> title,
+      required String blocks,
+      Value<String?> plainText,
+      Value<String?> folderId,
+      Value<bool> pinned,
+      Value<String?> colour,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$NotesTableUpdateCompanionBuilder =
+    NotesCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String?> title,
+      Value<String> blocks,
+      Value<String?> plainText,
+      Value<String?> folderId,
+      Value<bool> pinned,
+      Value<String?> colour,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
   $$NotesTableFilterComposer({
@@ -28258,20 +28276,22 @@ typedef $$NotesTableProcessedTableManager =
       Note,
       PrefetchHooks Function()
     >;
-typedef $$NoteLinksTableCreateCompanionBuilder = NoteLinksCompanion Function({
-  required String noteId,
-  required String entityType,
-  required String entityId,
-  Value<int?> createdAt,
-  Value<int> rowid,
-});
-typedef $$NoteLinksTableUpdateCompanionBuilder = NoteLinksCompanion Function({
-  Value<String> noteId,
-  Value<String> entityType,
-  Value<String> entityId,
-  Value<int?> createdAt,
-  Value<int> rowid,
-});
+typedef $$NoteLinksTableCreateCompanionBuilder =
+    NoteLinksCompanion Function({
+      required String noteId,
+      required String entityType,
+      required String entityId,
+      Value<int?> createdAt,
+      Value<int> rowid,
+    });
+typedef $$NoteLinksTableUpdateCompanionBuilder =
+    NoteLinksCompanion Function({
+      Value<String> noteId,
+      Value<String> entityType,
+      Value<String> entityId,
+      Value<int?> createdAt,
+      Value<int> rowid,
+    });
 
 class $$NoteLinksTableFilterComposer
     extends Composer<_$AppDatabase, $NoteLinksTable> {
@@ -28730,32 +28750,34 @@ typedef $$JournalEntriesTableProcessedTableManager =
       JournalEntry,
       PrefetchHooks Function()
     >;
-typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
-  required String id,
-  required String userId,
-  required String domain,
-  required String name,
-  Value<String?> colour,
-  Value<String?> icon,
-  Value<double?> sortIndex,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> domain,
-  Value<String> name,
-  Value<String?> colour,
-  Value<String?> icon,
-  Value<double?> sortIndex,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$CategoriesTableCreateCompanionBuilder =
+    CategoriesCompanion Function({
+      required String id,
+      required String userId,
+      required String domain,
+      required String name,
+      Value<String?> colour,
+      Value<String?> icon,
+      Value<double?> sortIndex,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$CategoriesTableUpdateCompanionBuilder =
+    CategoriesCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> domain,
+      Value<String> name,
+      Value<String?> colour,
+      Value<String?> icon,
+      Value<double?> sortIndex,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$CategoriesTableFilterComposer
     extends Composer<_$AppDatabase, $CategoriesTable> {
@@ -29017,40 +29039,42 @@ typedef $$CategoriesTableProcessedTableManager =
       Category,
       PrefetchHooks Function()
     >;
-typedef $$ExpensesTableCreateCompanionBuilder = ExpensesCompanion Function({
-  required String id,
-  required String userId,
-  required String type,
-  required int amountMinor,
-  required String currency,
-  Value<String?> categoryId,
-  required String date,
-  Value<String?> note,
-  Value<String?> recurrenceRule,
-  Value<String?> attachmentId,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$ExpensesTableUpdateCompanionBuilder = ExpensesCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String> type,
-  Value<int> amountMinor,
-  Value<String> currency,
-  Value<String?> categoryId,
-  Value<String> date,
-  Value<String?> note,
-  Value<String?> recurrenceRule,
-  Value<String?> attachmentId,
-  Value<int?> createdAt,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$ExpensesTableCreateCompanionBuilder =
+    ExpensesCompanion Function({
+      required String id,
+      required String userId,
+      required String type,
+      required int amountMinor,
+      required String currency,
+      Value<String?> categoryId,
+      required String date,
+      Value<String?> note,
+      Value<String?> recurrenceRule,
+      Value<String?> attachmentId,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$ExpensesTableUpdateCompanionBuilder =
+    ExpensesCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> type,
+      Value<int> amountMinor,
+      Value<String> currency,
+      Value<String?> categoryId,
+      Value<String> date,
+      Value<String?> note,
+      Value<String?> recurrenceRule,
+      Value<String?> attachmentId,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$ExpensesTableFilterComposer
     extends Composer<_$AppDatabase, $ExpensesTable> {
@@ -29388,30 +29412,32 @@ typedef $$ExpensesTableProcessedTableManager =
       Expense,
       PrefetchHooks Function()
     >;
-typedef $$BudgetsTableCreateCompanionBuilder = BudgetsCompanion Function({
-  required String id,
-  required String userId,
-  Value<String?> categoryId,
-  required int amountMinor,
-  required String period,
-  Value<String?> startDate,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$BudgetsTableUpdateCompanionBuilder = BudgetsCompanion Function({
-  Value<String> id,
-  Value<String> userId,
-  Value<String?> categoryId,
-  Value<int> amountMinor,
-  Value<String> period,
-  Value<String?> startDate,
-  Value<int?> updatedAt,
-  Value<int?> deletedAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$BudgetsTableCreateCompanionBuilder =
+    BudgetsCompanion Function({
+      required String id,
+      required String userId,
+      Value<String?> categoryId,
+      required int amountMinor,
+      required String period,
+      Value<String?> startDate,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$BudgetsTableUpdateCompanionBuilder =
+    BudgetsCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String?> categoryId,
+      Value<int> amountMinor,
+      Value<String> period,
+      Value<String?> startDate,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$BudgetsTableFilterComposer
     extends Composer<_$AppDatabase, $BudgetsTable> {
@@ -30262,30 +30288,32 @@ typedef $$AiConversationsTableProcessedTableManager =
       AiConversation,
       PrefetchHooks Function()
     >;
-typedef $$AiMessagesTableCreateCompanionBuilder = AiMessagesCompanion Function({
-  required String id,
-  required String conversationId,
-  required String role,
-  Value<String?> content,
-  Value<String?> proposedActions,
-  Value<String?> executedActions,
-  Value<int?> tokenCount,
-  Value<int?> createdAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
-typedef $$AiMessagesTableUpdateCompanionBuilder = AiMessagesCompanion Function({
-  Value<String> id,
-  Value<String> conversationId,
-  Value<String> role,
-  Value<String?> content,
-  Value<String?> proposedActions,
-  Value<String?> executedActions,
-  Value<int?> tokenCount,
-  Value<int?> createdAt,
-  Value<bool> dirty,
-  Value<int> rowid,
-});
+typedef $$AiMessagesTableCreateCompanionBuilder =
+    AiMessagesCompanion Function({
+      required String id,
+      required String conversationId,
+      required String role,
+      Value<String?> content,
+      Value<String?> proposedActions,
+      Value<String?> executedActions,
+      Value<int?> tokenCount,
+      Value<int?> createdAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$AiMessagesTableUpdateCompanionBuilder =
+    AiMessagesCompanion Function({
+      Value<String> id,
+      Value<String> conversationId,
+      Value<String> role,
+      Value<String?> content,
+      Value<String?> proposedActions,
+      Value<String?> executedActions,
+      Value<int?> tokenCount,
+      Value<int?> createdAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
 
 class $$AiMessagesTableFilterComposer
     extends Composer<_$AppDatabase, $AiMessagesTable> {
@@ -31313,26 +31341,28 @@ typedef $$DailyRollupsTableProcessedTableManager =
       DailyRollup,
       PrefetchHooks Function()
     >;
-typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
-  Value<int> seq,
-  required String targetTable,
-  required String rowId,
-  required String op,
-  Value<String?> payload,
-  Value<int?> createdAt,
-  Value<int> attempts,
-  Value<String?> lastError,
-});
-typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
-  Value<int> seq,
-  Value<String> targetTable,
-  Value<String> rowId,
-  Value<String> op,
-  Value<String?> payload,
-  Value<int?> createdAt,
-  Value<int> attempts,
-  Value<String?> lastError,
-});
+typedef $$OutboxTableCreateCompanionBuilder =
+    OutboxCompanion Function({
+      Value<int> seq,
+      required String targetTable,
+      required String rowId,
+      required String op,
+      Value<String?> payload,
+      Value<int?> createdAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+    });
+typedef $$OutboxTableUpdateCompanionBuilder =
+    OutboxCompanion Function({
+      Value<int> seq,
+      Value<String> targetTable,
+      Value<String> rowId,
+      Value<String> op,
+      Value<String?> payload,
+      Value<int?> createdAt,
+      Value<int> attempts,
+      Value<String?> lastError,
+    });
 
 class $$OutboxTableFilterComposer
     extends Composer<_$AppDatabase, $OutboxTable> {
@@ -31558,18 +31588,20 @@ typedef $$OutboxTableProcessedTableManager =
       OutboxData,
       PrefetchHooks Function()
     >;
-typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
-  required String targetTable,
-  Value<int?> lastPulledAt,
-  Value<int?> lastPushedSeq,
-  Value<int> rowid,
-});
-typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
-  Value<String> targetTable,
-  Value<int?> lastPulledAt,
-  Value<int?> lastPushedSeq,
-  Value<int> rowid,
-});
+typedef $$SyncStateTableCreateCompanionBuilder =
+    SyncStateCompanion Function({
+      required String targetTable,
+      Value<int?> lastPulledAt,
+      Value<int?> lastPushedSeq,
+      Value<int> rowid,
+    });
+typedef $$SyncStateTableUpdateCompanionBuilder =
+    SyncStateCompanion Function({
+      Value<String> targetTable,
+      Value<int?> lastPulledAt,
+      Value<int?> lastPushedSeq,
+      Value<int> rowid,
+    });
 
 class $$SyncStateTableFilterComposer
     extends Composer<_$AppDatabase, $SyncStateTable> {

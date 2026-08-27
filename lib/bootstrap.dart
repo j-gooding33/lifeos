@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_os/app.dart';
 import 'package:life_os/core/config/flavor.dart';
 import 'package:life_os/data/remote/supabase_client.dart';
@@ -19,7 +20,7 @@ Future<void> bootstrap(Flavor flavor) async {
 
   if (_sentryDsn.isEmpty) {
     runZonedGuarded(
-      () => runApp(const LifeOsApp()),
+      () => runApp(const ProviderScope(child: LifeOsApp())),
       (error, stack) => debugPrint('Uncaught error: $error\n$stack'),
     );
     return;
@@ -31,6 +32,6 @@ Future<void> bootstrap(Flavor flavor) async {
         ..dsn = _sentryDsn
         ..environment = flavor.name;
     },
-    appRunner: () => runApp(const LifeOsApp()),
+    appRunner: () => runApp(const ProviderScope(child: LifeOsApp())),
   );
 }

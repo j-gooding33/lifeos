@@ -31,7 +31,7 @@ class AppSubtask {
 /// generated `Task` row class (CLAUDE.md: domain models never leak Drift
 /// types into features/).
 class AppTask {
-  const AppTask({
+  AppTask({
     required this.id,
     required this.userId,
     required this.title,
@@ -46,7 +46,8 @@ class AppTask {
     this.sortIndex = 0,
     this.completedAt,
     this.subtasks = const [],
-  });
+    DateTime? createdAt,
+  }) : createdAt = createdAt ?? DateTime.now();
 
   final String id;
   final String userId;
@@ -66,6 +67,11 @@ class AppTask {
   final double sortIndex;
   final DateTime? completedAt;
   final List<AppSubtask> subtasks;
+
+  /// Set once, at construction, and carried through every `copyWith` — a
+  /// re-save must never bump this back to "now" (that's what `updatedAt`
+  /// is for, handled at the repository layer).
+  final DateTime createdAt;
 
   bool get isCompleted => completedAt != null;
   bool get isRepeating => recurrenceRule != null;
@@ -100,6 +106,7 @@ class AppTask {
       sortIndex: sortIndex ?? this.sortIndex,
       completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       subtasks: subtasks,
+      createdAt: createdAt,
     );
   }
 }

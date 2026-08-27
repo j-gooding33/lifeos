@@ -2,6 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
+import 'package:life_os/features/home/presentation/screens/home_screen.dart';
+import 'package:life_os/features/quick_add/presentation/quick_add_sheet.dart';
+import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
+import 'package:life_os/features/tasks/presentation/screens/tasks_screen.dart';
 import 'package:life_os/routing/deep_links.dart';
 import 'package:life_os/routing/not_built_yet_screen.dart';
 import 'package:life_os/routing/routes.dart';
@@ -32,8 +36,7 @@ GoRouter buildRouter() {
             routes: [
               GoRoute(
                 path: Routes.home,
-                builder: (context, state) =>
-                    const NotBuiltYetScreen(featureName: 'Home', showDevGalleryLink: true),
+                builder: (context, state) => const HomeScreen(),
               ),
               _placeholderRoute(Routes.homeDay, 'Day detail'),
               _placeholderRoute(Routes.homeBriefing, 'Briefing'),
@@ -56,9 +59,16 @@ GoRouter buildRouter() {
           ),
           StatefulShellBranch(
             routes: [
-              _placeholderRoute(Routes.tasks, 'Tasks'),
-              _placeholderRoute(Routes.tasksNew, 'New task'),
-              _placeholderRoute(Routes.taskDetail, 'Task detail'),
+              GoRoute(path: Routes.tasks, builder: (context, state) => const TasksScreen()),
+              GoRoute(
+                path: Routes.tasksNew,
+                builder: (context, state) => const TaskDetailScreen(),
+              ),
+              GoRoute(
+                path: Routes.taskDetail,
+                builder: (context, state) =>
+                    TaskDetailScreen(taskId: state.pathParameters['id']),
+              ),
               _placeholderRoute(Routes.projects, 'Projects'),
               _placeholderRoute(Routes.projectDetail, 'Project detail'),
               _placeholderRoute(Routes.projectNewTask, 'New project task'),
@@ -103,7 +113,11 @@ GoRouter buildRouter() {
       _placeholderRoute(Routes.ai, 'AI assistant'),
       _placeholderRoute(Routes.aiConversation, 'AI conversation'),
 
-      _placeholderRoute(Routes.settings, 'Settings'),
+      GoRoute(
+        path: Routes.settings,
+        builder: (context, state) =>
+            const NotBuiltYetScreen(featureName: 'Settings', showDevGalleryLink: true),
+      ),
       _placeholderRoute(Routes.settingsAccount, 'Account'),
       _placeholderRoute(Routes.settingsProfile, 'Profile'),
       _placeholderRoute(Routes.settingsAppearance, 'Appearance'),
@@ -127,7 +141,13 @@ GoRouter buildRouter() {
       GoRoute(path: Routes.deepLinkPlan, redirect: planDeepLinkRedirect),
       _placeholderRoute(Routes.deepLinkOccurrence, 'Occurrence'),
       GoRoute(path: Routes.deepLinkDay, redirect: dayDeepLinkRedirect),
-      _placeholderRoute(Routes.deepLinkQuickAdd, 'Quick Add'),
+      GoRoute(
+        path: Routes.deepLinkQuickAdd,
+        builder: (context, state) => Scaffold(
+          appBar: AppBar(title: const Text('Quick Add')),
+          body: const QuickAddSheet(),
+        ),
+      ),
     ],
   );
 }

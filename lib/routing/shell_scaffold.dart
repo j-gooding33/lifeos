@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
+import 'package:life_os/features/quick_add/presentation/quick_add_sheet.dart';
 
 /// The persistent five-tab bottom bar plus the floating `+` action (§3.1).
 ///
@@ -162,7 +163,7 @@ class _ShellScaffoldState extends State<ShellScaffold> {
         elevation: 6,
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: () => context.push('/quickadd'),
+          onTap: () => QuickAddSheet.show(context),
           child: SizedBox(
             width: 56,
             height: 56,

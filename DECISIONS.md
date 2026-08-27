@@ -4,6 +4,30 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M5 — Tasks, Home v1, Quick Add (2026-08-27)
+
+### Quick Add ships as a type-picker only; the Layer 1 NLP parser is deferred
+**Decision:** built the §6.2 type picker (6 primary tiles + 6 secondary chips) — only "Task" navigates anywhere, every other tile shows an `LToast` reading "$type creation is on the roadmap but hasn't shipped," and the "Ask AI" entry point from the mockup isn't rendered at all. **Not built:** the local Layer 1 natural-language parser and its 120-case test suite that §38's roadmap (item 9) also assigns to M5 — Quick Add does not parse free text into a typed item at all yet, it's tile-selection only.
+**Why:** Events, Plans, Habits, Goals, Notes, etc. don't have creation flows yet (that's M6/M7/later), and several don't even have a "new" route in §3.2's table to send them to — a tile that navigates to a wrong or half-built screen is worse than one that's honest about not existing yet (rule 1). The parser itself is a separate, self-contained pure-Dart engine on the same scale as the recurrence engine (M6-core) — parsing dates, times, types and modifiers out of free text, proven against 120 golden cases — and building it as a rushed add-on inside a session also covering M6 and M7 risked the same shortcut-taking the recurrence engine was deliberately built standalone to avoid. "Ask AI" needs both this parser and an AI proxy that doesn't exist until M16, so it's omitted entirely rather than present-but-dead.
+**How to apply:** dedicate a future session to a `core/nlp/` (or similar) pure-Dart parser with its own 120-case golden suite, gated the same way the recurrence engine was — no UI until every case passes. Once it exists, Quick Add's sheet gains a text-entry mode above the tile grid; as each type's creation flow ships, swap its tile's `_select` branch from the toast to a real `context.push`.
+
+### Home ships with 3 of the 6 spec'd first cards; customise screen and rollover service deferred
+**Decision:** built `focus`, `upcoming`, `recent` — the only 3 of §5.3's 15-card catalogue with a real repository behind them at M5. **Not built:** `plansToday`, `habits`, `goals` (the rest of §38 item 8's "first six cards"), the `DashboardCustomiseScreen` (drag-reorder, visibility toggles, size selector), the `dashboard_cards` table + repository, and the §5.6 midnight-rollover / `AppLifecycleState.resumed` recompute service.
+**Why:** `plansToday` needs `OccurrenceRepository` (M6), `habits` needs the habit data model (M10), `goals` needs goal progress (M13) — none exist yet, so those 3 cards would either render against empty tables that don't exist (fake) or need those milestones' full data layers built early, which is a much bigger scope explosion than Home itself. A drag-reorder customise screen is premature plumbing for 3 fixed cards there's currently no reason to hide or reorder. The rollover service matters most once a session can genuinely span midnight or a suspend/resume cycle with visible state to refresh; with only tasks behind Home, Drift's existing live-query streams already pick up same-day writes immediately, so the gap is real but lower-stakes for now.
+**How to apply:** each of `plansToday`/`habits`/`goals` is added to `HomeSnapshot` and gets its own card widget the moment its owning milestone (M6/M10/M13) ships real data — same pattern as the cross-domain `focus` merge below. Build the customise screen once there are enough real cards (5-6) to make reordering meaningful, backed by a real `dashboard_cards` table at that point, not before. Build the rollover `Timer`-at-midnight + resume listener alongside it or whenever an actual overnight-session bug report justifies it, whichever comes first.
+
+### Home's cross-domain merge is tasks-only for now
+**Decision:** `HomeSnapshot`'s `focusItems` (Today) and `upcomingByDay` counts are built entirely from `TaskRepository` queries. §5.3's actual model — Today merges events, plan occurrences, and tasks into one list — isn't implemented; there's nothing from Plans or Calendar to merge yet.
+**Why:** M6 (Plans/occurrences) and M7 (Calendar/events) don't exist yet, so a "merge" today would just be tasks with extra unused code paths. `home_providers.dart` composes only the task providers now; the merge becomes real (and testable — §5.6's edge cases actually need multiple sources to be meaningful) once M6 and M7 land.
+**How to apply:** when `OccurrenceRepository` and a calendar `EventRepository` exist, extend `homeSnapshotProvider` to fold their "due/occurring today" queries into `focusItems` alongside tasks, sorted per §5.3's ordering rule.
+
+### Drift's stream-cleanup timer needs a forced-flush pattern in every widget test that reaches a database-backed screen
+**Decision:** any `flutter_test` that renders a screen backed by a Drift stream query (`TaskDetailScreen`, `HomeScreen`, and — because `StatefulShellRoute.indexedStack` keeps every branch mounted — any test whose router starts at `/home` even if it navigates elsewhere) must end with `await tester.pumpWidget(const SizedBox()); await tester.pump(Duration.zero);` before the test body returns.
+**Why:** Drift schedules a zero-duration cleanup `Timer` when a stream query's last listener unsubscribes, which only happens once the widget is actually unmounted — normally after the test body returns, too late for an in-body `pump` to catch, which trips `flutter_test`'s "no pending timers" assertion. Discovered on the `/task/:id` deep-link test in M5-core, then hit again on four more `route_resolution_test.dart` cases and both `widget_test.dart` cases once Home stopped being a static placeholder and started as the router's real, database-backed `initialLocation`.
+**How to apply:** add the same two lines to any new widget test whose router setup can reach a live-query screen, including ones that never navigate there directly — Home's `IndexedStack` branch means it's always mounted once the app boots.
+
+---
+
 ## M4 — Local database and auth (2026-08-26)
 
 ### Full 30-table Drift schema now; full Postgres/RLS mirror deferred per-table
