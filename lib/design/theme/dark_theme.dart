@@ -1,30 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:life_os/design/theme/text_theme_builder.dart';
-import 'package:life_os/design/tokens/colors.dart';
-import 'package:life_os/design/tokens/typography.dart';
+import 'package:life_os/design/theme/scheme_theme.dart';
+import 'package:life_os/design/tokens/theme_scheme.dart';
 
-ThemeData buildDarkTheme({LifeAccentName accentName = LifeAccentName.signal}) {
-  final colors = LifeColors.of(Brightness.dark, accentName: accentName);
-  final n = colors.neutrals;
-  final textStyles = LifeTextStyles.standard();
-
-  return ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-    scaffoldBackgroundColor: n.bg,
-    canvasColor: n.bg,
-    dividerColor: n.border,
-    textTheme: buildLifeTextTheme(textStyles, n),
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: colors.accent.base,
-      brightness: Brightness.dark,
-      primary: colors.accent.base,
-      onPrimary: colors.accent.on,
-      surface: n.surface,
-      onSurface: n.ink,
-      error: LifeSemanticColors.danger(Brightness.dark).base,
-      onError: LifeSemanticColors.danger(Brightness.dark).on,
-    ),
-    extensions: [colors, textStyles],
-  );
-}
+/// The golden-test harness's canonical "dark" reference — the After Hours
+/// scheme, which is also the app's shipped default. See `light_theme.dart`.
+ThemeData buildDarkTheme() => buildThemeForScheme(LifeThemeScheme.afterHours);

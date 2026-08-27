@@ -17,6 +17,8 @@ import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.d
 import 'package:life_os/features/plans/presentation/screens/plan_occurrence_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plans_screen.dart';
 import 'package:life_os/features/quick_add/presentation/quick_add_sheet.dart';
+import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/tasks_screen.dart';
 import 'package:life_os/routing/deep_links.dart';
@@ -191,14 +193,14 @@ GoRouter buildRouter() {
 
       GoRoute(
         path: Routes.settings,
-        builder: (context, state) => const NotBuiltYetScreen(
-          featureName: 'Settings',
-          showDevGalleryLink: true,
-        ),
+        builder: (context, state) => const SettingsScreen(),
       ),
       _placeholderRoute(Routes.settingsAccount, 'Account'),
       _placeholderRoute(Routes.settingsProfile, 'Profile'),
-      _placeholderRoute(Routes.settingsAppearance, 'Appearance'),
+      GoRoute(
+        path: Routes.settingsAppearance,
+        builder: (context, state) => const AppearanceScreen(),
+      ),
       _placeholderRoute(Routes.settingsHome, 'Home settings'),
       _placeholderRoute(Routes.settingsNotifications, 'Notifications'),
       _placeholderRoute(Routes.settingsAi, 'AI settings'),

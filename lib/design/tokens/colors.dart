@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:life_os/design/tokens/theme_scheme.dart';
 
-/// The eight user-selectable accents (§2.2). `signal` is the default.
+/// The eight per-plan tag colours (§7.2, `plan_colour.dart`) — independent
+/// of [LifeThemeScheme]. `signal` is the default.
 enum LifeAccentName { signal, pine, ember, bloom, iris, moss, tide, slate }
 
 /// A colour with a base tone and a text colour guaranteed to meet 4.5:1
@@ -59,7 +61,71 @@ class LifeNeutrals {
     ink2: Color(0xFF9FA1AE),
     ink3: Color(0xFF6C6E7C),
   );
+
+  /// Theme schemes: the four [LifeThemeScheme] neutral palettes. `light`/`dark` above
+  /// are the original M2 pair, superseded as the shipped look but left in
+  /// place — `contrast_test.dart` still exercises them as token data.
+  static const ledger = LifeNeutrals(
+    bg: Color(0xFFF4F6FA),
+    surface: Color(0xFFFFFFFF),
+    surfaceAlt: Color(0xFFEDF1F6),
+    surfaceSunken: Color(0xFFE4E9F0),
+    border: Color(0xFFDBE2EC),
+    ink: Color(0xFF10151F),
+    ink2: Color(0xFF56606F),
+    ink3: Color(0xFF8B94A3),
+  );
+
+  static const afterHours = LifeNeutrals(
+    bg: Color(0xFF0D1117),
+    surface: Color(0xFF161B24),
+    surfaceAlt: Color(0xFF1D232E),
+    surfaceSunken: Color(0xFF232A36),
+    border: Color(0xFF262D3A),
+    ink: Color(0xFFF3F5F8),
+    ink2: Color(0xFFA7AFC0),
+    ink3: Color(0xFF626A7C),
+  );
+
+  static const fieldnotes = LifeNeutrals(
+    bg: Color(0xFFECE7DB),
+    surface: Color(0xFFFAF8F2),
+    surfaceAlt: Color(0xFFE2DECF),
+    surfaceSunken: Color(0xFFDAD4C2),
+    border: Color(0xFFDCD5C1),
+    ink: Color(0xFF2B2A22),
+    ink2: Color(0xFF5A5442),
+    ink3: Color(0xFF948C72),
+  );
+
+  static const signal = LifeNeutrals(
+    bg: Color(0xFFFFFFFF),
+    surface: Color(0xFFFFFFFF),
+    surfaceAlt: Color(0xFFF2F2F2),
+    surfaceSunken: Color(0xFFE8E8E8),
+    border: Color(0xFF141414),
+    ink: Color(0xFF0A0A0A),
+    ink2: Color(0xFF54555A),
+    ink3: Color(0xFF9A9A9E),
+  );
+
+  static LifeNeutrals forScheme(LifeThemeScheme scheme) => switch (scheme) {
+    LifeThemeScheme.ledger => ledger,
+    LifeThemeScheme.afterHours => afterHours,
+    LifeThemeScheme.fieldnotes => fieldnotes,
+    LifeThemeScheme.signal => signal,
+  };
 }
+
+/// One signature accent per [LifeThemeScheme] — the primary-button/FAB/
+/// selected-nav colour for that theme (distinct from the eight
+/// [LifeAccentName] plan-tag colours above).
+const _schemeAccents = <LifeThemeScheme, LifeAccentColor>{
+  LifeThemeScheme.ledger: LifeAccentColor(base: Color(0xFF2952E3), on: Color(0xFFFFFFFF)),
+  LifeThemeScheme.afterHours: LifeAccentColor(base: Color(0xFFFF8A5B), on: Color(0xFF1A0D05)),
+  LifeThemeScheme.fieldnotes: LifeAccentColor(base: Color(0xFF546B46), on: Color(0xFFF6F4EA)),
+  LifeThemeScheme.signal: LifeAccentColor(base: Color(0xFF0046FF), on: Color(0xFFFFFFFF)),
+};
 
 /// Dark-mode bases are the light-mode hue lifted ~10% in HSL lightness so
 /// they hold contrast on `#0A0B0F` (§2.2). `on` is whichever of pure
@@ -173,43 +239,35 @@ class LifeSemanticColors {
   static Map<String, LifeAccentColor> all(Brightness b) => b == Brightness.dark ? _dark : _light;
 }
 
-/// The full colour token set for one theme, exposed via [ThemeExtension] so
-/// feature code reads `Theme.of(context).extension<LifeColors>()!` instead
-/// of touching hex values directly (CLAUDE.md rule 5).
+/// The full colour token set for one [LifeThemeScheme], exposed via
+/// [ThemeExtension] so feature code reads
+/// `Theme.of(context).extension<LifeColors>()!` instead of touching hex
+/// values or a scheme directly (CLAUDE.md rule 5).
 @immutable
 class LifeColors extends ThemeExtension<LifeColors> {
-  const LifeColors({
-    required this.brightness,
-    required this.neutrals,
-    required this.accentName,
-    required this.accent,
-  });
+  const LifeColors({required this.scheme, required this.neutrals, required this.accent});
 
-  factory LifeColors.of(Brightness brightness, {LifeAccentName accentName = LifeAccentName.signal}) {
-    return LifeColors(
-      brightness: brightness,
-      neutrals: brightness == Brightness.dark ? LifeNeutrals.dark : LifeNeutrals.light,
-      accentName: accentName,
-      accent: LifeAccents.of(accentName, brightness),
-    );
+  factory LifeColors.forScheme(LifeThemeScheme scheme) {
+    return LifeColors(scheme: scheme, neutrals: LifeNeutrals.forScheme(scheme), accent: _schemeAccents[scheme]!);
   }
 
-  final Brightness brightness;
+  final LifeThemeScheme scheme;
   final LifeNeutrals neutrals;
-  final LifeAccentName accentName;
   final LifeAccentColor accent;
+
+  Brightness get brightness => scheme.brightness;
 
   LifeAccentColor domain(String name) => LifeDomainColors.all(brightness)[name]!;
   LifeAccentColor semantic(String name) => LifeSemanticColors.all(brightness)[name]!;
 
   @override
-  LifeColors copyWith({LifeAccentName? accentName}) {
-    return LifeColors.of(brightness, accentName: accentName ?? this.accentName);
+  LifeColors copyWith({LifeThemeScheme? scheme}) {
+    return LifeColors.forScheme(scheme ?? this.scheme);
   }
 
   @override
   LifeColors lerp(ThemeExtension<LifeColors>? other, double t) {
-    // Neutral/accent tables are discrete per theme, not interpolated.
+    // Neutral/accent tables are discrete per scheme, not interpolated.
     if (other is! LifeColors || t >= 0.5) return other as LifeColors? ?? this;
     return this;
   }

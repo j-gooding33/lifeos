@@ -4,6 +4,47 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## Theme Schemes — four selectable visual identities (2026-08-27)
+
+The project owner asked to move off the original M2 look and, after reviewing four pitched directions in an Artifact, picked **After Hours** (dark, ambient, coral-on-charcoal) as the shipped default, with all four available from Settings → Appearance.
+
+### One `LifeThemeScheme`, not an accent picker layered on light/dark
+**Decision:** replaced the old `LifeColors.of(Brightness, {accentName})` construction with `LifeColors.forScheme(LifeThemeScheme)`. A scheme is a complete bundle — neutrals palette, one signature accent, and a type trio — not three independently-set knobs. There's no separate light/dark `ThemeMode` any more: `LifeThemeScheme.brightness` (After Hours → dark, the other three → light) *is* the brightness: `LifeOsApp` calls `MaterialApp.router(theme: buildThemeForScheme(scheme))` with no `darkTheme`/`themeMode`.
+**Why:** the four pitched directions differ in palette *and* type *and* mood together — Ledger's cool cobalt-on-slate reads nothing like Fieldnotes' warm moss-on-stone even though both are "light." Keeping brightness and scheme as separate axes would let someone combine e.g. Fieldnotes' palette with a forced dark `ThemeMode`, a combination that was never designed and wouldn't look intentional.
+**How to apply:** `LifeAccentName`/`LifeAccents` (the eight per-*plan*-tag colours, `plan_colour.dart`) are untouched and unrelated — a plan's colour tag is independent of which app-wide scheme is active. Don't conflate the two when touching `colors.dart`.
+
+### Radius and shadow stay fixed across all four schemes (scope cut)
+**Decision:** `LifeRadius`/`LifeShadows` were **not** made scheme-aware. Ledger's tight hairline-square-corner pitch and Signal's fully sharp corners aren't implemented — every scheme currently uses the same `LifeRadius`/`LifeShadows.raised()` constants the app always has.
+**Why:** doing this properly means turning `LifeRadius` into a `ThemeExtension` and re-pointing every component that reads the static class (`LButton`, `LCard`, `LChip`, `LTextField`, `LSheet`, …) — real, additional work, and palette + accent + type alone already make the four schemes read as distinct, different products. Not worth blocking the actual ask (a working theme picker) on it.
+**How to apply:** if the flat-corner/hairline distinction is wanted later, convert `LifeRadius` to a `ThemeExtension` parameterized by `LifeThemeScheme`, following the exact pattern `LifeColors`/`LifeTextStyles` already use.
+
+### Fieldnotes' italic-greeting touch was dropped, not built as a global italic style
+**Decision:** the pitched Fieldnotes mockup showed the home greeting in italic Fraunces; the shipped scheme doesn't do this anywhere.
+**Why:** the only clean way to express "italic sometimes, on this one specific piece of text" through the token system would be a scheme-conditional inside a feature widget (`if (scheme == fieldnotes) ...`), which breaks the whole point of the token architecture — feature code should never know which scheme is active. Making display text *always* italic for Fieldnotes was rejected too — italic section headers/titles would misread as emphasis everywhere, not just in a greeting.
+**How to apply:** don't add scheme-conditionals to feature widgets to chase this back. If it matters later, it needs its own token (e.g. a `LifeTextStyles.greeting` role, scheme-provided) rather than a widget-level `if`.
+
+### Eight new font families, fetched from `google/fonts` on GitHub, added as pubspec assets
+**Decision:** Archivo, IBM Plex Sans, Sora, JetBrains Mono, Fraunces, Public Sans, Bebas Neue and Work Sans — one variable-font file each (static-only for Bebas Neue, matching how IBM Plex Mono already ships) — downloaded via `curl` from `raw.githubusercontent.com/google/fonts/main/ofl/<family>/`, the same SIL OFL source the original three (InstrumentSans/Inter/IBMPlexMono) came from. Each family's `OFL.txt` is bundled alongside it in `assets/fonts/`, matching the existing convention.
+**Why:** the pitched directions each depend on a real, distinct type pairing for their identity (Ledger's Archivo, Fieldnotes' Fraunces, Signal's Bebas Neue) — reusing the original three fonts with only colour changed would have undercut exactly what made the four pitches read as different products. Google Fonts' GitHub mirror is the same canonical OFL source `fonts.gstatic.com` serves, just fetchable as raw files instead of needing a browser.
+**How to apply:** `LifeSchemeFonts` (`typography.dart`) is the one place that maps scheme → family names; `LifeTextStyles.forScheme` is the only place that reads it. A fifth scheme needs a new `LifeThemeScheme` value, a `LifeNeutrals` palette, an entry in `_schemeAccents`, and three font families registered the same way.
+
+### A genuinely confusing test-only bug: new fonts render as solid blocks in `flutter test`
+**Decision/finding:** adding a font family to `pubspec.yaml` is **not enough** for it to render in a golden test on this project. `test/flutter_test_config.dart` explicitly `FontLoader`-loads a fixed list of families before any test runs — pubspec registration alone only wires the family into the *real app's* asset bundle, and `flutter_test`'s binding doesn't consult that automatically. The eight new families all had to be added to that explicit list too.
+**Why this was hard to isolate:** the failure mode (every string renders as a solid black rectangle, not tofu/missing-glyph boxes) looked exactly like a corrupt or unsupported font file. Ruled that out by re-pointing a *new* family name at the bytes of an already-working font (`Inter-Variable.ttf`) — it still rendered as blocks under the new name, proving the problem was about the family name never being explicitly loaded, not the file contents. `test/flutter_test_config.dart`'s own comment already named this exact gotcha for the original three fonts; it just hadn't been extended for the new eight.
+**How to apply:** any future new font family needs a `_loadFont(...)` call added to `flutter_test_config.dart`, in addition to the `pubspec.yaml` entry — one is not a substitute for the other.
+
+### Theme choice persists through the existing `Preferences` key/value table, not a new dependency
+**Decision:** `SettingsRepository`-equivalent logic (`settings_providers.dart`) reads/writes a `'themeScheme'` key through the *existing* `PreferencesRepository`/`Preferences` table (§23.3, built in M4, previously unused by any real feature) rather than adding `shared_preferences` or a new Drift table.
+**Why:** `PreferencesRepository`'s own doc comment invites exactly this ("callers define their own typed wrappers on top") — a single string setting doesn't justify a new dependency (CLAUDE.md: every new dependency needs a DECISIONS.md entry) or a schema migration, and it keeps the "every write is local-first" story (CLAUDE.md rule 6) uniform with everything else in the app.
+**How to apply:** any future simple app-wide setting (not per-entity data) should default to a `Preferences` row with its own typed wrapper, the same way, before reaching for a new table or package.
+
+### Settings hub is real navigation to every §22.5 section; only Appearance is built out
+**Decision:** `SettingsScreen` lists all twelve `§22.5` sections with real `context.push(...)` navigation. Only Appearance (the theme picker) has a real destination screen; Account/Profile/Home/Notifications/Calendar/AI/Privacy/Data/Integrations/Subscription/About still resolve to the existing `NotBuiltYetScreen` placeholder.
+**Why:** the same reasoning as the Library hub (M8) — a real, browsable menu with honest "not built yet" leaves (CLAUDE.md rule 1) rather than either hiding unbuilt sections (which would make the settings route table a dead end) or faking them with non-functional content.
+**How to apply:** as each settings section gets built for real, swap its `_placeholderRoute` for a real `GoRoute` in `router.dart` — `SettingsScreen` itself doesn't need to change, since it already routes by the `Routes.settingsX` constant.
+
+---
+
 ## M8 — Media Library, Rankings, Personal Lists & School Timetable (2026-08-27, ongoing)
 
 ### Films UI ships before Collections exists, so the watchlist screen has no Collections segment yet
