@@ -5,6 +5,12 @@ import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/calendar_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/event_detail_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
+import 'package:life_os/features/library/presentation/screens/film_detail_screen.dart';
+import 'package:life_os/features/library/presentation/screens/film_ratings_screen.dart';
+import 'package:life_os/features/library/presentation/screens/film_search_screen.dart';
+import 'package:life_os/features/library/presentation/screens/film_top5_screen.dart';
+import 'package:life_os/features/library/presentation/screens/films_screen.dart';
+import 'package:life_os/features/library/presentation/screens/library_home_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_calendar_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.dart';
@@ -126,10 +132,33 @@ GoRouter buildRouter() {
           ),
           StatefulShellBranch(
             routes: [
-              _placeholderRoute(Routes.library, 'Library'),
-              _placeholderRoute(Routes.libraryFilms, 'Films'),
-              _placeholderRoute(Routes.libraryFilmsSearch, 'Search films'),
-              _placeholderRoute(Routes.libraryFilmDetail, 'Film detail'),
+              GoRoute(
+                path: Routes.library,
+                builder: (context, state) => const LibraryHomeScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryFilms,
+                builder: (context, state) => const FilmsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryFilmsSearch,
+                builder: (context, state) => const FilmSearchScreen(),
+              ),
+              // Static-path siblings of `libraryFilmDetail` (`/library/films/:id`)
+              // must be declared before it — go_router matches sibling routes in
+              // declaration order, and `:id` would otherwise swallow them.
+              GoRoute(
+                path: Routes.libraryFilmRatings,
+                builder: (context, state) => const FilmRatingsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryFilmTop5,
+                builder: (context, state) => const FilmTop5Screen(),
+              ),
+              GoRoute(
+                path: Routes.libraryFilmDetail,
+                builder: (context, state) => FilmDetailScreen(filmId: state.pathParameters['id']!),
+              ),
               _placeholderRoute(Routes.libraryTv, 'TV'),
               _placeholderRoute(Routes.libraryTvDetail, 'TV detail'),
               _placeholderRoute(Routes.libraryBooks, 'Books'),

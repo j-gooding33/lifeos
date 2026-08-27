@@ -6,6 +6,11 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ## M8 — Media Library, Rankings, Personal Lists & School Timetable (2026-08-27, ongoing)
 
+### Films UI ships before Collections exists, so the watchlist screen has no Collections segment yet
+**Decision:** `FilmsScreen` (Watchlist/Watched/Favourites) omits the "Collections" segment the brief's Part 3 sketches, and the long-press/detail actions don't offer "add to collection" yet.
+**Why:** Part 28's `MediaCollection` (reusing `collections`/`collection_items` per the Top-N-lists decision above) hasn't been built yet in this milestone's sequence — a Collections tab with nothing behind it would be a fake affordance, which CLAUDE.md rule 1 rules out.
+**How to apply:** when Part 28 ships, add the Collections segment to `FilmsScreen` (and its TV/Books equivalents) rather than building a separate collections browser; the grid/tile/menu machinery already built here is meant to be reused, not duplicated.
+
 ### M8 is a custom milestone brief, not `LIFE_OS_SPEC.md`'s own M8
 **Decision:** the project owner supplied a large, self-contained M8 spec (Media Library covering Films/TV/Books with ratings, Top-N lists and Plan-based scheduling, plus an entirely new School Timetable system) that reorganises and significantly expands `LIFE_OS_SPEC.md`'s own M8 (Goals) through M13 (Books/Notes) and pulls pieces of M16 (AI) forward. Treating the pasted brief as this milestone's actual spec, the same way `LIFE_OS_SPEC.md` itself is treated elsewhere — cross-referenced against the existing spec's relevant sections (§15, §16, §19) rather than ignored, since much of the existing architecture (see below) was already designed for exactly this.
 **How to apply:** `LIFE_OS_SPEC.md`'s own M8 (Goals)/M9 (Projects)/M10 (Habits) are deferred until after this M8 — Goals/Projects still show `NotBuiltYetScreen`, unchanged.
