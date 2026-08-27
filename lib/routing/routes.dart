@@ -63,6 +63,14 @@ class Routes {
   static const libraryBookTop3 = '/library/books/top3';
   static const libraryAllRatings = '/library/ratings';
 
+  // School (M8 Parts 30-34) — not a bottom-nav tab (no room in the
+  // existing 4-tab bar without redesigning it again); reached from Home's
+  // app bar instead, like Settings.
+  static const schoolDashboard = '/school';
+  static const schoolSetup = '/school/setup';
+  static const schoolTimetable = '/school/timetable';
+  static const schoolTerms = '/school/terms';
+
   static const stats = '/stats';
   static const statsYear = '/stats/year';
   static const statsDomain = '/stats/:domain';

@@ -4,6 +4,25 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M8.30-M8.34 — School Timetable (2026-08-27)
+
+Manual timetable entry, term dates/closures, and a today-view dashboard, built on the pure-Dart `school_week_engine.dart` (Week A/B parity, term/closure open-day logic) written in an earlier session.
+
+### School has no bottom-nav tab; it's reached from a Home app-bar icon
+**Decision:** `Routes.schoolDashboard` and its three sub-routes (`schoolSetup`, `schoolTimetable`, `schoolTerms`) are top-level `GoRoute`s outside the `StatefulShellRoute` tab shell, not a fifth tab. `HomeScreen`'s app bar gained a school-icon `IconButton` next to Settings as the entry point.
+**Why:** the bottom nav was just finalised at four slots (Home/Plans/Tasks/Library) during the earlier FAB-overlap fix batch — adding a fifth so soon after would re-open a layout decision that batch deliberately closed. School is also not a daily-use-for-everyone feature the way Tasks or Home is, so an app-bar icon is proportionate.
+**How to apply:** if a future feature wants nav-bar-level prominence, treat that as its own layout decision, not a default for every new feature area — most should follow School's pattern of a top-level route reached from an icon or a link.
+
+### School lessons are not merged into the shared `CalendarScreen`/`calendar_providers.dart` yet
+**Decision:** School's "what's happening today" surface is its own `SchoolDashboardScreen`, not an addition to the existing shared calendar merge that Tasks/Plans/Library due dates already feed into.
+**Why:** `calendar_providers.dart` is a shared component several features already depend on; folding in a new, under-tested source the same session it was built risks a regression in a surface nothing here directly tests. A dedicated dashboard gets School shipped without that risk.
+**How to apply:** a future pass can add School lessons/events as another source feeding the shared calendar merge — the `SchoolRepository.lessonsFor`/`isOpenOn` composition methods already return plain domain data, not UI, so they're ready to be a calendar data source without changes.
+
+### Repository composition methods wrap the pure engine; they don't reimplement it
+**Decision:** `SchoolRepository.lessonsFor`/`isOpenOn`/`weekLabelOn` do nothing but convert domain rows to the engine's plain types (`SchoolLessonSlot`, `DateRange`) and call `lessonsOnDate`/`isSchoolOpen`/`weekLabelFor` from `school_week_engine.dart`.
+**Why:** keeps the actual date-parity and open/closed logic in one pure, directly-unit-testable place (already covered by the engine's own tests from the session that wrote it) rather than duplicated or subtly diverged in the repository layer.
+**How to apply:** any new School query that needs date logic should add a pure function to the engine file first, then a thin repository wrapper — not inline date maths in the repository or a screen.
+
 ## M8.7-M8.11 — TV Shows (2026-08-27)
 
 Same vertical slice as Films (search → library → detail → ratings → Top 5), plus per-episode tracking, which films don't need.

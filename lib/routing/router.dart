@@ -31,6 +31,10 @@ import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.d
 import 'package:life_os/features/plans/presentation/screens/plan_occurrence_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plans_screen.dart';
 import 'package:life_os/features/quick_add/presentation/quick_add_sheet.dart';
+import 'package:life_os/features/school/presentation/screens/school_dashboard_screen.dart';
+import 'package:life_os/features/school/presentation/screens/school_setup_screen.dart';
+import 'package:life_os/features/school/presentation/screens/school_terms_screen.dart';
+import 'package:life_os/features/school/presentation/screens/school_timetable_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
@@ -256,6 +260,23 @@ GoRouter buildRouter() {
             ],
           ),
         ],
+      ),
+
+      GoRoute(
+        path: Routes.schoolDashboard,
+        builder: (context, state) => const SchoolDashboardScreen(),
+      ),
+      GoRoute(
+        path: Routes.schoolSetup,
+        builder: (context, state) => const SchoolSetupScreen(),
+      ),
+      GoRoute(
+        path: Routes.schoolTimetable,
+        builder: (context, state) => const SchoolTimetableScreen(),
+      ),
+      GoRoute(
+        path: Routes.schoolTerms,
+        builder: (context, state) => const SchoolTermsScreen(),
       ),
 
       _placeholderRoute(Routes.search, 'Search'),
