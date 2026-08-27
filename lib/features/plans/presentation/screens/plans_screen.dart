@@ -78,11 +78,6 @@ class _PlansScreenState extends ConsumerState<PlansScreen> {
           Expanded(child: _buildSegment()),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.plansNew),
-        tooltip: 'New plan',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 

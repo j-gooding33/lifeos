@@ -42,12 +42,16 @@ class QuickAddSheet extends StatelessWidget {
   }
 
   void _select(BuildContext context, String type) {
-    if (type == 'Task') {
-      Navigator.of(context).maybePop();
-      context.push(Routes.tasksNew);
-      return;
+    switch (type) {
+      case 'Task':
+        Navigator.of(context).maybePop();
+        context.push(Routes.tasksNew);
+      case 'Plan':
+        Navigator.of(context).maybePop();
+        context.push(Routes.plansNew);
+      default:
+        LToast.show(context, "$type creation is on the roadmap but hasn't shipped.");
     }
-    LToast.show(context, "$type creation is on the roadmap but hasn't shipped.");
   }
 
   @override

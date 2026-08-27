@@ -57,11 +57,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           Expanded(child: _buildSegment()),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.tasksNew),
-        tooltip: 'Add task',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
