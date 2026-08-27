@@ -1250,6 +1250,140 @@ final class CollectionIdsContainingFamily extends $Family
   String toString() => r'collectionIdsContainingProvider';
 }
 
+/// §16.4/§16.5's "Schedule this". `library/` needs `PlanRepository` for it,
+/// but never `lib/features/plans/`'s own provider — that would be a
+/// features-to-features import (rule 4). This wraps the same
+/// `PlanDao`/database `plans/` own provider does, so a write through
+/// either instance is visible to both.
+
+@ProviderFor(libraryPlanRepository)
+const libraryPlanRepositoryProvider = LibraryPlanRepositoryProvider._();
+
+/// §16.4/§16.5's "Schedule this". `library/` needs `PlanRepository` for it,
+/// but never `lib/features/plans/`'s own provider — that would be a
+/// features-to-features import (rule 4). This wraps the same
+/// `PlanDao`/database `plans/` own provider does, so a write through
+/// either instance is visible to both.
+
+final class LibraryPlanRepositoryProvider
+    extends $FunctionalProvider<PlanRepository, PlanRepository, PlanRepository>
+    with $Provider<PlanRepository> {
+  /// §16.4/§16.5's "Schedule this". `library/` needs `PlanRepository` for it,
+  /// but never `lib/features/plans/`'s own provider — that would be a
+  /// features-to-features import (rule 4). This wraps the same
+  /// `PlanDao`/database `plans/` own provider does, so a write through
+  /// either instance is visible to both.
+  const LibraryPlanRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'libraryPlanRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$libraryPlanRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<PlanRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  PlanRepository create(Ref ref) {
+    return libraryPlanRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PlanRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PlanRepository>(value),
+    );
+  }
+}
+
+String _$libraryPlanRepositoryHash() =>
+    r'5fa802b108b53d9211378cbf9f3c3e4659a8cd9d';
+
+@ProviderFor(plansForMediaType)
+const plansForMediaTypeProvider = PlansForMediaTypeFamily._();
+
+final class PlansForMediaTypeProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppPlan>>,
+          List<AppPlan>,
+          Stream<List<AppPlan>>
+        >
+    with $FutureModifier<List<AppPlan>>, $StreamProvider<List<AppPlan>> {
+  const PlansForMediaTypeProvider._({
+    required PlansForMediaTypeFamily super.from,
+    required MediaType super.argument,
+  }) : super(
+         retry: null,
+         name: r'plansForMediaTypeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$plansForMediaTypeHash();
+
+  @override
+  String toString() {
+    return r'plansForMediaTypeProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppPlan>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppPlan>> create(Ref ref) {
+    final argument = this.argument as MediaType;
+    return plansForMediaType(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PlansForMediaTypeProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$plansForMediaTypeHash() => r'18b2262d3b4f9d61ef8443f31f5e17e4f66413d2';
+
+final class PlansForMediaTypeFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<AppPlan>>, MediaType> {
+  const PlansForMediaTypeFamily._()
+    : super(
+        retry: null,
+        name: r'plansForMediaTypeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  PlansForMediaTypeProvider call(MediaType type) =>
+      PlansForMediaTypeProvider._(argument: type, from: this);
+
+  @override
+  String toString() => r'plansForMediaTypeProvider';
+}
+
 /// TMDB's search results don't include season count — only `detail()` does
 /// — so the TV show detail screen needs one extra round trip the first
 /// time it's opened to know how many season rows to offer.

@@ -10,6 +10,7 @@ import 'package:life_os/core/utils/result.dart';
 import 'package:life_os/data/local/daos/activity_log_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/database.dart' as db;
+import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:uuid/uuid.dart';
 
@@ -24,6 +25,7 @@ class PlanRepository {
     this._activityLog, {
     Materialiser? materialiser,
     MissedSweep? missedSweep,
+    this.libraryItemRepository,
   }) : _materialiser = materialiser ?? const Materialiser(),
        _missedSweep = missedSweep ?? const MissedSweep();
 
@@ -31,6 +33,12 @@ class PlanRepository {
   final ActivityLogDao _activityLog;
   final Materialiser _materialiser;
   final MissedSweep _missedSweep;
+
+  /// §16.5. Optional: only the app's real singleton needs this (to mark a
+  /// linked film/show/book watched on completion) — a `null` instance
+  /// simply skips that sync, which every existing caller that doesn't pass
+  /// one relies on.
+  final LibraryItemRepository? libraryItemRepository;
 
   CivilDate get _today => CivilDate.fromDateTime(DateTime.now());
 
@@ -271,6 +279,15 @@ class PlanRepository {
         status: 'completed',
         completedAt: now.millisecondsSinceEpoch,
       );
+      // §16.5: completing a linked occurrence marks the film/show/book
+      // watched, stamped with the occurrence's own date (not "now") —
+      // marking a Sunday's film watched on Tuesday should still log Sunday.
+      if (occurrence.linkedEntityType == 'libraryItem' && occurrence.linkedEntityId != null) {
+        await libraryItemRepository?.markWatched(
+          occurrence.linkedEntityId!,
+          watchedDate: _toDateTime(occurrence.scheduledDate),
+        );
+      }
       if (plan.scheduleMode == ScheduleMode.rolling) {
         final reanchored = plan.copyWith(
           rule: reanchorRule(plan.rule, CivilDate.fromDateTime(now)),
@@ -382,6 +399,32 @@ class PlanRepository {
       return const Ok(null);
     } on Object catch (e) {
       return Err(DatabaseFailure('setOccurrenceNote failed: $e'));
+    }
+  }
+
+  /// §16.5 "choose a film/show/book". Linking never touches the item's own
+  /// status — only completing a linked occurrence does that.
+  Future<Result<void, Failure>> linkOccurrenceToLibraryItem(
+    String occurrenceId,
+    String libraryItemId,
+  ) async {
+    try {
+      await _dao.setLinkedEntity(occurrenceId, entityType: 'libraryItem', entityId: libraryItemId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('linkOccurrenceToLibraryItem failed: $e'));
+    }
+  }
+
+  /// §16.5: "unlinking a film from an occurrence never changes the film's
+  /// status" — true here for free, since this only ever touches the
+  /// occurrence row.
+  Future<Result<void, Failure>> unlinkOccurrence(String occurrenceId) async {
+    try {
+      await _dao.setLinkedEntity(occurrenceId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('unlinkOccurrence failed: $e'));
     }
   }
 
@@ -658,6 +701,8 @@ class PlanRepository {
     final total = done + missed;
     return total == 0 ? null : done / total;
   }
+
+  DateTime _toDateTime(CivilDate date) => DateTime(date.year, date.month, date.day);
 
   List<AppPlan> _toDomainList(List<db.Plan> rows) =>
       rows.map(_toDomain).toList();

@@ -39,9 +39,9 @@ String _formatDate(CivilDate date) =>
     '${_weekdayNames[date.isoWeekday - 1]} ${date.day} ${_monthNames[date.month - 1]}';
 
 /// §7.5. Stats strip, 12-week heatmap, and an Upcoming/History list split
-/// at today. The `mediaType != none` content slot ("+ choose a film") is
-/// deferred — there's no Library to pick from until M11/M12 — so occurrence
-/// rows never offer it, per rule 1 (no dead affordances).
+/// at today. The `mediaType != none` content slot shows a linked item's
+/// title inline (`_LinkedMediaLabel`); actually choosing/unlinking one
+/// happens in `OccurrenceSheet`, opened by tapping the row.
 class PlanDetailScreen extends ConsumerStatefulWidget {
   const PlanDetailScreen({required this.planId, super.key});
 
@@ -270,6 +270,10 @@ class _UpcomingSection extends ConsumerWidget {
                                 color: colors.neutrals.ink3,
                               ),
                             ],
+                            if (plan.mediaType != null) ...[
+                              const SizedBox(width: LifeSpace.s8),
+                              Expanded(child: _LinkedMediaLabel(occurrence: occurrence)),
+                            ],
                           ],
                         ),
                       ),
@@ -280,6 +284,37 @@ class _UpcomingSection extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// §16.5's "🎬 Interstellar" / "＋ choose a film" row content — an at-a-glance
+/// summary only; actually choosing or unlinking happens in `OccurrenceSheet`.
+class _LinkedMediaLabel extends ConsumerWidget {
+  const _LinkedMediaLabel({required this.occurrence});
+
+  final AppOccurrence occurrence;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final linkedId = occurrence.linkedEntityId;
+    if (linkedId == null || occurrence.linkedEntityType != 'libraryItem') {
+      return Text(
+        '+ choose',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: context.textStyles.caption.copyWith(color: colors.neutrals.ink3),
+      );
+    }
+    final asyncItem = ref.watch(linkedLibraryItemProvider(linkedId));
+    final title = asyncItem.value?.title;
+    if (title == null) return const SizedBox.shrink();
+    return Text(
+      title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: context.textStyles.caption.copyWith(color: colors.neutrals.ink2),
     );
   }
 }

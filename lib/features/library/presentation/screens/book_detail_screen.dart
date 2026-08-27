@@ -16,6 +16,7 @@ import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/library/application/library_providers.dart';
 import 'package:life_os/features/library/presentation/media_poster.dart';
 import 'package:life_os/features/library/presentation/widgets/mark_watched_sheet.dart';
+import 'package:life_os/features/library/presentation/widgets/schedule_this_sheet.dart';
 
 /// Book detail — `film_detail_screen.dart`'s shape with "author" instead
 /// of "director" and "Finished"/"Mark Finished" instead of "Watched".
@@ -171,6 +172,13 @@ class _BookDetailBody extends ConsumerWidget {
                 ),
               ],
             ),
+          const SizedBox(height: LifeSpace.s12),
+          LButton(
+            label: 'Schedule this',
+            variant: LButtonVariant.tonal,
+            icon: Icons.event_repeat_outlined,
+            onPressed: () => ScheduleThisSheet.show(context, item),
+          ),
           const SizedBox(height: LifeSpace.s24),
           LButton(
             label: 'Add to Top list',

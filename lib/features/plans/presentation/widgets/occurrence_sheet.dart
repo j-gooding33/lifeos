@@ -4,15 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/data/media/media_types.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
+import 'package:life_os/data/repositories/plan_repository.dart';
 import 'package:life_os/design/components/l_button.dart';
 import 'package:life_os/design/components/l_confirm_dialog.dart';
 import 'package:life_os/design/components/l_sheet.dart';
+import 'package:life_os/design/components/l_star_rating.dart';
 import 'package:life_os/design/components/l_text_field.dart';
 import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/plans/application/plan_providers.dart';
+import 'package:life_os/features/plans/presentation/widgets/link_media_sheet.dart';
 import 'package:life_os/routing/routes.dart';
 
 const _weekdayNames = [
@@ -45,9 +49,8 @@ String _formatFullDate(CivilDate date) =>
 /// §8.3. "The critical rule of this screen is that changing one occurrence
 /// must not change the plan" — every action here edits `occurrence` alone;
 /// only "Edit the whole plan" (visually separated, `ink2`) touches the
-/// rule. The `mediaType != none` "Choose a film" row from the mockup is
-/// omitted — there's no Library to choose from until M11/M12 (see
-/// DECISIONS.md).
+/// rule. §16.5's "choose a film" row is `_MediaLinkSection`, shown only
+/// when `plan.mediaType` is set.
 class OccurrenceSheet extends ConsumerWidget {
   const OccurrenceSheet({
     required this.occurrence,
@@ -104,7 +107,7 @@ class OccurrenceSheet extends ConsumerWidget {
                   label: occurrence.isCompleted ? 'Completed' : 'Complete',
                   onPressed: occurrence.isCompleted
                       ? () => repository.uncompleteOccurrence(occurrence)
-                      : () => repository.completeOccurrence(occurrence, plan),
+                      : () => _complete(context, ref, repository),
                 ),
               ),
               const SizedBox(width: LifeSpace.s12),
@@ -117,6 +120,10 @@ class OccurrenceSheet extends ConsumerWidget {
               ),
             ],
           ),
+          if (plan.mediaType != null) ...[
+            const Divider(),
+            _MediaLinkSection(occurrence: occurrence, plan: plan),
+          ],
           const SizedBox(height: LifeSpace.s20),
           Row(
             children: [
@@ -183,6 +190,38 @@ class OccurrenceSheet extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _complete(BuildContext context, WidgetRef ref, PlanRepository repository) async {
+    final result = await repository.completeOccurrence(occurrence, plan);
+    if (!context.mounted) return;
+    if (result.isOk && occurrence.linkedEntityType == 'libraryItem' && occurrence.linkedEntityId != null) {
+      await _promptRatingIfNeeded(context, ref, occurrence.linkedEntityId!);
+    }
+  }
+
+  /// §16.5: "opens an optional rating prompt" — skippable, and never shown
+  /// again once the item already has a rating.
+  Future<void> _promptRatingIfNeeded(BuildContext context, WidgetRef ref, String libraryItemId) async {
+    final item = await ref.read(planMediaRepositoryProvider).watchById(libraryItemId).first;
+    if (item == null || item.isRated || !context.mounted) return;
+    var rating = 0.0;
+    final saved = await showDialog<double>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          title: Text('Rate ${item.title}?'),
+          content: LStarRating(rating: rating, onChanged: (value) => setState(() => rating = value)),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Skip')),
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(rating), child: const Text('Save')),
+          ],
+        ),
+      ),
+    );
+    if (saved != null && saved > 0) {
+      await ref.read(planMediaRepositoryProvider).setRating(libraryItemId, saved);
+    }
   }
 
   Future<void> _move(BuildContext context, WidgetRef ref, CivilDate to) async {
@@ -299,5 +338,76 @@ class OccurrenceSheet extends ConsumerWidget {
         err: (_) {},
       );
     }
+  }
+}
+
+MediaType? _parseMediaType(String? raw) {
+  for (final type in MediaType.values) {
+    if (type.name == raw) return type;
+  }
+  return null;
+}
+
+String _mediaNoun(MediaType type) => switch (type) {
+  MediaType.film => 'film',
+  MediaType.tv => 'show',
+  MediaType.book => 'book',
+};
+
+class _MediaLinkSection extends ConsumerWidget {
+  const _MediaLinkSection({required this.occurrence, required this.plan});
+
+  final AppOccurrence occurrence;
+  final AppPlan plan;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final type = _parseMediaType(plan.mediaType);
+    if (type == null) return const SizedBox.shrink();
+    final colors = context.colors;
+    final linkedId = occurrence.linkedEntityId;
+
+    if (linkedId == null || occurrence.linkedEntityType != 'libraryItem') {
+      return InkWell(
+        onTap: () => LinkMediaSheet.show(
+          context,
+          mediaType: type,
+          onPicked: (item) => ref.read(planRepositoryProvider).linkOccurrenceToLibraryItem(occurrence.id, item.id),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: LifeSpace.s12),
+          child: Row(
+            children: [
+              Icon(Icons.add, size: 18, color: colors.accent.base),
+              const SizedBox(width: LifeSpace.s8),
+              Text('Choose a ${_mediaNoun(type)}', style: context.textStyles.body.copyWith(color: colors.accent.base)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final asyncItem = ref.watch(linkedLibraryItemProvider(linkedId));
+    return asyncItem.when(
+      loading: () => const SizedBox.shrink(),
+      error: (error, stack) => const SizedBox.shrink(),
+      data: (item) {
+        if (item == null) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: LifeSpace.s12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(item.title, style: context.textStyles.body.copyWith(color: colors.neutrals.ink)),
+              ),
+              TextButton(
+                onPressed: () => ref.read(planRepositoryProvider).unlinkOccurrence(occurrence.id),
+                child: const Text('Unlink'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

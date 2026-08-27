@@ -226,6 +226,20 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
     );
   }
 
+  /// §16.5's "choose a film"/"unlink" — pass both null to unlink.
+  Future<void> setLinkedEntity(
+    String id, {
+    String? entityType,
+    String? entityId,
+  }) {
+    return (update(planOccurrences)..where((o) => o.id.equals(id))).write(
+      PlanOccurrencesCompanion(
+        linkedEntityType: Value(entityType),
+        linkedEntityId: Value(entityId),
+      ),
+    );
+  }
+
   /// §8.4 step 1: the move itself — sets `originalDate`, the new
   /// `scheduledDate`, `isException = true`, and `status = pending`.
   Future<void> moveOccurrence(

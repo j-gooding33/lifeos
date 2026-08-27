@@ -4,6 +4,37 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §16.5 — Plan-based scheduling, the flagship flow (2026-08-27)
+
+The M8 brief's own umbrella title names "Plan-based scheduling" as a pillar alongside ratings and Top-N lists, but building it was deferred until the Library it depends on existed — `occurrence_sheet.dart` and `plan_detail_screen.dart` both carried stale comments saying so ("there's no Library to choose from until M11/M12"). Library shipped earlier in this same M8 pass, so this closes that gap: linking a Plan occurrence to a film/show/book, completing a linked occurrence marks it watched, and "Schedule this" from the item's own detail screen.
+
+### The link lives on `plan_occurrences`' existing `linkedEntityType`/`linkedEntityId`, unused until now
+**Decision:** `PlanDao.setLinkedEntity`/`PlanRepository.linkOccurrenceToLibraryItem`/`unlinkOccurrence` write `entityType = 'libraryItem'`, `entityId = library_items.id` into columns the schema has carried since M4.
+**Why:** exactly the generic polymorphic reference these columns were designed for — no migration needed, and the same columns are ready for a future entity type (e.g. a Note) without another schema change.
+
+### `PlanRepository` takes an optional `LibraryItemRepository`, per rule 4
+**Decision:** `PlanRepository`'s constructor gained an optional `libraryItemRepository` param (default `null`, so every existing caller and test is unaffected). `completeOccurrence` calls `libraryItemRepository?.markWatched(...)` when the occurrence is linked, stamped with the *occurrence's* scheduled date, not "now" — completing a Sunday's film on Tuesday should still log Sunday.
+**Why:** CLAUDE.md rule 4 ("cross-feature work goes through `lib/data/repositories/`") means this composition belongs at the data layer, not a cross-feature provider. There's no `lib/core/events/` bus built yet (rule 4's other sanctioned path), so direct repository injection is the only available mechanism, same layer `ActivityLogDao` is already injected at.
+**How to apply:** the `null`-default means the app's own `planRepositoryProvider` singleton is the only place that needs to actually wire a real `LibraryItemRepository` in; anything constructing `PlanRepository` for an unrelated purpose (tests, `onboarding_providers.dart`'s plan-creation-only instance) can keep omitting it.
+
+### `plans/` and `library/` each construct their own `LibraryItemRepository`/`PlanRepository` instance — never each other's provider
+**Decision:** `plan_providers.dart` adds `planMediaRepositoryProvider` (wrapping `LibraryItemDao` directly) instead of importing `library_providers.dart`'s `libraryItemRepositoryProvider`; symmetrically, `library_providers.dart` adds `libraryPlanRepositoryProvider` (wrapping `PlanDao` directly) for "Schedule this," instead of importing `plan_providers.dart`.
+**Why:** rule 4 forbids `lib/features/plans/` importing `lib/features/library/` (or vice versa) — even just for a provider. `onboarding_providers.dart` already established this exact workaround (constructing its own `LibraryItemRepository(LibraryItemDao(database))` rather than importing `library/`'s provider) before this decision; this just applies the same pattern in both directions. Multiple instances are safe because Drift's `watch()` streams are backed by the database's own change notifications, not by the repository object's state — a write through either instance is visible to both.
+
+### The optional rating prompt reimplements a tiny dialog with `LStarRating` rather than importing `library/`'s `RateDialog`
+**Decision:** `OccurrenceSheet._promptRatingIfNeeded` is a self-contained `AlertDialog` + `LStarRating` + `planMediaRepositoryProvider.setRating`, not a call to `lib/features/library/presentation/widgets/rate_dialog.dart`.
+**Why:** same rule-4 boundary as above — `RateDialog` lives in `library/`'s presentation layer, off-limits to `plans/`. `LStarRating` is a design-system component (`lib/design/`), fair game anywhere, so reusing it here costs a dozen lines instead of a cross-feature import.
+
+### "Schedule this" links to the next free upcoming occurrence automatically; it doesn't open a date/slot picker
+**Decision:** picking a plan in `ScheduleThisSheet` finds that plan's earliest upcoming occurrence with no existing link and connects it immediately — there's no UI to pick *which* occurrence.
+**Why:** §16.5's own mockup shows the primary picking motion happening from the *plan* side (`OccurrenceSheet`'s "choose a film" on a specific date), which this build fully supports. "Schedule this" from the item's side is the secondary entry point the spec also names (§16.4) — auto-picking the next free slot keeps it a one-tap action; a user who wants a specific date can already get one via the plan's own calendar/occurrence list.
+**How to apply:** if a future pass wants "Schedule this" to also offer a specific date, that's an additive UI change to `ScheduleThisSheet`, not a new backend capability — `linkOccurrenceToLibraryItem` already takes any occurrence id.
+
+### "Fill from watchlist" (bulk-assign) and the goal-contribution on completion are both deferred
+**Decision:** built the single-item linking primitive (choose one film for one occurrence) and its two entry points, not §16.5's "Fill from watchlist assigns the next N unwatched items" bulk action, and not "emits a goal contribution if a films goal exists."
+**Why:** "Fill from watchlist" is additive sugar over the same `linkOccurrenceToLibraryItem` primitive already built — safe to add later without touching what's here. The goal contribution can't be built at all yet: Goals is still `NotBuiltYetScreen` (see the earlier M8 umbrella decision) — there is no goal record to contribute to, and inventing one would be exactly the fake affordance rule 1 forbids.
+**How to apply:** when Goals is real, `completeOccurrence`'s existing linked-item branch is the natural place to add a goal-contribution call, gated on `plan.goalId != null`.
+
 ## M8 Parts 35-40 — Settings → AI permission scopes (2026-08-27)
 
 The buildable slice of AI (§19) identified in the earlier "AI: shell only, no live model calls" decision: a real, working permission-scopes screen with no model behind it yet.

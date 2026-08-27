@@ -8,6 +8,70 @@ part of 'plan_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// `plans/` needs `LibraryItemRepository` for §16.5's occurrence-linking
+/// flow, but never `lib/features/library/`'s own provider — that would be
+/// a features-to-features import (rule 4). This wraps the same
+/// `LibraryItemDao`/database `library/`'s own provider does, so a write
+/// through either instance is visible to both.
+
+@ProviderFor(planMediaRepository)
+const planMediaRepositoryProvider = PlanMediaRepositoryProvider._();
+
+/// `plans/` needs `LibraryItemRepository` for §16.5's occurrence-linking
+/// flow, but never `lib/features/library/`'s own provider — that would be
+/// a features-to-features import (rule 4). This wraps the same
+/// `LibraryItemDao`/database `library/`'s own provider does, so a write
+/// through either instance is visible to both.
+
+final class PlanMediaRepositoryProvider
+    extends
+        $FunctionalProvider<
+          LibraryItemRepository,
+          LibraryItemRepository,
+          LibraryItemRepository
+        >
+    with $Provider<LibraryItemRepository> {
+  /// `plans/` needs `LibraryItemRepository` for §16.5's occurrence-linking
+  /// flow, but never `lib/features/library/`'s own provider — that would be
+  /// a features-to-features import (rule 4). This wraps the same
+  /// `LibraryItemDao`/database `library/`'s own provider does, so a write
+  /// through either instance is visible to both.
+  const PlanMediaRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'planMediaRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$planMediaRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<LibraryItemRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  LibraryItemRepository create(Ref ref) {
+    return planMediaRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LibraryItemRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LibraryItemRepository>(value),
+    );
+  }
+}
+
+String _$planMediaRepositoryHash() =>
+    r'e5c2adf929955137412fe934358d538dbc417a1f';
 
 @ProviderFor(planRepository)
 const planRepositoryProvider = PlanRepositoryProvider._();
@@ -48,7 +112,188 @@ final class PlanRepositoryProvider
   }
 }
 
-String _$planRepositoryHash() => r'3752ed5b48d8c7bb4331d1db79c7bb8e4dea832c';
+String _$planRepositoryHash() => r'8da958857246686ba3c67e17c65a8f83d82baa62';
+
+/// The library item linked to an occurrence, for `OccurrenceSheet`'s
+/// "linked film/show/book" display.
+
+@ProviderFor(linkedLibraryItem)
+const linkedLibraryItemProvider = LinkedLibraryItemFamily._();
+
+/// The library item linked to an occurrence, for `OccurrenceSheet`'s
+/// "linked film/show/book" display.
+
+final class LinkedLibraryItemProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<AppLibraryItem?>,
+          AppLibraryItem?,
+          Stream<AppLibraryItem?>
+        >
+    with $FutureModifier<AppLibraryItem?>, $StreamProvider<AppLibraryItem?> {
+  /// The library item linked to an occurrence, for `OccurrenceSheet`'s
+  /// "linked film/show/book" display.
+  const LinkedLibraryItemProvider._({
+    required LinkedLibraryItemFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'linkedLibraryItemProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$linkedLibraryItemHash();
+
+  @override
+  String toString() {
+    return r'linkedLibraryItemProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<AppLibraryItem?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<AppLibraryItem?> create(Ref ref) {
+    final argument = this.argument as String;
+    return linkedLibraryItem(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LinkedLibraryItemProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$linkedLibraryItemHash() => r'7b15087884388b7ac61fd6638e4df989b586bc84';
+
+/// The library item linked to an occurrence, for `OccurrenceSheet`'s
+/// "linked film/show/book" display.
+
+final class LinkedLibraryItemFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<AppLibraryItem?>, String> {
+  const LinkedLibraryItemFamily._()
+    : super(
+        retry: null,
+        name: r'linkedLibraryItemProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// The library item linked to an occurrence, for `OccurrenceSheet`'s
+  /// "linked film/show/book" display.
+
+  LinkedLibraryItemProvider call(String libraryItemId) =>
+      LinkedLibraryItemProvider._(argument: libraryItemId, from: this);
+
+  @override
+  String toString() => r'linkedLibraryItemProvider';
+}
+
+/// §16.5's "choose a film" candidates — everything of [type] not already
+/// watched/finished.
+
+@ProviderFor(unwatchedLibraryItems)
+const unwatchedLibraryItemsProvider = UnwatchedLibraryItemsFamily._();
+
+/// §16.5's "choose a film" candidates — everything of [type] not already
+/// watched/finished.
+
+final class UnwatchedLibraryItemsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppLibraryItem>>,
+          List<AppLibraryItem>,
+          Stream<List<AppLibraryItem>>
+        >
+    with
+        $FutureModifier<List<AppLibraryItem>>,
+        $StreamProvider<List<AppLibraryItem>> {
+  /// §16.5's "choose a film" candidates — everything of [type] not already
+  /// watched/finished.
+  const UnwatchedLibraryItemsProvider._({
+    required UnwatchedLibraryItemsFamily super.from,
+    required MediaType super.argument,
+  }) : super(
+         retry: null,
+         name: r'unwatchedLibraryItemsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$unwatchedLibraryItemsHash();
+
+  @override
+  String toString() {
+    return r'unwatchedLibraryItemsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppLibraryItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppLibraryItem>> create(Ref ref) {
+    final argument = this.argument as MediaType;
+    return unwatchedLibraryItems(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UnwatchedLibraryItemsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$unwatchedLibraryItemsHash() =>
+    r'f30570351f48b0805a72f3fd080effad3e095575';
+
+/// §16.5's "choose a film" candidates — everything of [type] not already
+/// watched/finished.
+
+final class UnwatchedLibraryItemsFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<AppLibraryItem>>, MediaType> {
+  const UnwatchedLibraryItemsFamily._()
+    : super(
+        retry: null,
+        name: r'unwatchedLibraryItemsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// §16.5's "choose a film" candidates — everything of [type] not already
+  /// watched/finished.
+
+  UnwatchedLibraryItemsProvider call(MediaType type) =>
+      UnwatchedLibraryItemsProvider._(argument: type, from: this);
+
+  @override
+  String toString() => r'unwatchedLibraryItemsProvider';
+}
 
 @ProviderFor(activePlans)
 const activePlansProvider = ActivePlansProvider._();

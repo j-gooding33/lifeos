@@ -16,6 +16,7 @@ import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/library/application/library_providers.dart';
 import 'package:life_os/features/library/presentation/media_poster.dart';
 import 'package:life_os/features/library/presentation/widgets/mark_watched_sheet.dart';
+import 'package:life_os/features/library/presentation/widgets/schedule_this_sheet.dart';
 
 /// M8 Part 4: film detail — status, rating (interactive, independent of
 /// watched state per §43), the watched log, and the Top-list/remove
@@ -158,6 +159,13 @@ class _FilmDetailBody extends ConsumerWidget {
             ),
           ] else
             LButton(label: 'Mark Watched', onPressed: () => MarkWatchedSheet.show(context, item)),
+          const SizedBox(height: LifeSpace.s12),
+          LButton(
+            label: 'Schedule this',
+            variant: LButtonVariant.tonal,
+            icon: Icons.event_repeat_outlined,
+            onPressed: () => ScheduleThisSheet.show(context, item),
+          ),
           const SizedBox(height: LifeSpace.s12),
           LButton(
             label: 'Add to Top list',

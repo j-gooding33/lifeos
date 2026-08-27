@@ -18,6 +18,7 @@ import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/library/application/library_providers.dart';
 import 'package:life_os/features/library/presentation/media_poster.dart';
 import 'package:life_os/features/library/presentation/widgets/mark_watched_sheet.dart';
+import 'package:life_os/features/library/presentation/widgets/schedule_this_sheet.dart';
 import 'package:life_os/routing/routes.dart';
 
 /// TV show detail — the show-level rating here is 1-5★, same scale as
@@ -148,6 +149,13 @@ class _TvShowDetailBody extends ConsumerWidget {
                 ),
               ],
             ),
+          const SizedBox(height: LifeSpace.s12),
+          LButton(
+            label: 'Schedule this',
+            variant: LButtonVariant.tonal,
+            icon: Icons.event_repeat_outlined,
+            onPressed: () => ScheduleThisSheet.show(context, item),
+          ),
           const SizedBox(height: LifeSpace.s24),
           const LSectionHeader(title: 'Seasons'),
           const SizedBox(height: LifeSpace.s8),

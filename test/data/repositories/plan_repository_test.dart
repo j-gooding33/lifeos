@@ -8,8 +8,12 @@ import 'package:life_os/core/scheduling/missed_sweep.dart';
 import 'package:life_os/core/scheduling/recurrence_rule.dart';
 import 'package:life_os/core/utils/result.dart';
 import 'package:life_os/data/local/daos/activity_log_dao.dart';
+import 'package:life_os/data/local/daos/library_item_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/database.dart';
+import 'package:life_os/data/media/media_types.dart';
+import 'package:life_os/data/repositories/library_item_repository.dart';
+import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
 
@@ -542,4 +546,84 @@ void main() {
       expect(afterRegenerate.any((o) => o.id == extra.id), isTrue);
     },
   );
+
+  group('§16.5 media linking', () {
+    test('linkOccurrenceToLibraryItem sets the link, unlinkOccurrence clears it', () async {
+      final created = await repository.createPlan(
+        userId: 'u1',
+        title: 'Watch a film',
+        rule: IntervalDays(3, anchor: today),
+        mediaType: 'film',
+      );
+      final plan = _okPlan(created);
+      final occurrence = (await repository.watchUpcoming(plan.id).first).first;
+
+      await repository.linkOccurrenceToLibraryItem(occurrence.id, 'film1');
+      var row = (await dao.getOccurrencesForPlan(plan.id)).firstWhere((o) => o.id == occurrence.id);
+      expect(row.linkedEntityType, 'libraryItem');
+      expect(row.linkedEntityId, 'film1');
+
+      await repository.unlinkOccurrence(occurrence.id);
+      row = (await dao.getOccurrencesForPlan(plan.id)).firstWhere((o) => o.id == occurrence.id);
+      expect(row.linkedEntityType, null);
+      expect(row.linkedEntityId, null);
+    });
+
+    test('linking then completing a linked occurrence marks the library item watched on the occurrence date', () async {
+      final database2 = AppDatabase.forTesting(NativeDatabase.memory());
+      addTearDown(database2.close);
+      final planDao = PlanDao(database2);
+      final libraryRepository = LibraryItemRepository(LibraryItemDao(database2));
+      final repositoryWithMedia = PlanRepository(planDao, ActivityLogDao(database2), libraryItemRepository: libraryRepository);
+
+      final film = (await libraryRepository.addManually(userId: 'u1', type: MediaType.film, title: 'Interstellar'))
+          .when(ok: (i) => i, err: (f) => throw StateError(f.message));
+
+      final created = await repositoryWithMedia.createPlan(
+        userId: 'u1',
+        title: 'Watch a film',
+        rule: IntervalDays(3, anchor: today),
+        mediaType: 'film',
+      );
+      final plan = _okPlan(created);
+      // `watchUpcoming` is strictly after today, so pick the next scheduled
+      // date rather than the anchor's own (today's) occurrence.
+      final futureDate = today.addDays(3);
+      final occurrence = (await repositoryWithMedia.watchUpcoming(plan.id).first).firstWhere((o) => o.scheduledDate == futureDate);
+
+      await repositoryWithMedia.linkOccurrenceToLibraryItem(occurrence.id, film.id);
+      final linked = (await repositoryWithMedia.watchUpcoming(plan.id).first).firstWhere((o) => o.id == occurrence.id);
+      expect(linked.linkedEntityType, 'libraryItem');
+      expect(linked.linkedEntityId, film.id);
+
+      await repositoryWithMedia.completeOccurrence(linked, plan);
+
+      final updatedFilm = await libraryRepository.watchById(film.id).first;
+      expect(updatedFilm!.status, LibraryItemStatus.done);
+      expect(updatedFilm.finishedAt, DateTime(futureDate.year, futureDate.month, futureDate.day));
+
+      // Unlinking never touches the item's own status (§16.5).
+      await repositoryWithMedia.unlinkOccurrence(occurrence.id);
+      final unlinked = (await repositoryWithMedia.watchUpcoming(plan.id).first).firstWhere((o) => o.id == occurrence.id);
+      final stillDone = await libraryRepository.watchById(film.id).first;
+      expect(stillDone!.status, LibraryItemStatus.done);
+      expect(unlinked.linkedEntityId, null);
+    });
+
+    test('completing a linked occurrence with no libraryItemRepository configured does not throw', () async {
+      final created = await repository.createPlan(
+        userId: 'u1',
+        title: 'Watch a film',
+        rule: IntervalDays(3, anchor: today),
+        mediaType: 'film',
+      );
+      final plan = _okPlan(created);
+      final occurrence = (await repository.watchUpcoming(plan.id).first).first;
+      await repository.linkOccurrenceToLibraryItem(occurrence.id, 'film1');
+      final linked = (await repository.watchUpcoming(plan.id).first).firstWhere((o) => o.id == occurrence.id);
+
+      final result = await repository.completeOccurrence(linked, plan);
+      expect(result.isOk, isTrue);
+    });
+  });
 }

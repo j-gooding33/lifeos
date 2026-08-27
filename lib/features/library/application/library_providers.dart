@@ -2,8 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_os/core/errors/failure.dart';
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/core/utils/result.dart';
+import 'package:life_os/data/local/daos/activity_log_dao.dart';
 import 'package:life_os/data/local/daos/collection_dao.dart';
 import 'package:life_os/data/local/daos/library_item_dao.dart';
+import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/daos/top_list_dao.dart';
 import 'package:life_os/data/local/daos/tv_episode_dao.dart';
 import 'package:life_os/data/media/media_metadata_provider.dart';
@@ -14,6 +16,8 @@ import 'package:life_os/data/repositories/collection_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/app_collection.dart';
 import 'package:life_os/data/repositories/models/app_library_item.dart';
+import 'package:life_os/data/repositories/models/app_plan.dart';
+import 'package:life_os/data/repositories/plan_repository.dart';
 import 'package:life_os/data/repositories/top_list_repository.dart';
 import 'package:life_os/data/repositories/tv_episode_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -125,6 +129,26 @@ Stream<List<AppLibraryItem>> collectionItems(Ref ref, String collectionId) {
 @riverpod
 Stream<Set<String>> collectionIdsContaining(Ref ref, String libraryItemId) {
   return ref.watch(collectionRepositoryProvider).watchCollectionIdsContaining(libraryItemId);
+}
+
+/// §16.4/§16.5's "Schedule this". `library/` needs `PlanRepository` for it,
+/// but never `lib/features/plans/`'s own provider — that would be a
+/// features-to-features import (rule 4). This wraps the same
+/// `PlanDao`/database `plans/` own provider does, so a write through
+/// either instance is visible to both.
+@Riverpod(keepAlive: true)
+PlanRepository libraryPlanRepository(Ref ref) {
+  final database = ref.watch(appDatabaseProvider);
+  return PlanRepository(PlanDao(database), ActivityLogDao(database));
+}
+
+@riverpod
+Stream<List<AppPlan>> plansForMediaType(Ref ref, MediaType type) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  yield* ref
+      .watch(libraryPlanRepositoryProvider)
+      .watchActive(userId)
+      .map((plans) => plans.where((p) => p.mediaType == type.name).toList());
 }
 
 /// TMDB's search results don't include season count — only `detail()` does
