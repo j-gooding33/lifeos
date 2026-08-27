@@ -21,6 +21,7 @@ class Routes {
   static const planCalendar = '/plans/:id/calendar';
   static const planOccurrence = '/plans/:id/occurrence/:occId';
   static const habits = '/habits';
+  static const habitsNew = '/habits/new';
   static const habitDetail = '/habits/:id';
   static const calendar = '/calendar';
   static const calendarEvent = '/calendar/event/:id';

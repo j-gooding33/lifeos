@@ -13,6 +13,7 @@ class LTextField extends StatelessWidget {
     this.outlined = false,
     this.onChanged,
     this.autofocus = false,
+    this.keyboardType,
     super.key,
   });
 
@@ -22,6 +23,7 @@ class LTextField extends StatelessWidget {
   final bool outlined;
   final ValueChanged<String>? onChanged;
   final bool autofocus;
+  final TextInputType? keyboardType;
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +32,7 @@ class LTextField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       autofocus: autofocus,
+      keyboardType: keyboardType,
       style: context.textStyles.body.copyWith(color: colors.neutrals.ink),
       decoration: InputDecoration(
         hintText: placeholder,

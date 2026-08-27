@@ -4,6 +4,28 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §13 — Habits (2026-08-28)
+
+The M8 media/school brief explicitly deferred `LIFE_OS_SPEC.md`'s own M8 (Goals)/M9 (Projects)/M10 (Habits) "until after this M8." With that custom M8's own named pillars (media library, rankings, personal lists, School, AI shell, plan-based scheduling) now shipped, Habits is next — and by far the most shovel-ready of the three, since §7.1's binding decision ("habits are plans with `kind = habit`, no separate engine") means the whole recurrence/completion/streak backend already existed from M6/M7. Only the habit-specific UI and a couple of small stats were missing.
+
+### Habit creation reuses `RhythmEditor` wholesale rather than a second, smaller rhythm control
+**Decision:** `HabitCreateScreen`'s "frequency row" (§13.1) embeds the same `RhythmEditor` widget `PlanCreateScreen`'s step 2 uses, defaulted to `IntervalDays(1, anchor: today)` ("Every day").
+**Why:** §13.1 says "nothing else," but building a second, habit-scale rhythm picker would be a second implementation of "how often" to keep in sync with the real one — exactly what §7.1's own reasoning for not building a separate habits engine warns against, one level up the stack. `RhythmEditor` is already a self-contained widget (not tied to being "step 2 of a wizard"), so embedding it costs nothing extra.
+**How to apply:** editing an existing habit reuses `PlanCreateScreen` in its edit mode (via `showPlanActionsMenu`'s existing "Edit" action, unchanged) rather than a bespoke `HabitEditScreen` — §13.1's "one screen" requirement is about creation specifically; a real, working edit flow that happens to show more controls than the minimal create screen is not a violation of it.
+
+### `target` (§7.2) is wired end to end now — the column existed since M4, unused
+**Decision:** `AppPlan.target` (a new `PlanTarget {value, unit}`, JSON-encoded into the pre-existing `plans.target` column) is set from `HabitCreateScreen`'s two optional fields and round-trips through `PlanRepository`.
+**Why:** same pattern as School's and Collections' schema columns that existed unused since M4 — wiring the already-designed column costs a few lines in `_savePlan`/`_toDomain`, versus inventing a new one.
+**How to apply:** counter habits (target > 1) currently store and display the target but the list/detail screens don't yet render §13.2's stepper-plus-partial-ring — `AppOccurrence.valueAchieved` (also pre-existing, also unused until now) is exactly the field a future pass would write partial progress into; this pass only ships the binary complete/incomplete interaction.
+
+### `bestStreak` is a new field on the shared `PlanStats`, not a habit-only type
+**Decision:** `PlanStats` gained `bestStreak` (longest historical consecutive-completed run) alongside the existing `streak` (current run), computed in the same `_computeStats` pass every Plan already gets, not a separate habit-specific stats query.
+**Why:** the computation is a cheap second scan of data `_computeStats` already has in memory; adding it to the shared type means it's available if a future Plan-detail redesign ever wants it too, at zero extra query cost today.
+
+### The full-year heatmap and "month calendar" are new pure logic plus reuse, not new screens
+**Decision:** `computeYearHeatmap`/`computeMonthCompletionRate` (pure functions, `habit_stats.dart`) turn a plain `List<AppOccurrence>` — already fetchable via the existing `planOccurrencesInRangeProvider` — into `LHeatmapGrid`-ready values (columns: 7, so weeks stack as rows) and a month percentage. "Month calendar" is literally `PlanCalendarScreen` (§8.2, already built for regular plans) via its existing `/plans/:id/calendar` route — a habit is a plan, so its calendar is that same screen, unchanged.
+**Why:** `LHeatmapGrid` is already a generic `List<double?>` renderer with no changes needed; a month-grid calendar already exists and works for any plan id. Building either again would be exactly the kind of duplication rule 4 and this session's whole pattern of reuse exist to prevent.
+
 ## §16.6 — Per-media-type Library stats (2026-08-27)
 
 `LibraryStatsScreen`, one per media type, reached via a new stats icon on Films/TV/Books (same pattern as the existing Ratings/Top5 icons) — not the general `/stats` tab.

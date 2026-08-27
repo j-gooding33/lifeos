@@ -2,6 +2,22 @@ import 'package:life_os/core/scheduling/civil_date.dart';
 import 'package:life_os/core/scheduling/missed_sweep.dart' show MissedPolicy;
 import 'package:life_os/core/scheduling/recurrence_rule.dart';
 
+/// §7.2's `target` field — `{value, unit}`, e.g. "8 glasses" or "30
+/// minutes". §13.2: a habit with `value > 1` renders a stepper and a
+/// partial ring instead of a plain checkmark.
+class PlanTarget {
+  const PlanTarget({required this.value, required this.unit});
+
+  factory PlanTarget.fromJson(Map<String, Object?> json) {
+    return PlanTarget(value: (json['value']! as num).toDouble(), unit: json['unit']! as String);
+  }
+
+  final double value;
+  final String unit;
+
+  Map<String, Object?> toJson() => {'value': value, 'unit': unit};
+}
+
 /// §7.1, binding: habits are plans with `kind = habit` — there is no
 /// separate habits engine.
 enum PlanKind { plan, habit }
@@ -35,6 +51,7 @@ class AppPlan {
     this.endAfterCount,
     this.timeOfDay,
     this.durationMinutes,
+    this.target,
     this.missedPolicy = MissedPolicy.markMissed,
     this.scheduleMode = ScheduleMode.fixed,
     this.pauseFrom,
@@ -66,6 +83,7 @@ class AppPlan {
   /// Wall time `HH:mm` (§9.1).
   final String? timeOfDay;
   final int? durationMinutes;
+  final PlanTarget? target;
   final MissedPolicy missedPolicy;
   final ScheduleMode scheduleMode;
   final CivilDate? pauseFrom;
@@ -101,6 +119,8 @@ class AppPlan {
     bool clearEndAfterCount = false,
     String? timeOfDay,
     int? durationMinutes,
+    PlanTarget? target,
+    bool clearTarget = false,
     MissedPolicy? missedPolicy,
     ScheduleMode? scheduleMode,
     CivilDate? pauseFrom,
@@ -129,6 +149,7 @@ class AppPlan {
           : (endAfterCount ?? this.endAfterCount),
       timeOfDay: timeOfDay ?? this.timeOfDay,
       durationMinutes: durationMinutes ?? this.durationMinutes,
+      target: clearTarget ? null : (target ?? this.target),
       missedPolicy: missedPolicy ?? this.missedPolicy,
       scheduleMode: scheduleMode ?? this.scheduleMode,
       pauseFrom: clearPause ? null : (pauseFrom ?? this.pauseFrom),
@@ -184,6 +205,7 @@ class PlanStats {
     required this.done,
     required this.rate,
     required this.streak,
+    required this.bestStreak,
     required this.missed,
     required this.weeklyHeatmap,
   });
@@ -195,6 +217,10 @@ class PlanStats {
   /// (§9.6: "nothing is counted").
   final double rate;
   final int streak;
+
+  /// §13.2: "best streak" — the longest consecutive-completed run in this
+  /// plan's whole history, not just the current one. Always `>= streak`.
+  final int bestStreak;
   final int missed;
 
   /// Oldest week first, each 0.0–1.0 or null for "no occurrences that week".

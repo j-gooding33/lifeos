@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:life_os/core/errors/failure.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
@@ -119,6 +121,7 @@ class PlanRepository {
     CivilDate? startDate,
     String? timeOfDay,
     int? durationMinutes,
+    PlanTarget? target,
     MissedPolicy missedPolicy = MissedPolicy.markMissed,
     ScheduleMode scheduleMode = ScheduleMode.fixed,
     String? goalId,
@@ -138,6 +141,7 @@ class PlanRepository {
         startDate: startDate,
         timeOfDay: timeOfDay,
         durationMinutes: durationMinutes,
+        target: target,
         missedPolicy: missedPolicy,
         scheduleMode: scheduleMode,
         goalId: goalId,
@@ -552,6 +556,7 @@ class PlanRepository {
         endAfterCount: Value(plan.endAfterCount),
         timeOfDay: Value(plan.timeOfDay),
         durationMinutes: Value(plan.durationMinutes),
+        target: Value(plan.target == null ? null : jsonEncode(plan.target!.toJson())),
         missedPolicy: Value(plan.missedPolicy.name),
         scheduleMode: Value(plan.scheduleMode.name),
         pauseFrom: Value(plan.pauseFrom?.toIso()),
@@ -673,6 +678,22 @@ class PlanRepository {
       }
     }
 
+    // §13.2 "best streak" — the longest such run anywhere in the plan's
+    // history, oldest-first this time so a broken run resets the running
+    // count instead of stopping at the first one.
+    var bestStreak = 0;
+    var runningStreak = 0;
+    for (final row in pastRows.reversed) {
+      if (row.status == 'completed') {
+        runningStreak++;
+        if (runningStreak > bestStreak) bestStreak = runningStreak;
+      } else if (row.status == 'cancelled' || row.status == 'skipped') {
+        continue;
+      } else {
+        runningStreak = 0;
+      }
+    }
+
     final thisWeekStart = today.startOfWeek();
     final heatmap = <double?>[
       for (var i = 11; i >= 0; i--)
@@ -683,6 +704,7 @@ class PlanRepository {
       done: done,
       rate: rate,
       streak: streak,
+      bestStreak: bestStreak,
       missed: missed,
       weeklyHeatmap: heatmap,
     );
@@ -723,6 +745,7 @@ class PlanRepository {
       endAfterCount: row.endAfterCount,
       timeOfDay: row.timeOfDay,
       durationMinutes: row.durationMinutes,
+      target: row.target == null ? null : PlanTarget.fromJson(jsonDecode(row.target!) as Map<String, Object?>),
       missedPolicy: MissedPolicy.values.byName(row.missedPolicy),
       scheduleMode: row.scheduleMode == 'rolling'
           ? ScheduleMode.rolling

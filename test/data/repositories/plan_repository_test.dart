@@ -502,6 +502,51 @@ void main() {
     expect(stats.missed, 0);
   });
 
+  test('bestStreak (§13.2) tracks the longest historical run, even after it ends', () async {
+    final rule = IntervalDays(1, anchor: today.addDays(-4));
+    final created = await repository.createPlan(userId: 'u1', title: 'Daily thing', rule: rule);
+    final plan = _okPlan(created);
+
+    Future<void> complete(CivilDate date) async {
+      final rows = await dao.getOccurrencesForPlan(plan.id);
+      final row = rows.firstWhere((o) => o.scheduledDate == date.toIso());
+      await repository.completeOccurrence(AppOccurrence(id: row.id, planId: plan.id, scheduledDate: date), plan);
+    }
+
+    // A 3-day run (day -4..-2), a missed day (-1) breaks it, then a
+    // shorter 1-day current run (today). Best should stay 3.
+    await complete(today.addDays(-4));
+    await complete(today.addDays(-3));
+    await complete(today.addDays(-2));
+    // day -1 left pending/missed — never completed.
+    await complete(today);
+
+    final stats = await repository.watchStats(plan.id).first;
+    expect(stats.streak, 1);
+    expect(stats.bestStreak, 3);
+  });
+
+  test('a target round-trips through create and update (§7.2)', () async {
+    final created = await repository.createPlan(
+      userId: 'u1',
+      title: 'Drink water',
+      rule: IntervalDays(1, anchor: today),
+      kind: PlanKind.habit,
+      target: const PlanTarget(value: 8, unit: 'glasses'),
+    );
+    final plan = _okPlan(created);
+    expect(plan.target?.value, 8);
+    expect(plan.target?.unit, 'glasses');
+
+    final reloaded = await repository.watchById(plan.id).first;
+    expect(reloaded!.target?.value, 8);
+    expect(reloaded.target?.unit, 'glasses');
+
+    await repository.updatePlan(reloaded, reloaded.copyWith(clearTarget: true));
+    final cleared = await repository.watchById(plan.id).first;
+    expect(cleared!.target, null);
+  });
+
   test('removing an occurrence deletes the row', () async {
     final rule = IntervalDays(1, anchor: today);
     final created = await repository.createPlan(

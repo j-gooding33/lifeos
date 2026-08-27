@@ -29,6 +29,9 @@ import 'package:life_os/features/library/presentation/screens/tv_shows_screen.da
 import 'package:life_os/features/library/presentation/screens/tv_top5_screen.dart';
 import 'package:life_os/features/library/presentation/screens/unified_ratings_screen.dart';
 import 'package:life_os/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/habit_create_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/habit_detail_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/habits_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_calendar_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.dart';
@@ -115,8 +118,18 @@ GoRouter buildRouter() {
                   occurrenceId: state.pathParameters['occId']!,
                 ),
               ),
-              _placeholderRoute(Routes.habits, 'Habits'),
-              _placeholderRoute(Routes.habitDetail, 'Habit detail'),
+              GoRoute(
+                path: Routes.habits,
+                builder: (context, state) => const HabitsScreen(),
+              ),
+              GoRoute(
+                path: Routes.habitsNew,
+                builder: (context, state) => const HabitCreateScreen(),
+              ),
+              GoRoute(
+                path: Routes.habitDetail,
+                builder: (context, state) => HabitDetailScreen(habitId: state.pathParameters['id']!),
+              ),
               GoRoute(
                 path: Routes.calendar,
                 builder: (context, state) => const CalendarScreen(),
