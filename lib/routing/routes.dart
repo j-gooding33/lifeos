@@ -61,6 +61,7 @@ class Routes {
   static const libraryTvTop5 = '/library/tv/top5';
   static const libraryBookRatings = '/library/books/ratings';
   static const libraryBookTop3 = '/library/books/top3';
+  static const libraryAllRatings = '/library/ratings';
 
   static const stats = '/stats';
   static const statsYear = '/stats/year';

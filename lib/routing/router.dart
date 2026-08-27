@@ -23,6 +23,7 @@ import 'package:life_os/features/library/presentation/screens/tv_search_screen.d
 import 'package:life_os/features/library/presentation/screens/tv_show_detail_screen.dart';
 import 'package:life_os/features/library/presentation/screens/tv_shows_screen.dart';
 import 'package:life_os/features/library/presentation/screens/tv_top5_screen.dart';
+import 'package:life_os/features/library/presentation/screens/unified_ratings_screen.dart';
 import 'package:life_os/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_calendar_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
@@ -153,6 +154,10 @@ GoRouter buildRouter() {
               GoRoute(
                 path: Routes.library,
                 builder: (context, state) => const LibraryHomeScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryAllRatings,
+                builder: (context, state) => const UnifiedRatingsScreen(),
               ),
               GoRoute(
                 path: Routes.libraryFilms,
