@@ -39,6 +39,11 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
         title: const Text('Books'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'Stats',
+            onPressed: () => context.push(Routes.libraryBookStats),
+          ),
+          IconButton(
             icon: const Icon(Icons.emoji_events_outlined),
             tooltip: 'Top 3',
             onPressed: () => context.push(Routes.libraryBookTop3),

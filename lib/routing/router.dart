@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:life_os/data/media/media_types.dart';
 import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/calendar_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/event_detail_screen.dart';
@@ -18,6 +19,7 @@ import 'package:life_os/features/library/presentation/screens/film_search_screen
 import 'package:life_os/features/library/presentation/screens/film_top5_screen.dart';
 import 'package:life_os/features/library/presentation/screens/films_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_home_screen.dart';
+import 'package:life_os/features/library/presentation/screens/library_stats_screen.dart';
 import 'package:life_os/features/library/presentation/screens/season_episodes_screen.dart';
 import 'package:life_os/features/library/presentation/screens/tv_episode_ratings_screen.dart';
 import 'package:life_os/features/library/presentation/screens/tv_ratings_screen.dart';
@@ -186,6 +188,10 @@ GoRouter buildRouter() {
                 builder: (context, state) => const FilmTop5Screen(),
               ),
               GoRoute(
+                path: Routes.libraryFilmStats,
+                builder: (context, state) => const LibraryStatsScreen(mediaType: MediaType.film),
+              ),
+              GoRoute(
                 path: Routes.libraryFilmDetail,
                 builder: (context, state) => FilmDetailScreen(filmId: state.pathParameters['id']!),
               ),
@@ -210,6 +216,10 @@ GoRouter buildRouter() {
               GoRoute(
                 path: Routes.libraryTvTop5,
                 builder: (context, state) => const TvTop5Screen(),
+              ),
+              GoRoute(
+                path: Routes.libraryTvStats,
+                builder: (context, state) => const LibraryStatsScreen(mediaType: MediaType.tv),
               ),
               GoRoute(
                 path: Routes.libraryTvSeason,
@@ -239,6 +249,10 @@ GoRouter buildRouter() {
               GoRoute(
                 path: Routes.libraryBookTop3,
                 builder: (context, state) => const BookTop3Screen(),
+              ),
+              GoRoute(
+                path: Routes.libraryBookStats,
+                builder: (context, state) => const LibraryStatsScreen(mediaType: MediaType.book),
               ),
               GoRoute(
                 path: Routes.libraryBookDetail,

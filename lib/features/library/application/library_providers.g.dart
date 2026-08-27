@@ -1384,6 +1384,100 @@ final class PlansForMediaTypeFamily extends $Family
   String toString() => r'plansForMediaTypeProvider';
 }
 
+/// §16.6. Runtime is only a meaningful stat for films/TV — books don't
+/// reliably track a runtime-equivalent (page counts aren't tracked at all
+/// yet), so `includeRuntime` is false there rather than showing a fake `0`.
+
+@ProviderFor(libraryStats)
+const libraryStatsProvider = LibraryStatsFamily._();
+
+/// §16.6. Runtime is only a meaningful stat for films/TV — books don't
+/// reliably track a runtime-equivalent (page counts aren't tracked at all
+/// yet), so `includeRuntime` is false there rather than showing a fake `0`.
+
+final class LibraryStatsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<LibraryStats>,
+          LibraryStats,
+          Stream<LibraryStats>
+        >
+    with $FutureModifier<LibraryStats>, $StreamProvider<LibraryStats> {
+  /// §16.6. Runtime is only a meaningful stat for films/TV — books don't
+  /// reliably track a runtime-equivalent (page counts aren't tracked at all
+  /// yet), so `includeRuntime` is false there rather than showing a fake `0`.
+  const LibraryStatsProvider._({
+    required LibraryStatsFamily super.from,
+    required MediaType super.argument,
+  }) : super(
+         retry: null,
+         name: r'libraryStatsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$libraryStatsHash();
+
+  @override
+  String toString() {
+    return r'libraryStatsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<LibraryStats> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<LibraryStats> create(Ref ref) {
+    final argument = this.argument as MediaType;
+    return libraryStats(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is LibraryStatsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$libraryStatsHash() => r'3b8b027f7fcad42c76ff5372c20663f0a691eff1';
+
+/// §16.6. Runtime is only a meaningful stat for films/TV — books don't
+/// reliably track a runtime-equivalent (page counts aren't tracked at all
+/// yet), so `includeRuntime` is false there rather than showing a fake `0`.
+
+final class LibraryStatsFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<LibraryStats>, MediaType> {
+  const LibraryStatsFamily._()
+    : super(
+        retry: null,
+        name: r'libraryStatsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// §16.6. Runtime is only a meaningful stat for films/TV — books don't
+  /// reliably track a runtime-equivalent (page counts aren't tracked at all
+  /// yet), so `includeRuntime` is false there rather than showing a fake `0`.
+
+  LibraryStatsProvider call(MediaType type) =>
+      LibraryStatsProvider._(argument: type, from: this);
+
+  @override
+  String toString() => r'libraryStatsProvider';
+}
+
 /// TMDB's search results don't include season count — only `detail()` does
 /// — so the TV show detail screen needs one extra round trip the first
 /// time it's opened to know how many season rows to offer.

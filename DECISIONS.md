@@ -4,6 +4,24 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §16.6 — Per-media-type Library stats (2026-08-27)
+
+`LibraryStatsScreen`, one per media type, reached via a new stats icon on Films/TV/Books (same pattern as the existing Ratings/Top5 icons) — not the general `/stats` tab.
+
+### Computed directly from `library_items` at render time, not a rollup table
+**Decision:** `computeLibraryStats` reads whatever `LibraryItemRepository.watchAll` currently holds and derives everything (this year/month counts, average rating, top genre, runtime, rating distribution) on the spot — no `daily_rollups` row, no `StatsRecorder`.
+**Why:** §20.1's "never compute statistics by scanning raw tables at render time, maintain a rollup table" is written for the general Stats tab's daily-granularity trends across every domain — a genuinely large, cross-cutting feature this session correctly left alone. §16.6 itself only says these particular figures are "computed locally from `library_items`," which is a small, already-loaded, per-user table (a personal library, not an event log) — scanning it at render time is the same cost as any other `ref.watch` over a Drift stream elsewhere in this app, not the problem §20.1 is warning about.
+**How to apply:** don't reuse this precedent to justify skipping the rollup table for the actual `/stats` tab when that gets built — that one really does need it, per its own much larger domain list and daily time series.
+
+### Total runtime is scoped to this year, and omitted entirely for books
+**Decision:** `totalRuntimeMinutes` sums only the current year's finished items (matching §16.6's own worked example, "94 hours of film this year") and is `null` — hidden from the UI, not shown as `0` — when `includeRuntime: false`, which `library_stats` always passes for books.
+**Why:** books have no reliably-tracked runtime-equivalent (page counts aren't tracked at all yet — `progressValue`/`progressUnit` are a generic, inconsistently-populated field, not a real page-count feature); showing a fabricated or near-always-zero stat would be exactly the "fake data" rule 1 forbids.
+
+### The rating-distribution bar is hand-drawn with `Container` heights, not a chart package
+**Decision:** `_RatingDistribution` computes each bar's height as a plain clamped fraction of a fixed max (`Container(height: ...)`), not `fl_chart` (not yet a dependency) and not `FractionallySizedBox` (whose `heightFactor` needs a bounded incoming height that a `Row`-in-`Column` layout doesn't reliably guarantee here).
+**Why:** one five-bar chart doesn't justify a new charting dependency (CLAUDE.md: "No new dependency without an entry in DECISIONS.md" — better to avoid needing one), and the codebase already hand-rolls small visualisations this way (`LHeatmapGrid` for Plan stats, `LSquiggleDivider`'s `CustomPainter`) rather than reaching for a library each time.
+**How to apply:** if the general Stats tab later adopts `fl_chart` per §20.2, this bar doesn't need to migrate — it's a small enough visual to stay bespoke.
+
 ## §16.5 — Plan-based scheduling, the flagship flow (2026-08-27)
 
 The M8 brief's own umbrella title names "Plan-based scheduling" as a pillar alongside ratings and Top-N lists, but building it was deferred until the Library it depends on existed — `occurrence_sheet.dart` and `plan_detail_screen.dart` both carried stale comments saying so ("there's no Library to choose from until M11/M12"). Library shipped earlier in this same M8 pass, so this closes that gap: linking a Plan occurrence to a film/show/book, completing a linked occurrence marks it watched, and "Schedule this" from the item's own detail screen.

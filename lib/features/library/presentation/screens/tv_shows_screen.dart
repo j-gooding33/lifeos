@@ -40,6 +40,11 @@ class _TvShowsScreenState extends ConsumerState<TvShowsScreen> {
         title: const Text('TV Shows'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'Stats',
+            onPressed: () => context.push(Routes.libraryTvStats),
+          ),
+          IconButton(
             icon: const Icon(Icons.emoji_events_outlined),
             tooltip: 'Top 5',
             onPressed: () => context.push(Routes.libraryTvTop5),

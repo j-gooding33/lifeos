@@ -55,13 +55,16 @@ class Routes {
   // above.
   static const libraryFilmRatings = '/library/films/ratings';
   static const libraryFilmTop5 = '/library/films/top5';
+  static const libraryFilmStats = '/library/films/stats';
   static const libraryTvSearch = '/library/tv/search';
   static const libraryTvSeason = '/library/tv/:id/season/:seasonNumber';
   static const libraryTvShowRatings = '/library/tv/ratings';
   static const libraryTvEpisodeRatings = '/library/tv/episode-ratings';
   static const libraryTvTop5 = '/library/tv/top5';
+  static const libraryTvStats = '/library/tv/stats';
   static const libraryBookRatings = '/library/books/ratings';
   static const libraryBookTop3 = '/library/books/top3';
+  static const libraryBookStats = '/library/books/stats';
   static const libraryAllRatings = '/library/ratings';
 
   // School (M8 Parts 30-34) — not a bottom-nav tab (no room in the

@@ -38,6 +38,11 @@ class _FilmsScreenState extends ConsumerState<FilmsScreen> {
         title: const Text('Films'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bar_chart_outlined),
+            tooltip: 'Stats',
+            onPressed: () => context.push(Routes.libraryFilmStats),
+          ),
+          IconButton(
             icon: const Icon(Icons.emoji_events_outlined),
             tooltip: 'Top 5',
             onPressed: () => context.push(Routes.libraryFilmTop5),

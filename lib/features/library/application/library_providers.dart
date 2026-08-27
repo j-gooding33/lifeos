@@ -20,6 +20,7 @@ import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
 import 'package:life_os/data/repositories/top_list_repository.dart';
 import 'package:life_os/data/repositories/tv_episode_repository.dart';
+import 'package:life_os/features/library/application/library_stats.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'library_providers.g.dart';
@@ -149,6 +150,18 @@ Stream<List<AppPlan>> plansForMediaType(Ref ref, MediaType type) async* {
       .watch(libraryPlanRepositoryProvider)
       .watchActive(userId)
       .map((plans) => plans.where((p) => p.mediaType == type.name).toList());
+}
+
+/// §16.6. Runtime is only a meaningful stat for films/TV — books don't
+/// reliably track a runtime-equivalent (page counts aren't tracked at all
+/// yet), so `includeRuntime` is false there rather than showing a fake `0`.
+@riverpod
+Stream<LibraryStats> libraryStats(Ref ref, MediaType type) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  yield* ref
+      .watch(libraryItemRepositoryProvider)
+      .watchAll(userId, type)
+      .map((items) => computeLibraryStats(items, now: DateTime.now(), includeRuntime: type != MediaType.book));
 }
 
 /// TMDB's search results don't include season count — only `detail()` does
