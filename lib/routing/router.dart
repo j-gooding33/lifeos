@@ -45,6 +45,8 @@ import 'package:life_os/features/school/presentation/screens/school_timetable_sc
 import 'package:life_os/features/settings/presentation/screens/ai_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
+import 'package:life_os/features/tasks/presentation/screens/project_detail_screen.dart';
+import 'package:life_os/features/tasks/presentation/screens/projects_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/tasks_screen.dart';
 import 'package:life_os/routing/deep_links.dart';
@@ -163,8 +165,14 @@ GoRouter buildRouter() {
                 builder: (context, state) =>
                     TaskDetailScreen(taskId: state.pathParameters['id']),
               ),
-              _placeholderRoute(Routes.projects, 'Projects'),
-              _placeholderRoute(Routes.projectDetail, 'Project detail'),
+              GoRoute(
+                path: Routes.projects,
+                builder: (context, state) => const ProjectsScreen(),
+              ),
+              GoRoute(
+                path: Routes.projectDetail,
+                builder: (context, state) => ProjectDetailScreen(projectId: state.pathParameters['id']!),
+              ),
               _placeholderRoute(Routes.projectNewTask, 'New project task'),
               _placeholderRoute(Routes.goals, 'Goals'),
               _placeholderRoute(Routes.goalsNew, 'New goal'),

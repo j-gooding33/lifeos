@@ -4,6 +4,31 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §11 — Projects (2026-08-28)
+
+Habits' spec-sequence sibling — `ProjectRepository`/`AppProject` existed since the onboarding batch (deliberately minimal then: no screen existed to use the rest of §11.2's fields). A real Projects list and detail screen now exist, so the rest of the model got wired up.
+
+### `colour`/`icon`/`deadline`/`goalId` were already columns on `Projects` since M4, unused until now
+**Decision:** `AppProject` gained all four, JSON/plain-column round-tripped through `ProjectRepository._save`/`_toDomain` — the same "wire up the column that already exists" pattern as School, Collections, and Habits' `target` this session.
+**Why:** no migration needed; the schema was already designed for this.
+
+### Progress is computed in the UI from `tasksForProjectProvider`, never stored on `AppProject`
+**Decision:** neither `AppProject` nor `ProjectRepository` has a `progress`/`completedTasks` field — `ProjectsScreen`/`ProjectDetailScreen` derive the percentage from whatever `TaskRepository.watchByProjectId` currently returns.
+**Why:** §11.2 says progress is "derived, never stored" outside of a `daily_rollups` cache for statistics — and that rollup table doesn't exist yet for the same reason the general Stats tab doesn't (see the Library Stats decision above). Storing progress on `AppProject` now would just be a cache with no invalidation story; computing it live from a `Stream` costs nothing extra since the screen already needs the task list to render the To do/Done sections.
+
+### Deleting a project asks first — the two choices are separate `TaskRepository` calls, not a flag on `ProjectRepository.deleteProject`
+**Decision:** the delete confirmation dialog itself decides "delete N tasks too" vs. "move them to no project," then calls `TaskRepository.deleteAllForProject`/`clearProjectForAll` (both new — thin bulk wrappers over new `TaskDao` methods) *before* calling the plain `ProjectRepository.deleteProject(id)`. `deleteProject` itself takes no such flag.
+**Why:** §11.4's own wording, "never silently orphan or silently destroy," is squarely a UI-decision concern (what does the user want), not something `ProjectRepository` should encode as a boolean parameter whose two meanings live in a comment. Keeping the two task-repository calls separate and explicit at the call site makes the actual database effect of each choice legible without reading `ProjectRepository`'s internals.
+
+### Projects reuses `TaskRow` (Tasks feature) directly; a `resolveProjectColour` helper is duplicated from `plan_colour.dart`, not imported
+**Decision:** `ProjectDetailScreen`'s Tasks section is literally `TaskRow` from `lib/features/tasks/presentation/widgets/task_row.dart` — a same-feature reuse (Projects lives under the Tasks tab, `/tasks/projects/...`). `resolveProjectColour` (`lib/features/tasks/presentation/project_colour.dart`) is a near-identical ~15-line copy of `plans/`'s `resolvePlanColour`, not an import of it.
+**Why:** `TaskRow` costs nothing to reuse — same feature, no boundary crossed. `resolvePlanColour` lives in `lib/features/plans/`; importing it from `lib/features/tasks/` would be a real rule-4 violation (features importing features) for the sake of one small function whose only feature-specific bit is its fallback domain name (`'plans'` vs `'tasks'`). Duplicating ~15 lines is cheaper and cleaner than restructuring where domain-colour resolution lives just to share it.
+**How to apply:** if a third feature needs the same lookup, that's the signal to promote it to a shared, non-feature-owned home (e.g. `lib/design/theme/`) with a `fallbackDomain` parameter — not before.
+
+### Files and a filtered Activity history (§11.3) are deferred
+**Decision:** this pass ships Tasks (grouped, inline add) and Notes (free-text `description`) — not "Files" (needs the Links/Documents feature, itself unbuilt — §17.3) or an `activity_log`-filtered Activity section (a real feature needing its own query/rendering layer, not a quick addition).
+**Why:** same category as "Fill from watchlist" and goal contributions earlier this session — the core primitive (a real Project a Task can belong to, with derived progress) is what makes Projects a real feature; these two sections are additive and depend on other unbuilt features (Files) or non-trivial new UI (a filtered activity feed) that don't block Projects from being genuinely useful today.
+
 ## §13 — Habits (2026-08-28)
 
 The M8 media/school brief explicitly deferred `LIFE_OS_SPEC.md`'s own M8 (Goals)/M9 (Projects)/M10 (Habits) "until after this M8." With that custom M8's own named pillars (media library, rankings, personal lists, School, AI shell, plan-based scheduling) now shipped, Habits is next — and by far the most shovel-ready of the three, since §7.1's binding decision ("habits are plans with `kind = habit`, no separate engine") means the whole recurrence/completion/streak backend already existed from M6/M7. Only the habit-specific UI and a couple of small stats were missing.

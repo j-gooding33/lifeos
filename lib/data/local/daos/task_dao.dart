@@ -141,6 +141,27 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
         TasksCompanion(deletedAt: Value(now)),
       );
 
+  /// §11.3's Project detail Tasks section, grouped To do/Done by the
+  /// caller from one stream.
+  Stream<List<Task>> watchByProjectId(String projectId) {
+    final query = select(tasks)
+      ..where((t) => t.projectId.equals(projectId) & t.deletedAt.isNull())
+      ..orderBy([(t) => OrderingTerm.asc(t.sortIndex)]);
+    return query.watch();
+  }
+
+  /// §11.4's "delete 12 tasks too" choice.
+  Future<void> softDeleteByProjectId(String projectId, int now) =>
+      (update(tasks)..where((t) => t.projectId.equals(projectId))).write(
+        TasksCompanion(deletedAt: Value(now)),
+      );
+
+  /// §11.4's "move them to no project" choice.
+  Future<void> clearProjectId(String projectId) =>
+      (update(tasks)..where((t) => t.projectId.equals(projectId))).write(
+        const TasksCompanion(projectId: Value(null)),
+      );
+
   Stream<List<Subtask>> watchSubtasks(String taskId) {
     final query = select(subtasks)
       ..where((s) => s.taskId.equals(taskId) & s.deletedAt.isNull())

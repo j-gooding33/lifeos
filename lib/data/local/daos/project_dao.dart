@@ -21,5 +21,28 @@ class ProjectDao extends DatabaseAccessor<AppDatabase> with _$ProjectDaoMixin {
     return query.watch();
   }
 
+  Stream<Project?> watchById(String id) {
+    final query = select(projects)..where((p) => p.id.equals(id) & p.deletedAt.isNull());
+    return query.watchSingleOrNull();
+  }
+
   Future<void> upsert(ProjectsCompanion entry) => into(projects).insertOnConflictUpdate(entry);
+
+  Future<void> updateStatus(
+    String id,
+    String status, {
+    int? completedAt,
+    bool clearCompletedAt = false,
+  }) {
+    return (update(projects)..where((p) => p.id.equals(id))).write(
+      ProjectsCompanion(
+        status: Value(status),
+        completedAt: clearCompletedAt ? const Value(null) : (completedAt == null ? const Value.absent() : Value(completedAt)),
+      ),
+    );
+  }
+
+  Future<void> softDelete(String id, int now) => (update(projects)..where((p) => p.id.equals(id))).write(
+    ProjectsCompanion(deletedAt: Value(now)),
+  );
 }

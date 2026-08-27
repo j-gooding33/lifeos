@@ -166,6 +166,30 @@ class TaskRepository {
     }
   }
 
+  Stream<List<AppTask>> watchByProjectId(String projectId) {
+    return _dao.watchByProjectId(projectId).map(_toDomainList);
+  }
+
+  /// §11.4 "Delete N tasks too."
+  Future<Result<void, Failure>> deleteAllForProject(String projectId) async {
+    try {
+      await _dao.softDeleteByProjectId(projectId, DateTime.now().millisecondsSinceEpoch);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('deleteAllForProject failed: $e'));
+    }
+  }
+
+  /// §11.4 "...or move them to no project?"
+  Future<Result<void, Failure>> clearProjectForAll(String projectId) async {
+    try {
+      await _dao.clearProjectId(projectId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('clearProjectForAll failed: $e'));
+    }
+  }
+
   Stream<List<AppSubtask>> watchSubtasks(String taskId) {
     return _dao
         .watchSubtasks(taskId)

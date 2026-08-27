@@ -199,4 +199,37 @@ void main() {
       isTrue,
     );
   });
+
+  group('§11.3/§11.4 project-linked tasks', () {
+    test('watchByProjectId returns only tasks for that project', () async {
+      await repository.createTask(userId: 'u1', title: 'In project', projectId: 'p1');
+      await repository.createTask(userId: 'u1', title: 'No project');
+
+      final projectTasks = await repository.watchByProjectId('p1').first;
+      expect(projectTasks.map((t) => t.title), ['In project']);
+    });
+
+    test('deleteAllForProject soft-deletes every task in that project', () async {
+      await repository.createTask(userId: 'u1', title: 'A', projectId: 'p1');
+      await repository.createTask(userId: 'u1', title: 'B', projectId: 'p1');
+      await repository.createTask(userId: 'u1', title: 'Other project', projectId: 'p2');
+
+      await repository.deleteAllForProject('p1');
+
+      expect(await repository.watchByProjectId('p1').first, isEmpty);
+      expect(await repository.watchByProjectId('p2').first, hasLength(1));
+    });
+
+    test('clearProjectForAll moves every task in that project to no project without deleting them', () async {
+      await repository.createTask(userId: 'u1', title: 'A', projectId: 'p1');
+      await repository.createTask(userId: 'u1', title: 'B', projectId: 'p1');
+
+      await repository.clearProjectForAll('p1');
+
+      expect(await repository.watchByProjectId('p1').first, isEmpty);
+      final all = await repository.watchSomeday('u1').first;
+      expect(all.map((t) => t.title), containsAll(['A', 'B']));
+      expect(all.every((t) => t.projectId == null), isTrue);
+    });
+  });
 }
