@@ -37,6 +37,9 @@ class LSegmented<T> extends StatelessWidget {
                   ),
                   child: Text(
                     entry.value,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
                     style: context.textStyles.subhead.copyWith(
                       color: entry.key == selected ? colors.neutrals.ink : colors.neutrals.ink2,
                     ),

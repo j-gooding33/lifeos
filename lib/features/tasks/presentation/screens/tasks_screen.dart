@@ -46,9 +46,9 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             child: LSegmented<_TaskSegment>(
               segments: const {
                 _TaskSegment.today: 'Today',
-                _TaskSegment.upcoming: 'Upcoming',
+                _TaskSegment.upcoming: 'Next',
                 _TaskSegment.overdue: 'Overdue',
-                _TaskSegment.completed: 'Completed',
+                _TaskSegment.completed: 'Done',
               },
               selected: _segment,
               onChanged: (value) => setState(() => _segment = value),
