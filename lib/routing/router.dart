@@ -37,6 +37,7 @@ import 'package:life_os/features/school/presentation/screens/school_dashboard_sc
 import 'package:life_os/features/school/presentation/screens/school_setup_screen.dart';
 import 'package:life_os/features/school/presentation/screens/school_terms_screen.dart';
 import 'package:life_os/features/school/presentation/screens/school_timetable_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/ai_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
@@ -304,7 +305,10 @@ GoRouter buildRouter() {
       ),
       _placeholderRoute(Routes.settingsHome, 'Home settings'),
       _placeholderRoute(Routes.settingsNotifications, 'Notifications'),
-      _placeholderRoute(Routes.settingsAi, 'AI settings'),
+      GoRoute(
+        path: Routes.settingsAi,
+        builder: (context, state) => const AiSettingsScreen(),
+      ),
       _placeholderRoute(Routes.settingsPrivacy, 'Privacy'),
       _placeholderRoute(Routes.settingsData, 'Data'),
       _placeholderRoute(Routes.settingsCalendar, 'Calendar settings'),

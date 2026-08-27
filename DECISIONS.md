@@ -4,6 +4,19 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M8 Parts 35-40 — Settings → AI permission scopes (2026-08-27)
+
+The buildable slice of AI (§19) identified in the earlier "AI: shell only, no live model calls" decision: a real, working permission-scopes screen with no model behind it yet.
+
+### The screen is fully functional and saves real preferences; only the assistant itself is inert
+**Decision:** `AiSettingsScreen` (`Routes.settingsAi`) has a master "Enable AI assistant" switch, a separate "Let it make changes" write switch (defaults on per §19.2), and one read-scope switch per domain (tasks, plans, habits, goals, projects, calendar, library, statistics, journal, finance — journal and finance default off). Every switch writes through `AiPermissionsRepository` immediately, same key/value `Preferences` pattern as the theme scheme and onboarding state. A card at the top states plainly that the assistant isn't available yet because there's no server component configured.
+**Why:** §16.7/CLAUDE.md's "no fake affordances" rule cuts against a UI that looks interactive but silently discards input — these switches don't yet gate anything, but they're not lying either: flipping one and reopening the screen shows the same value. The explanatory card is the honest disclosure the rule actually requires, not a reason to disable the controls.
+**How to apply:** when the Supabase Edge Function from the earlier AI decision exists, the context builder reads `AiPermissionScopes` from this same repository to decide what to include — no migration needed, since real user choices have been accumulating here the whole time.
+
+### Scopes are one JSON blob under one preferences key, not one row per domain
+**Decision:** `AiPermissionScopes` (12 booleans) round-trips through a single `aiPermissionScopes` preferences key via `jsonEncode`/`jsonDecode`, the same shape as `OnboardingRepository`'s saved-answers blob.
+**Why:** the whole scope set is read and written together (one settings screen, one save-on-toggle flow) — a dedicated table with one row per domain would need its own migration and CRUD DAO for data that's never queried per-row or joined against anything else.
+
 ## M8 Part 28 — Media Collections (2026-08-27)
 
 Manual collections (§15.2): named, ordered, polymorphic lists over `collections`/`collection_items`, which existed in the schema since M4 but had no DAO/repository/UI until now.
