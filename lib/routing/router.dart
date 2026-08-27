@@ -5,6 +5,11 @@ import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/calendar_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/event_detail_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
+import 'package:life_os/features/library/presentation/screens/book_detail_screen.dart';
+import 'package:life_os/features/library/presentation/screens/book_ratings_screen.dart';
+import 'package:life_os/features/library/presentation/screens/book_search_screen.dart';
+import 'package:life_os/features/library/presentation/screens/book_top3_screen.dart';
+import 'package:life_os/features/library/presentation/screens/books_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_detail_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_ratings_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_search_screen.dart';
@@ -205,9 +210,28 @@ GoRouter buildRouter() {
                 path: Routes.libraryTvDetail,
                 builder: (context, state) => TvShowDetailScreen(showId: state.pathParameters['id']!),
               ),
-              _placeholderRoute(Routes.libraryBooks, 'Books'),
-              _placeholderRoute(Routes.libraryBooksSearch, 'Search books'),
-              _placeholderRoute(Routes.libraryBookDetail, 'Book detail'),
+              GoRoute(
+                path: Routes.libraryBooks,
+                builder: (context, state) => const BooksScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryBooksSearch,
+                builder: (context, state) => const BookSearchScreen(),
+              ),
+              // Static siblings of libraryBookDetail (`/library/books/:id`)
+              // must come before it — see the note by libraryFilmDetail.
+              GoRoute(
+                path: Routes.libraryBookRatings,
+                builder: (context, state) => const BookRatingsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryBookTop3,
+                builder: (context, state) => const BookTop3Screen(),
+              ),
+              GoRoute(
+                path: Routes.libraryBookDetail,
+                builder: (context, state) => BookDetailScreen(bookId: state.pathParameters['id']!),
+              ),
               _placeholderRoute(Routes.libraryNotes, 'Notes'),
               _placeholderRoute(Routes.libraryNoteDetail, 'Note'),
               _placeholderRoute(Routes.libraryCollectionDetail, 'Collection'),

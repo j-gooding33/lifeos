@@ -33,6 +33,7 @@ class LibraryHomeScreen extends StatelessWidget {
           LListTile(
             leading: const Icon(Icons.menu_book_outlined),
             title: 'Books',
+            subtitle: 'Reading list, ratings, Top 3',
             onTap: () => context.push(Routes.libraryBooks),
           ),
           LListTile(
