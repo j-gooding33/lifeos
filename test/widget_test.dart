@@ -6,13 +6,20 @@ import 'package:life_os/app.dart';
 import 'package:life_os/core/config/flavor.dart';
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/data/local/database.dart';
+import 'package:life_os/features/onboarding/application/onboarding_providers.dart';
 
 /// `path_provider` (which the real `AppDatabase()` needs) has no platform
 /// channel in `flutter_test`, so every widget test overrides it with an
 /// in-memory database — see the same note in `route_resolution_test.dart`.
-Widget _appUnderTest() {
+/// [onboarded] defaults to true so tests about tab navigation don't also
+/// have to deal with the onboarding gate; the gate itself gets its own
+/// test below with `onboarded: false`.
+Widget _appUnderTest({bool onboarded = true}) {
   return ProviderScope(
-    overrides: [appDatabaseProvider.overrideWithValue(AppDatabase.forTesting(NativeDatabase.memory()))],
+    overrides: [
+      appDatabaseProvider.overrideWithValue(AppDatabase.forTesting(NativeDatabase.memory())),
+      if (onboarded) hasOnboardedProvider.overrideWith((ref) => Stream.value(true)),
+    ],
     child: const LifeOsApp(),
   );
 }
@@ -47,6 +54,16 @@ void main() {
     // the AppBar's greeting text now — not the literal word "Home" — so it
     // no longer needs the double-match note the other labels don't have.
     expect(find.text('Home'), findsAtLeastNWidgets(1));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(Duration.zero);
+  });
+
+  testWidgets('a first-run user (hasOnboarded false) sees onboarding, not the tab bar', (tester) async {
+    await tester.pumpWidget(_appUnderTest(onboarded: false));
+    await tester.pumpAndSettle();
+
+    expect(find.text('What do you want to start doing?'), findsOneWidget);
+    expect(find.text('Plans'), findsNothing);
     await tester.pumpWidget(const SizedBox());
     await tester.pump(Duration.zero);
   });

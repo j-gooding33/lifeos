@@ -17,6 +17,7 @@ class _SettingsRow {
 const _accountRows = [
   _SettingsRow(Icons.person_outline, 'Account', Routes.settingsAccount),
   _SettingsRow(Icons.badge_outlined, 'Profile', Routes.settingsProfile),
+  _SettingsRow(Icons.replay_outlined, 'Redo setup', Routes.onboarding),
 ];
 
 const _preferenceRows = [
@@ -39,8 +40,9 @@ const _aboutRows = [
 ];
 
 /// The Settings hub (§22.5) — every section from the route table gets a
-/// real, navigable entry here; only Appearance is fully built out so far,
-/// the rest resolve to the honest "not built yet" state (CLAUDE.md rule 1).
+/// real, navigable entry here; only Appearance and Redo setup are fully
+/// built out so far, the rest resolve to the honest "not built yet" state
+/// (CLAUDE.md rule 1).
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 

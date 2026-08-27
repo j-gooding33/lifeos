@@ -11,6 +11,7 @@ import 'package:life_os/features/library/presentation/screens/film_search_screen
 import 'package:life_os/features/library/presentation/screens/film_top5_screen.dart';
 import 'package:life_os/features/library/presentation/screens/films_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_home_screen.dart';
+import 'package:life_os/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_calendar_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.dart';
@@ -38,7 +39,10 @@ GoRouter buildRouter() {
   return GoRouter(
     initialLocation: Routes.home,
     routes: [
-      _placeholderRoute(Routes.onboarding, 'Onboarding'),
+      GoRoute(
+        path: Routes.onboarding,
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       _placeholderRoute(Routes.authSignIn, 'Sign in'),
       _placeholderRoute(Routes.authSignUp, 'Sign up'),
       _placeholderRoute(Routes.authReset, 'Reset password'),

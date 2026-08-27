@@ -4,6 +4,45 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## Onboarding, Home/Tasks polish, and a first-run gate (2026-08-27)
+
+A batch of UI bugs found by actually using the app on the emulator, plus a first-run onboarding flow, done as one item-per-commit sequence.
+
+### First run is a widget swap in `LifeOsApp`, not a go_router redirect
+**Decision:** `LifeOsApp.build()` watches `hasOnboardedProvider` and renders `MaterialApp(home: OnboardingScreen())` when it's false, or the normal `MaterialApp.router(routerConfig: _router)` once it's true. `_router` is a `late final` field built lazily on first access, so a first-run user never constructs the router (or pays for building the whole `StatefulShellRoute` tree) until onboarding actually finishes.
+**Why:** a go_router-level `redirect` callback would need `buildRouter()` to take a `Ref`, which every existing call site (`route_resolution_test.dart` included) constructs without one — a bigger, riskier change for the same outcome. The widget-swap approach touches nothing about the router itself and needed no changes to `buildRouter()`'s signature.
+**How to apply:** `OnboardingScreen`'s "Finish" button doesn't navigate anywhere itself — it calls `completeOnboarding()`, which flips `hasOnboardedProvider`, and `LifeOsApp` rebuilds into the router on its own. Reached again later from Settings ("Redo setup") via a normal `context.push` — there, Finish's `Navigator.pop()` (a no-op on first run, since that stack is empty) pops back to Settings instead.
+
+### Onboarding answers convert to real records immediately, not a persisted backlog
+**Decision:** `completeOnboarding()` runs the mapper and creates real Task/Plan/Project/Library rows in the same call that marks `hasOnboarded = true`. The saved-answers JSON (`OnboardingRepository.saveAnswers`) is a record of what was asked, not a queue `SuggestionCard` reads from.
+**Why:** item 8's own instruction was "on completion, turn the answers into real records" — immediate, not deferred. That leaves `SuggestionCard`'s fallback list (below) with nothing to swap to yet: the records it would suggest already exist the moment onboarding finishes.
+**How to apply:** if a future "a few more ideas" feature wants to re-surface onboarding answers as ongoing suggestions, it should read `OnboardingRepository.getAnswers()` directly rather than assuming they're still "to do" — some or all may already have real records now edited or completed.
+
+### `SuggestionCard`'s fallback list is not yet swapped for onboarding answers
+**Decision:** despite the above, `SuggestionCard` (item 7) still shows a fixed generic list, not anything derived from `OnboardingRepository`.
+**Why:** see the decision above — after onboarding, its answers are already real records, so there's no unconverted backlog left to surface. Wiring it up now would mean re-listing things that already have their own real place in the app.
+**How to apply:** don't wire this up reactively "because item 7 said to" — only do it alongside a real feature that needs to reference onboarding answers after the fact.
+
+### Onboarding's "daily or weekly" question always creates a daily habit
+**Decision:** every answer to `OnboardingQuestion.dailyWeekly` becomes a habit-kind Plan with `IntervalDays(1, anchor: today)`, regardless of whether the user meant daily or weekly.
+**Why:** the mapper is explicitly rules-based, not NLP — there's no reliable way to tell "meditate daily" from "meal prep on Sundays" apart from free text alone. Defaulting to daily and leaving the user to edit the rule once the Plan exists is honest about that limit, rather than guessing a specific weekday.
+**How to apply:** an AI-based `OnboardingMapper` (the interface exists for exactly this) can replace this with a real weekly/daily distinction once it exists.
+
+### The "read or watch" question's book/film split is a toggle, not a guess
+**Decision:** `OnboardingScreen`'s fourth page has an explicit Book / Film segmented control; every answer entered on that page (free text or chip) is tagged with whichever is selected. There's no attempt to infer the type from the text itself.
+**Why:** same reasoning as the daily/weekly rule above — a rules-based mapper can't reliably tell "Dune" (a book, a film, or both) apart without being told. An explicit toggle is honest and takes one tap.
+
+### Projects gets a minimal real repository, not a stub or a Task workaround
+**Decision:** `ProjectDao`/`ProjectRepository`/`AppProject` are new, real, and write to the `Projects` table that has existed in the schema since it was first set up (no migration needed — it was just never read from). `Routes.projects` is still the honest `NotBuiltYetScreen` placeholder.
+**Why:** item 8 explicitly asks for "longer efforts become Projects" as real records, and the table already existed for exactly this. Routing "currently working on" answers into Tasks instead (to avoid touching a new table) would have been the fake move — CLAUDE.md rule 1. The records are real now; only the dedicated screen to browse them isn't built yet, same category as `collections` before its own UI existed.
+**How to apply:** when a real Projects feature is built, its repository is already here — don't re-derive it from the Tasks workaround this decision explicitly avoided.
+
+### Tasks/Plans screens' own FABs were removed, not just visually deduplicated
+**Decision:** `TasksScreen` and `PlansScreen` no longer declare a `floatingActionButton` on their own nested `Scaffold` — the shell's single global Quick Add FAB is now the only one. Quick Add's "Plan" tile was wired to `Routes.plansNew` (previously a "not shipped" toast) so plan creation didn't silently disappear along with the screen-level FAB.
+**Why:** the two FABs were rendering on top of each other; keeping both and just changing z-order or opacity would have papered over the duplication rather than removed its cause (a genuinely redundant second `Scaffold`-level FAB).
+
+---
+
 ## Theme Schemes — four selectable visual identities (2026-08-27)
 
 The project owner asked to move off the original M2 look and, after reviewing four pitched directions in an Artifact, picked **After Hours** (dark, ambient, coral-on-charcoal) as the shipped default, with all four available from Settings → Appearance.
