@@ -8,6 +8,7 @@ import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/home/application/home_providers.dart';
+import 'package:life_os/features/home/presentation/widgets/suggestion_card.dart';
 import 'package:life_os/features/tasks/application/task_providers.dart';
 import 'package:life_os/routing/routes.dart';
 
@@ -25,19 +26,7 @@ class FocusCard extends ConsumerWidget {
     final textStyles = context.textStyles;
 
     if (snapshot.hasNothingToday) {
-      return LCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const LSectionHeader(title: 'Today'),
-            const SizedBox(height: LifeSpace.s12),
-            Text(
-              'Nothing scheduled. Add something, or take the day.',
-              style: textStyles.body.copyWith(color: colors.neutrals.ink2),
-            ),
-          ],
-        ),
-      );
+      return const SuggestionCard(title: 'Nothing scheduled today');
     }
 
     if (snapshot.allDoneToday) {
