@@ -31,9 +31,11 @@ this commit:
 | Habits (§13) | Habits are Plans (`kind = 'habit'`) — creation, list with a 7-day dot strip, detail with streak/best-streak/year heatmap. |
 | Projects (§11) | Full CRUD, task grouping (To do/Done, inline add), derived progress, deadline chips. |
 | Goals (§12) | Full CRUD, all six goal types, honest projection arithmetic, milestones, and automatic progress from completed Plan occurrences. |
+| Notes (§17.1) | A custom block editor (paragraph/heading/checklist/bullet/quote/divider/code), pinning, plain-text projection. |
 
 `LIFE_OS_SPEC.md`'s own M8 (Goals), M9 (Projects) and M10 (Habits) were
-deferred until the custom M8 brief below shipped; all three are now done.
+deferred until the custom M8 brief below shipped; all three are now done,
+along with Notes (part of M13).
 
 ### M8 — Media Library & School Timetable (custom brief, see `DECISIONS.md`)
 
@@ -66,9 +68,10 @@ Done, end to end:
   rating prompt.
 
 Not yet built: the live AI backend (needs a Supabase project and an Edge
-Function — same blocker as sync), Notes/Links/Documents, Universal Search,
-Journal, Finance, and the general cross-domain Stats tab (needs the
-`daily_rollups` rollup-table architecture `§20.1` calls for — a
+Function — same blocker as sync), Links/Documents (Notes itself now ships —
+see the Status table above), note-linking into other detail screens,
+Universal Search, Journal, Finance, and the general cross-domain Stats tab
+(needs the `daily_rollups` rollup-table architecture `§20.1` calls for — a
 meaningfully bigger feature than the per-media-type stats above). See
 `DECISIONS.md` for the full list of smaller, deliberate cuts within each
 shipped feature (e.g. "Fill from watchlist," the counter-habit stepper,
