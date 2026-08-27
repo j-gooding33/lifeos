@@ -87,7 +87,11 @@ const _routeTablePaths = [
 /// documents directory) has no platform channel in `flutter_test`.
 Widget _pumpableApp(GoRouter router) {
   return ProviderScope(
-    overrides: [appDatabaseProvider.overrideWithValue(AppDatabase.forTesting(NativeDatabase.memory()))],
+    overrides: [
+      appDatabaseProvider.overrideWithValue(
+        AppDatabase.forTesting(NativeDatabase.memory()),
+      ),
+    ],
     child: MaterialApp.router(theme: buildLightTheme(), routerConfig: router),
   );
 }
@@ -95,7 +99,9 @@ Widget _pumpableApp(GoRouter router) {
 void main() {
   setUp(() => AppConfig.initialize(Flavor.dev));
 
-  testWidgets('every route in the §3.2 table resolves without error', (tester) async {
+  testWidgets('every route in the §3.2 table resolves without error', (
+    tester,
+  ) async {
     final router = buildRouter();
     await tester.pumpWidget(_pumpableApp(router));
     await tester.pumpAndSettle();
@@ -103,8 +109,16 @@ void main() {
     for (final path in _routeTablePaths) {
       router.go(path);
       await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull, reason: '$path threw while resolving');
-      expect(find.byType(Scaffold), findsWidgets, reason: '$path rendered no Scaffold');
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: '$path threw while resolving',
+      );
+      expect(
+        find.byType(Scaffold),
+        findsWidgets,
+        reason: '$path rendered no Scaffold',
+      );
     }
   });
 
@@ -135,7 +149,11 @@ void main() {
       await tester.pumpWidget(_pumpableApp(router));
       router.go('/plan/abc123');
       await tester.pumpAndSettle();
-      expect(find.text('Plan detail'), findsOneWidget);
+      // A real screen now (M6) — abc123 doesn't exist in the fresh test
+      // database, so it resolves to the "no longer exists" state rather
+      // than a placeholder, which is itself proof the redirect landed on
+      // the real plan-detail route rather than somewhere else.
+      expect(find.text('This plan no longer exists.'), findsOneWidget);
       // Home (the initial location) is a real database-backed screen now
       // (M5) and stays mounted inside the shell's IndexedStack even after
       // navigating away, so it needs the same forced-unmount flush as the
@@ -164,7 +182,9 @@ void main() {
       await tester.pump(Duration.zero);
     });
 
-    testWidgets('/occurrence/:id -> honest placeholder (needs M7 repository)', (tester) async {
+    testWidgets('/occurrence/:id -> honest placeholder (needs M7 repository)', (
+      tester,
+    ) async {
       final router = buildRouter();
       await tester.pumpWidget(_pumpableApp(router));
       router.go('/occurrence/occ1');

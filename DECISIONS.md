@@ -4,6 +4,38 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M6 — Recurrence engine + Plans (2026-08-27)
+
+### Occurrence CRUD lives on `PlanRepository`, not a separate `OccurrenceRepository`
+**Decision:** §8.7 names `PlanRepository` and `OccurrenceRepository` as two separate deliverables; this session built one `PlanRepository` that owns both plans and their occurrences (`watchUpcoming`, `watchHistory`, `completeOccurrence`, `_regenerate`, stats, the missed sweep).
+**Why:** every occurrence operation needs the owning plan's rule, `missedPolicy`, `scheduleMode` and `startDate` to do anything (materialise, sweep, roll a rolling-mode plan forward) — splitting occurrence CRUD into its own class would mean either that class taking a `PlanRepository` dependency anyway, or duplicating plan-lookup logic on both sides. One class matches how the two pieces of data are actually used together everywhere in this codebase so far.
+**How to apply:** if `OccurrenceRepository` genuinely earns its own class later (e.g. the calendar work in M7 needs occurrence queries with no plan context, like "every occurrence across every plan this week"), split it out then — extending `PlanRepository` is cheaper until that need is concrete.
+
+### Regeneration and the missed sweep run opportunistically, not on a true midnight/resume job
+**Decision:** `ensureMaterialised` runs when a plan is created, edited, or its detail screen opens (three of §9.5's five triggers); `applyMissedSweep` runs once whenever the Plans list screen opens. Neither runs on `AppLifecycleState.resumed` or a genuine local-midnight timer — the other two §9.5 triggers ("app resume" and "the daily maintenance job").
+**Why:** same category of deferral as Home's date-rollover service in M5 (see that entry) — a real background scheduler is infrastructure shared by several features (Home's own midnight rollover, notifications later) and deserves one implementation, not a Plans-specific stopgap. Opening the Plans list is a good-enough proxy for "the user is here, make sure the data's current" until that shared piece exists.
+**How to apply:** when a real app-lifecycle/midnight service is built (likely alongside Home's rollover, or notifications in M17), wire `PlanRepository.applyMissedSweep` and per-active-plan `ensureMaterialised` calls into it instead of the Plans screen's `initState`.
+
+### Rhythm editor: six presets over one shared "every N (days/weeks/months)" control, "Custom" unlocks all seven rule types
+**Decision:** §7.3's mockup shows six preset buttons above a single "Every [N] [unit ▾]" field. Read that as: the first four presets (day/other day/3 days/weekly) and "Specific days" all drive that one shared control (unit=days → `IntervalDays`, unit=weeks with no explicit days → `WeeklyDays` on the anchor's own weekday, "Specific days" → `WeeklyDays` with a user-picked day set); "Custom" replaces it with a full seven-type picker covering `MonthlyDay`, `MonthlyWeekday`, `Yearly`, `CustomDates` and `TimesPerPeriod` too, per §7.3's explicit "Custom opens the full rule editor with all seven rule types" line.
+**Why:** the mockup's simple control genuinely can't express five of the seven rule types, but the prose is explicit that all seven must be reachable somewhere — "Custom" is that somewhere. This was the only reading that satisfies both the mockup and the prose without inventing a rule type the engine doesn't have.
+
+### Habit creation still goes through `NotBuiltYetScreen`
+**Decision:** `PlanCreateScreen` (the three-step wizard) always creates `kind: PlanKind.plan` — there's no path to `kind: PlanKind.habit` yet, even though the data layer fully supports habits (`watchHabits`, the Habits segment, `PlanRow` rendering either kind identically).
+**Why:** §7.1's binding rule ("habits are plans") is about the *engine*, which is shared and done. The *UI* difference — "one step instead of three, daily default, streaks/heatmap presentation instead of a schedule list" — is its own deliverable explicitly sequenced at M10 (§38 item 15). The Habits tab itself is still `NotBuiltYetScreen`, so there's nowhere for a habit-creation entry point to live yet regardless.
+
+### Plans list: no category filter, no "next due"/"completion rate" sort
+**Decision:** §7.4 asks for sort by next-due/recently-created/alphabetical/completion-rate and a category filter. Built recently-created (the default row order) and alphabetical only; skipped the category filter chips.
+**Why:** minor relative to the rest of M6 — "next due" and "completion rate" sorts need a per-plan async lookup (next fire date, or the same stats computation the detail screen does) at list-render time for every row, which is a real perf question worth its own pass rather than a quick add-on. Smaller in scope than the parser/Home-card deferrals, noted here rather than asked about separately.
+**How to apply:** add the two remaining sort modes once there's a cheap way to get "next due" per plan without N extra stream subscriptions (e.g. batching through `HomeSnapshot`-style single composed query, §5.5's own lesson).
+
+### Occurrence content slot ("+ choose a film") isn't rendered
+**Decision:** §7.5 says every future occurrence of a `mediaType != none` plan gets a tap target to attach a library item. `PlanDetailScreen`'s Upcoming rows never show it, regardless of `mediaType`.
+**Why:** there's nothing to attach to until Library/Films exists (M11/M12) — rendering the affordance now would be exactly the dead-button problem rule 1 exists to prevent.
+**How to apply:** add the content slot to the Upcoming row once `LibraryRepository` (M11) exists to back a picker.
+
+---
+
 ## M5 — Tasks, Home v1, Quick Add (2026-08-27)
 
 ### Quick Add ships as a type-picker only; the Layer 1 NLP parser is deferred

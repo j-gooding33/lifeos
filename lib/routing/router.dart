@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/plans_screen.dart';
 import 'package:life_os/features/quick_add/presentation/quick_add_sheet.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/tasks_screen.dart';
@@ -45,10 +48,24 @@ GoRouter buildRouter() {
           ),
           StatefulShellBranch(
             routes: [
-              _placeholderRoute(Routes.plans, 'Plans'),
-              _placeholderRoute(Routes.plansNew, 'New plan'),
-              _placeholderRoute(Routes.planDetail, 'Plan detail'),
-              _placeholderRoute(Routes.planEdit, 'Edit plan'),
+              GoRoute(
+                path: Routes.plans,
+                builder: (context, state) => const PlansScreen(),
+              ),
+              GoRoute(
+                path: Routes.plansNew,
+                builder: (context, state) => const PlanCreateScreen(),
+              ),
+              GoRoute(
+                path: Routes.planDetail,
+                builder: (context, state) =>
+                    PlanDetailScreen(planId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: Routes.planEdit,
+                builder: (context, state) =>
+                    PlanCreateScreen(planId: state.pathParameters['id']),
+              ),
               _placeholderRoute(Routes.planCalendar, 'Plan calendar'),
               _placeholderRoute(Routes.planOccurrence, 'Occurrence detail'),
               _placeholderRoute(Routes.habits, 'Habits'),
@@ -59,7 +76,10 @@ GoRouter buildRouter() {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: Routes.tasks, builder: (context, state) => const TasksScreen()),
+              GoRoute(
+                path: Routes.tasks,
+                builder: (context, state) => const TasksScreen(),
+              ),
               GoRoute(
                 path: Routes.tasksNew,
                 builder: (context, state) => const TaskDetailScreen(),
@@ -115,8 +135,10 @@ GoRouter buildRouter() {
 
       GoRoute(
         path: Routes.settings,
-        builder: (context, state) =>
-            const NotBuiltYetScreen(featureName: 'Settings', showDevGalleryLink: true),
+        builder: (context, state) => const NotBuiltYetScreen(
+          featureName: 'Settings',
+          showDevGalleryLink: true,
+        ),
       ),
       _placeholderRoute(Routes.settingsAccount, 'Account'),
       _placeholderRoute(Routes.settingsProfile, 'Profile'),
