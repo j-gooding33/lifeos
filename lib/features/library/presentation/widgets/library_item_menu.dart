@@ -6,6 +6,7 @@ import 'package:life_os/design/components/l_confirm_dialog.dart';
 import 'package:life_os/design/components/l_menu.dart';
 import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/features/library/application/library_providers.dart';
+import 'package:life_os/features/library/presentation/widgets/add_to_collection_sheet.dart';
 import 'package:life_os/features/library/presentation/widgets/mark_watched_sheet.dart';
 import 'package:life_os/features/library/presentation/widgets/rate_dialog.dart';
 
@@ -61,6 +62,11 @@ Future<void> showLibraryItemMenu(
             err: (f) => LToast.show(context, f.message),
           );
         },
+      ),
+      LMenuItem(
+        label: 'Add to collection',
+        icon: Icons.collections_bookmark_outlined,
+        onTap: () => AddToCollectionSheet.show(context, item),
       ),
       LMenuItem(
         label: 'Remove',

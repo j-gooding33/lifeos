@@ -50,6 +50,12 @@ class LibraryItemRepository {
     return _dao.watchById(id).map((row) => row == null ? null : _toDomain(row));
   }
 
+  /// Resolves a mixed-media-type batch of ids in one query — how a
+  /// Collection (M8 Part 28) joins its membership list to full items.
+  Stream<List<AppLibraryItem>> watchByIds(List<String> ids) {
+    return _dao.watchByIds(ids).map(_toDomainList);
+  }
+
   /// §16.7: adding an already-saved item just returns the existing row
   /// rather than creating a duplicate.
   Future<Result<AppLibraryItem, Failure>> addFromSearchResult({

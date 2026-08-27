@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_os/core/errors/failure.dart';
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/core/utils/result.dart';
+import 'package:life_os/data/local/daos/collection_dao.dart';
 import 'package:life_os/data/local/daos/library_item_dao.dart';
 import 'package:life_os/data/local/daos/top_list_dao.dart';
 import 'package:life_os/data/local/daos/tv_episode_dao.dart';
@@ -9,7 +10,9 @@ import 'package:life_os/data/media/media_metadata_provider.dart';
 import 'package:life_os/data/media/media_types.dart';
 import 'package:life_os/data/media/open_library_provider.dart';
 import 'package:life_os/data/media/tmdb_metadata_provider.dart';
+import 'package:life_os/data/repositories/collection_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
+import 'package:life_os/data/repositories/models/app_collection.dart';
 import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/data/repositories/top_list_repository.dart';
 import 'package:life_os/data/repositories/tv_episode_repository.dart';
@@ -30,6 +33,11 @@ TvEpisodeRepository tvEpisodeRepository(Ref ref) {
 @Riverpod(keepAlive: true)
 TopListRepository topListRepository(Ref ref) {
   return TopListRepository(TopListDao(ref.watch(appDatabaseProvider)));
+}
+
+@Riverpod(keepAlive: true)
+CollectionRepository collectionRepository(Ref ref) {
+  return CollectionRepository(CollectionDao(ref.watch(appDatabaseProvider)));
 }
 
 /// §16.2: films and TV both use TMDB; books use Open Library. One provider
@@ -93,6 +101,30 @@ Stream<List<AppTvEpisode>> ratedEpisodes(Ref ref) async* {
 Stream<List<TopListEntry>> topList(Ref ref, MediaType type) async* {
   final userId = await ref.watch(currentUserIdProvider.future);
   yield* ref.watch(topListRepositoryProvider).watch(userId, type);
+}
+
+@riverpod
+Stream<List<AppCollection>> collections(Ref ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  yield* ref.watch(collectionRepositoryProvider).watchAll(userId);
+}
+
+@riverpod
+Stream<AppCollection?> collectionById(Ref ref, String id) {
+  return ref.watch(collectionRepositoryProvider).watchById(id);
+}
+
+/// Joins a collection's membership list to full items in one query — a
+/// collection can hold a mix of films, TV shows and books.
+@riverpod
+Stream<List<AppLibraryItem>> collectionItems(Ref ref, String collectionId) {
+  final itemRepository = ref.watch(libraryItemRepositoryProvider);
+  return ref.watch(collectionRepositoryProvider).watchItemIds(collectionId).asyncExpand(itemRepository.watchByIds);
+}
+
+@riverpod
+Stream<Set<String>> collectionIdsContaining(Ref ref, String libraryItemId) {
+  return ref.watch(collectionRepositoryProvider).watchCollectionIdsContaining(libraryItemId);
 }
 
 /// TMDB's search results don't include season count — only `detail()` does

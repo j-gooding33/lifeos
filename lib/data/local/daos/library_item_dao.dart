@@ -68,6 +68,16 @@ class LibraryItemDao extends DatabaseAccessor<AppDatabase>
   Stream<LibraryItem?> watchById(String id) =>
       (select(libraryItems)..where((i) => i.id.equals(id))).watchSingleOrNull();
 
+  /// Collections (M8 Part 28) store membership as a list of ids spanning
+  /// any media type, so lookups need to resolve a mixed-type batch in one
+  /// query rather than per-type like the methods above.
+  Stream<List<LibraryItem>> watchByIds(List<String> ids) {
+    if (ids.isEmpty) return Stream.value(const []);
+    final query = select(libraryItems)
+      ..where((i) => i.id.isIn(ids) & i.deletedAt.isNull());
+    return query.watch();
+  }
+
   /// §16.7: "same film added twice — adding again just opens the existing
   /// item," backed by the unique `(providerId, externalId, userId)` index.
   Future<LibraryItem?> getByExternalId(

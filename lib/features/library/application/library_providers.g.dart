@@ -152,6 +152,54 @@ final class TopListRepositoryProvider
 
 String _$topListRepositoryHash() => r'5ba313b42b809067caef7c0a939a4d9915d30328';
 
+@ProviderFor(collectionRepository)
+const collectionRepositoryProvider = CollectionRepositoryProvider._();
+
+final class CollectionRepositoryProvider
+    extends
+        $FunctionalProvider<
+          CollectionRepository,
+          CollectionRepository,
+          CollectionRepository
+        >
+    with $Provider<CollectionRepository> {
+  const CollectionRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'collectionRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$collectionRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<CollectionRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CollectionRepository create(Ref ref) {
+    return collectionRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CollectionRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CollectionRepository>(value),
+    );
+  }
+}
+
+String _$collectionRepositoryHash() =>
+    r'050946c07b42de2539095d4e7d3fef663efd2101';
+
 /// §16.2: films and TV both use TMDB; books use Open Library. One provider
 /// instance each, kept alive for the app's lifetime.
 
@@ -916,6 +964,290 @@ final class TopListFamily extends $Family
 
   @override
   String toString() => r'topListProvider';
+}
+
+@ProviderFor(collections)
+const collectionsProvider = CollectionsProvider._();
+
+final class CollectionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppCollection>>,
+          List<AppCollection>,
+          Stream<List<AppCollection>>
+        >
+    with
+        $FutureModifier<List<AppCollection>>,
+        $StreamProvider<List<AppCollection>> {
+  const CollectionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'collectionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$collectionsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppCollection>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppCollection>> create(Ref ref) {
+    return collections(ref);
+  }
+}
+
+String _$collectionsHash() => r'b5d145835354f9d012b2a4a6ae27a88d5cdba9cb';
+
+@ProviderFor(collectionById)
+const collectionByIdProvider = CollectionByIdFamily._();
+
+final class CollectionByIdProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<AppCollection?>,
+          AppCollection?,
+          Stream<AppCollection?>
+        >
+    with $FutureModifier<AppCollection?>, $StreamProvider<AppCollection?> {
+  const CollectionByIdProvider._({
+    required CollectionByIdFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'collectionByIdProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$collectionByIdHash();
+
+  @override
+  String toString() {
+    return r'collectionByIdProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<AppCollection?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<AppCollection?> create(Ref ref) {
+    final argument = this.argument as String;
+    return collectionById(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CollectionByIdProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$collectionByIdHash() => r'772b60834d5091bdbbaea8e3be880df70c6c2e8c';
+
+final class CollectionByIdFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<AppCollection?>, String> {
+  const CollectionByIdFamily._()
+    : super(
+        retry: null,
+        name: r'collectionByIdProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CollectionByIdProvider call(String id) =>
+      CollectionByIdProvider._(argument: id, from: this);
+
+  @override
+  String toString() => r'collectionByIdProvider';
+}
+
+/// Joins a collection's membership list to full items in one query — a
+/// collection can hold a mix of films, TV shows and books.
+
+@ProviderFor(collectionItems)
+const collectionItemsProvider = CollectionItemsFamily._();
+
+/// Joins a collection's membership list to full items in one query — a
+/// collection can hold a mix of films, TV shows and books.
+
+final class CollectionItemsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppLibraryItem>>,
+          List<AppLibraryItem>,
+          Stream<List<AppLibraryItem>>
+        >
+    with
+        $FutureModifier<List<AppLibraryItem>>,
+        $StreamProvider<List<AppLibraryItem>> {
+  /// Joins a collection's membership list to full items in one query — a
+  /// collection can hold a mix of films, TV shows and books.
+  const CollectionItemsProvider._({
+    required CollectionItemsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'collectionItemsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$collectionItemsHash();
+
+  @override
+  String toString() {
+    return r'collectionItemsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppLibraryItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppLibraryItem>> create(Ref ref) {
+    final argument = this.argument as String;
+    return collectionItems(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CollectionItemsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$collectionItemsHash() => r'39e23f75fd71e6b55d9ce43be7d065379150247d';
+
+/// Joins a collection's membership list to full items in one query — a
+/// collection can hold a mix of films, TV shows and books.
+
+final class CollectionItemsFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<List<AppLibraryItem>>, String> {
+  const CollectionItemsFamily._()
+    : super(
+        retry: null,
+        name: r'collectionItemsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Joins a collection's membership list to full items in one query — a
+  /// collection can hold a mix of films, TV shows and books.
+
+  CollectionItemsProvider call(String collectionId) =>
+      CollectionItemsProvider._(argument: collectionId, from: this);
+
+  @override
+  String toString() => r'collectionItemsProvider';
+}
+
+@ProviderFor(collectionIdsContaining)
+const collectionIdsContainingProvider = CollectionIdsContainingFamily._();
+
+final class CollectionIdsContainingProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Set<String>>,
+          Set<String>,
+          Stream<Set<String>>
+        >
+    with $FutureModifier<Set<String>>, $StreamProvider<Set<String>> {
+  const CollectionIdsContainingProvider._({
+    required CollectionIdsContainingFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'collectionIdsContainingProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$collectionIdsContainingHash();
+
+  @override
+  String toString() {
+    return r'collectionIdsContainingProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<Set<String>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<Set<String>> create(Ref ref) {
+    final argument = this.argument as String;
+    return collectionIdsContaining(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CollectionIdsContainingProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$collectionIdsContainingHash() =>
+    r'e8f61d44a305876ca98abbfbb7c9a7a21b4b7531';
+
+final class CollectionIdsContainingFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<Set<String>>, String> {
+  const CollectionIdsContainingFamily._()
+    : super(
+        retry: null,
+        name: r'collectionIdsContainingProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  CollectionIdsContainingProvider call(String libraryItemId) =>
+      CollectionIdsContainingProvider._(argument: libraryItemId, from: this);
+
+  @override
+  String toString() => r'collectionIdsContainingProvider';
 }
 
 /// TMDB's search results don't include season count — only `detail()` does

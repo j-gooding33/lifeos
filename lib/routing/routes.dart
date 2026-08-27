@@ -46,6 +46,7 @@ class Routes {
   static const libraryBookDetail = '/library/books/:id';
   static const libraryNotes = '/library/notes';
   static const libraryNoteDetail = '/library/notes/:id';
+  static const libraryCollections = '/library/collections';
   static const libraryCollectionDetail = '/library/collections/:id';
   static const libraryLinks = '/library/links';
 

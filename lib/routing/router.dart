@@ -10,6 +10,8 @@ import 'package:life_os/features/library/presentation/screens/book_ratings_scree
 import 'package:life_os/features/library/presentation/screens/book_search_screen.dart';
 import 'package:life_os/features/library/presentation/screens/book_top3_screen.dart';
 import 'package:life_os/features/library/presentation/screens/books_screen.dart';
+import 'package:life_os/features/library/presentation/screens/collection_detail_screen.dart';
+import 'package:life_os/features/library/presentation/screens/collections_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_detail_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_ratings_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_search_screen.dart';
@@ -243,7 +245,14 @@ GoRouter buildRouter() {
               ),
               _placeholderRoute(Routes.libraryNotes, 'Notes'),
               _placeholderRoute(Routes.libraryNoteDetail, 'Note'),
-              _placeholderRoute(Routes.libraryCollectionDetail, 'Collection'),
+              GoRoute(
+                path: Routes.libraryCollections,
+                builder: (context, state) => const CollectionsScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryCollectionDetail,
+                builder: (context, state) => CollectionDetailScreen(collectionId: state.pathParameters['id']!),
+              ),
               _placeholderRoute(Routes.libraryLinks, 'Links'),
             ],
           ),

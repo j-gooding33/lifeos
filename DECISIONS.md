@@ -4,6 +4,29 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M8 Part 28 — Media Collections (2026-08-27)
+
+Manual collections (§15.2): named, ordered, polymorphic lists over `collections`/`collection_items`, which existed in the schema since M4 but had no DAO/repository/UI until now.
+
+### Collections is its own hub off Library Home, not a segment inside Films/TV/Books
+**Decision:** `CollectionsScreen` (`/library/collections`) and `CollectionDetailScreen` (`/library/collections/:id`) are top-level siblings of Films/TV/Books under the Library tab, reached from a new "Collections" row on `LibraryHomeScreen` — not a fourth segmented-control tab bolted onto `FilmsScreen`/`TvShowsScreen`/`BooksScreen`.
+**Why:** this supersedes the plan sketched in the earlier "Films UI ships before Collections exists" decision, written before `LibraryHomeScreen` (M8.15) existed. §3.2's own route table already lists `/library/collections/:id` as a sibling of `/library/films`, `/library/tv`, `/library/books` — all reached from the Library hub — not nested under any one media type. A collection is also explicitly polymorphic (can hold a film, a TV show and a book together), so it never belonged inside a single media type's screen in the first place.
+**How to apply:** the grid/tile machinery is still reused (see below) — only the entry point changed from the original plan, not the underlying screens.
+
+### Items are added to a collection from the item's own menu, not from inside the collection
+**Decision:** `showLibraryItemMenu`'s "Add to collection" action opens `AddToCollectionSheet` (a checklist of collections with a "New collection" quick action at the top); `CollectionDetailScreen` itself has no "add item" affordance, only "remove from collection" per item and rename/delete for the collection as a whole.
+**Why:** a reverse picker (browse the whole library from inside a collection to add something) would duplicate the search/browse screens Films/TV/Books already have. Starting from the item keeps one direction of "add," matching how "Add to Top list" already works from the same menu.
+**How to apply:** if a future collection-builder flow wants a from-the-collection add path too, it should reuse the existing per-type browse screens (`FilmsScreen` etc.) as a picker rather than building a new cross-type search.
+
+### Collection membership is a plain id list; the poster grid is the same tile pattern as Films/TV/Books
+**Decision:** `CollectionRepository` only owns rows in `collection_items` (`watchItemIds`, `addItem`, `removeItem`, `watchCollectionIdsContaining`) — same "membership only, caller joins for display" shape as `TopListRepository`. `LibraryItemDao.watchByIds`/`LibraryItemRepository.watchByIds` (new) resolve a mixed-media-type id batch in one query, and `CollectionDetailScreen`'s grid reuses `FilmsScreen`'s `_FilmTile` layout (poster + title, `LPosterTile`, long-press menu) generalised to route to whichever of `libraryFilmDetail`/`libraryTvDetail`/`libraryBookDetail` matches each item's `mediaType`.
+**Why:** avoids a second "join ids to display data" implementation and a second poster-grid layout for what is visually identical to the existing Watchlist/Watched/Favourites grids — the DECISIONS.md note left by the earlier Films-UI decision ("the grid/tile/menu machinery already built here is meant to be reused, not duplicated") still holds, just applied at the tile level instead of a shared screen.
+
+### Collections are manual only in this pass; `itemType` isn't yet user-set at creation
+**Decision:** `CollectionRepository.create()` always writes `itemType = null` (mixed); the schema column and domain model (`AppCollection.itemType`) exist and round-trip correctly, but no UI control sets it yet. `isSmart`/`smartQuery` are untouched, per §15.2's "smart collections ship in M15."
+**Why:** no v1 flow actually needs a single-media-type-restricted collection yet, and adding a create-time picker for a restriction nothing enforces downstream would be speculative. The column staying wired end-to-end (just not exposed) means adding that control later is a UI-only change.
+**How to apply:** if a future collection type needs the restriction enforced (e.g. `AddToCollectionSheet` filtering out mismatched media types), that's a small addition to `create()`'s caller and the sheet's list — the repository and schema already carry the data.
+
 ## M8.30-M8.34 — School Timetable (2026-08-27)
 
 Manual timetable entry, term dates/closures, and a today-view dashboard, built on the pure-Dart `school_week_engine.dart` (Week A/B parity, term/closure open-day logic) written in an earlier session.

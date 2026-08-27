@@ -63,6 +63,11 @@ class LibraryHomeScreen extends ConsumerWidget {
             onTap: () => context.push(Routes.libraryBooks),
           ),
           LListTile(
+            leading: const Icon(Icons.collections_bookmark_outlined),
+            title: 'Collections',
+            onTap: () => context.push(Routes.libraryCollections),
+          ),
+          LListTile(
             leading: const Icon(Icons.note_outlined),
             title: 'Notes',
             onTap: () => context.push(Routes.libraryNotes),
