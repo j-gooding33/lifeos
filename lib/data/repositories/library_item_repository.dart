@@ -20,7 +20,7 @@ class LibraryItemRepository {
 
   Stream<List<AppLibraryItem>> watchByStatus(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
     LibraryItemStatus status,
   ) {
     return _dao
@@ -28,20 +28,20 @@ class LibraryItemRepository {
         .map(_toDomainList);
   }
 
-  Stream<List<AppLibraryItem>> watchAll(String userId, LibraryMediaType type) {
+  Stream<List<AppLibraryItem>> watchAll(String userId, MediaType type) {
     return _dao.watchAllForType(userId, type.name).map(_toDomainList);
   }
 
   Stream<List<AppLibraryItem>> watchFavourites(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
   ) {
     return _dao.watchFavourites(userId, type.name).map(_toDomainList);
   }
 
   Stream<List<AppLibraryItem>> watchRated(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
   ) {
     return _dao.watchRated(userId, type.name).map(_toDomainList);
   }
@@ -54,7 +54,7 @@ class LibraryItemRepository {
   /// rather than creating a duplicate.
   Future<Result<AppLibraryItem, Failure>> addFromSearchResult({
     required String userId,
-    required LibraryMediaType type,
+    required MediaType type,
     required String providerId,
     required MediaSearchResult result,
   }) async {
@@ -91,7 +91,7 @@ class LibraryItemRepository {
   /// when a provider is unconfigured or a title genuinely isn't listed.
   Future<Result<AppLibraryItem, Failure>> addManually({
     required String userId,
-    required LibraryMediaType type,
+    required MediaType type,
     required String title,
     int? year,
   }) async {
@@ -253,7 +253,7 @@ class LibraryItemRepository {
     return AppLibraryItem(
       id: row.id,
       userId: row.userId,
-      mediaType: LibraryMediaType.values.byName(row.mediaType),
+      mediaType: MediaType.values.byName(row.mediaType),
       title: row.title,
       sortTitle: row.sortTitle,
       providerId: row.providerId,

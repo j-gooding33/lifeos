@@ -1,11 +1,10 @@
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/data/media/media_types.dart' show MediaType;
 
 /// §16.3. One vocabulary shared by films, TV and books — "want to watch /
 /// watching / watched" and "want to read / reading / read" are the same
 /// four states underneath, so the query layer (sort, filter, stats) is
 /// shared across all three media types instead of tripled.
-enum LibraryMediaType { film, tv, book }
-
 enum LibraryItemStatus { wishlist, inProgress, done, abandoned }
 
 /// A film, TV show, or book the user has saved. Backed by `library_items`
@@ -39,7 +38,7 @@ class AppLibraryItem {
 
   final String id;
   final String userId;
-  final LibraryMediaType mediaType;
+  final MediaType mediaType;
   final String title;
   final String? sortTitle;
   final String? providerId;

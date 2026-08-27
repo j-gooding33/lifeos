@@ -49,6 +49,19 @@ class Routes {
   static const libraryCollectionDetail = '/library/collections/:id';
   static const libraryLinks = '/library/links';
 
+  // M8 additions — not in §3.2's original table (that milestone predates
+  // this brief). Same `/library/<type>/...` convention as the routes
+  // above.
+  static const libraryFilmRatings = '/library/films/ratings';
+  static const libraryFilmTop5 = '/library/films/top5';
+  static const libraryTvSearch = '/library/tv/search';
+  static const libraryTvSeason = '/library/tv/:id/season/:seasonNumber';
+  static const libraryTvShowRatings = '/library/tv/ratings';
+  static const libraryTvEpisodeRatings = '/library/tv/episode-ratings';
+  static const libraryTvTop5 = '/library/tv/top5';
+  static const libraryBookRatings = '/library/books/ratings';
+  static const libraryBookTop3 = '/library/books/top3';
+
   static const stats = '/stats';
   static const statsYear = '/stats/year';
   static const statsDomain = '/stats/:domain';

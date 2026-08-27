@@ -33,7 +33,7 @@ void main() {
     final first = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
@@ -41,14 +41,14 @@ void main() {
     final second = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
     );
 
     expect(second.id, first.id);
-    final all = await repository.watchAll('u1', LibraryMediaType.film).first;
+    final all = await repository.watchAll('u1', MediaType.film).first;
     expect(all, hasLength(1));
   });
 
@@ -61,7 +61,7 @@ void main() {
     final item = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
@@ -80,7 +80,7 @@ void main() {
       final item = _okItem(
         await repository.addFromSearchResult(
           userId: 'u1',
-          type: LibraryMediaType.film,
+          type: MediaType.film,
           providerId: 'tmdb',
           result: result,
         ),
@@ -104,7 +104,7 @@ void main() {
     final item = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
@@ -129,7 +129,7 @@ void main() {
     final item = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
@@ -151,7 +151,7 @@ void main() {
     final item = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
@@ -182,7 +182,7 @@ void main() {
     final item = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),
@@ -190,7 +190,7 @@ void main() {
 
     await repository.setFavourite(item.id, isFavourite: true);
     expect(
-      (await repository.watchFavourites('u1', LibraryMediaType.film).first).map(
+      (await repository.watchFavourites('u1', MediaType.film).first).map(
         (i) => i.id,
       ),
       contains(item.id),
@@ -198,7 +198,7 @@ void main() {
 
     await repository.setFavourite(item.id, isFavourite: false);
     expect(
-      (await repository.watchFavourites('u1', LibraryMediaType.film).first).map(
+      (await repository.watchFavourites('u1', MediaType.film).first).map(
         (i) => i.id,
       ),
       isNot(contains(item.id)),
@@ -209,21 +209,21 @@ void main() {
     final rated = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: const MediaSearchResult(externalId: '1', title: 'Rated'),
       ),
     );
     await repository.addFromSearchResult(
       userId: 'u1',
-      type: LibraryMediaType.film,
+      type: MediaType.film,
       providerId: 'tmdb',
       result: const MediaSearchResult(externalId: '2', title: 'Unrated'),
     );
     await repository.setRating(rated.id, 4);
 
     final ratedItems = await repository
-        .watchRated('u1', LibraryMediaType.film)
+        .watchRated('u1', MediaType.film)
         .first;
     expect(ratedItems.map((i) => i.title), ['Rated']);
   });
@@ -232,7 +232,7 @@ void main() {
     final item = _okItem(
       await repository.addManually(
         userId: 'u1',
-        type: LibraryMediaType.book,
+        type: MediaType.book,
         title: 'A Rare Book',
       ),
     );
@@ -244,12 +244,12 @@ void main() {
     final item = _okItem(
       await repository.addManually(
         userId: 'u1',
-        type: LibraryMediaType.book,
+        type: MediaType.book,
         title: 'Gone soon',
       ),
     );
     await repository.remove(item.id);
-    final all = await repository.watchAll('u1', LibraryMediaType.book).first;
+    final all = await repository.watchAll('u1', MediaType.book).first;
     expect(all, isEmpty);
   });
 
@@ -262,7 +262,7 @@ void main() {
     final item = _okItem(
       await repository.addFromSearchResult(
         userId: 'u1',
-        type: LibraryMediaType.film,
+        type: MediaType.film,
         providerId: 'tmdb',
         result: result,
       ),

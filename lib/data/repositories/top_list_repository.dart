@@ -3,7 +3,7 @@ import 'package:life_os/core/errors/failure.dart';
 import 'package:life_os/core/utils/result.dart';
 import 'package:life_os/data/local/daos/top_list_dao.dart';
 import 'package:life_os/data/local/database.dart' as db;
-import 'package:life_os/data/repositories/models/app_library_item.dart';
+import 'package:life_os/data/media/media_types.dart';
 import 'package:uuid/uuid.dart';
 
 /// One entry in a Top-N list: which item, and at what rank. The UI joins
@@ -30,20 +30,20 @@ class TopListRepository {
   final TopListDao _dao;
 
   static const _caps = {
-    LibraryMediaType.film: 5,
-    LibraryMediaType.tv: 5,
-    LibraryMediaType.book: 3,
+    MediaType.film: 5,
+    MediaType.tv: 5,
+    MediaType.book: 3,
   };
 
-  int capFor(LibraryMediaType type) => _caps[type]!;
+  int capFor(MediaType type) => _caps[type]!;
 
-  Stream<List<TopListEntry>> watch(String userId, LibraryMediaType type) {
+  Stream<List<TopListEntry>> watch(String userId, MediaType type) {
     return _dao.watch(userId, type.name).map(_toDomainList);
   }
 
   Future<Result<void, Failure>> add(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
     String libraryItemId,
   ) async {
     try {
@@ -76,7 +76,7 @@ class TopListRepository {
   /// contiguous 1..N.
   Future<Result<void, Failure>> remove(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
     String libraryItemId,
   ) async {
     try {
@@ -98,7 +98,7 @@ class TopListRepository {
   /// removing then adding (which would move it to the end).
   Future<Result<void, Failure>> replace(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
     String oldLibraryItemId,
     String newLibraryItemId,
   ) async {
@@ -135,7 +135,7 @@ class TopListRepository {
   /// collide with whichever row hasn't moved yet.
   Future<Result<void, Failure>> reorder(
     String userId,
-    LibraryMediaType type,
+    MediaType type,
     List<String> orderedLibraryItemIds,
   ) async {
     try {

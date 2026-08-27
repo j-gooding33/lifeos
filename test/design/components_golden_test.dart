@@ -20,6 +20,7 @@ import 'package:life_os/design/components/l_progress_ring.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_segmented.dart';
 import 'package:life_os/design/components/l_sheet.dart';
+import 'package:life_os/design/components/l_star_rating.dart';
 import 'package:life_os/design/components/l_stat.dart';
 import 'package:life_os/design/components/l_swipe_row.dart';
 import 'package:life_os/design/components/l_text_field.dart';
@@ -193,5 +194,12 @@ void main() {
         ),
       ),
     ),
+  );
+
+  goldenMatrix('l_star_rating', () => const LStarRating(rating: 3.5));
+
+  goldenMatrix(
+    'l_star_rating_six',
+    () => const LStarRating(rating: 6, maxRating: 6),
   );
 }
