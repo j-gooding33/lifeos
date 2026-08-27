@@ -10,7 +10,11 @@ enum PlanKind { plan, habit }
 /// whenever the occurrence was actually completed.
 enum ScheduleMode { fixed, rolling }
 
-enum OccurrenceStatus { pending, completed, missed, cancelled }
+/// §8.1. `moved` isn't a separate value here — §8.4 step 1 sets a moved
+/// occurrence's status to `pending` (with `originalDate` set), so "moved"
+/// is a derived presentation state (`pending` + `originalDate != null`),
+/// not a distinct one.
+enum OccurrenceStatus { pending, completed, skipped, missed, cancelled }
 
 /// §7.2. `rule.anchor` is the date the rhythm counts from; [startDate] is
 /// the separate "first date the plan is active" field — occurrences the

@@ -4,8 +4,11 @@ import 'package:life_os/core/errors/failure.dart';
 /// exception message. Grows alongside `Failure`'s subtypes.
 String mapFailureToMessage(Failure failure) {
   return switch (failure) {
-    DatabaseFailure() => 'Something went wrong saving that. Your data is safe — try again.',
+    DatabaseFailure() =>
+      'Something went wrong saving that. Your data is safe — try again.',
     NotFoundFailure() => "That doesn't seem to exist anymore.",
     AuthFailure() => "That didn't work. Check your details and try again.",
+    OccurrenceConflictFailure() =>
+      "There's already one on that day. Merge, or keep both?",
   };
 }

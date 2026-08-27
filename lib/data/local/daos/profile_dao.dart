@@ -17,7 +17,8 @@ class ProfileDao extends DatabaseAccessor<AppDatabase> with _$ProfileDaoMixin {
   /// Local-first identity (§4 M4): before any cloud sign-in there's at
   /// most one profile row on the device, so "is there a local identity
   /// yet" is just "does any row exist."
-  Future<Profile?> getAnyProfile() => (select(profiles)..limit(1)).getSingleOrNull();
+  Future<Profile?> getAnyProfile() =>
+      (select(profiles)..limit(1)).getSingleOrNull();
 
   Future<void> upsertProfile(ProfilesCompanion entry) =>
       into(profiles).insertOnConflictUpdate(entry);

@@ -1,5 +1,6 @@
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/data/local/daos/activity_log_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
@@ -9,7 +10,8 @@ part 'plan_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 PlanRepository planRepository(Ref ref) {
-  return PlanRepository(PlanDao(ref.watch(appDatabaseProvider)));
+  final database = ref.watch(appDatabaseProvider);
+  return PlanRepository(PlanDao(database), ActivityLogDao(database));
 }
 
 @riverpod
@@ -64,6 +66,37 @@ Stream<PlanStats> planStats(Ref ref, String planId) {
 Stream<AppOccurrence?> todayOccurrenceForPlan(Ref ref, String planId) {
   final today = CivilDate.fromDateTime(DateTime.now());
   return ref.watch(planRepositoryProvider).watchOccurrenceOn(planId, today);
+}
+
+@riverpod
+Stream<AppOccurrence?> occurrenceById(Ref ref, String occurrenceId) {
+  return ref.watch(planRepositoryProvider).watchOccurrenceById(occurrenceId);
+}
+
+@riverpod
+Stream<List<AppOccurrence>> planOccurrencesInRange(
+  Ref ref,
+  String planId,
+  CivilDate from,
+  CivilDate through,
+) {
+  return ref
+      .watch(planRepositoryProvider)
+      .watchPlanOccurrencesInRange(planId, from, through);
+}
+
+/// §14.5: one range query per visible calendar period, shared by every
+/// unified-calendar view.
+@riverpod
+Stream<List<AppOccurrence>> occurrencesInRange(
+  Ref ref,
+  CivilDate from,
+  CivilDate through,
+) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  yield* ref
+      .watch(planRepositoryProvider)
+      .watchOccurrencesInRange(userId, from, through);
 }
 
 /// §9.5 trigger: run once whenever the Plans list is opened, so occurrence

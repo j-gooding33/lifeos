@@ -134,6 +134,40 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
     return query.watch();
   }
 
+  /// One range query per visible period (§14.5) — used by both the
+  /// single-plan calendar and the unified calendar's month/week/day views.
+  Stream<List<PlanOccurrence>> watchOccurrencesInRange(
+    String userId,
+    String from,
+    String through,
+  ) {
+    final query = select(planOccurrences)
+      ..where(
+        (o) =>
+            o.userId.equals(userId) &
+            o.scheduledDate.isBiggerOrEqualValue(from) &
+            o.scheduledDate.isSmallerOrEqualValue(through),
+      )
+      ..orderBy([(o) => OrderingTerm.asc(o.scheduledDate)]);
+    return query.watch();
+  }
+
+  Stream<List<PlanOccurrence>> watchOccurrencesInRangeForPlan(
+    String planId,
+    String from,
+    String through,
+  ) {
+    final query = select(planOccurrences)
+      ..where(
+        (o) =>
+            o.planId.equals(planId) &
+            o.scheduledDate.isBiggerOrEqualValue(from) &
+            o.scheduledDate.isSmallerOrEqualValue(through),
+      )
+      ..orderBy([(o) => OrderingTerm.asc(o.scheduledDate)]);
+    return query.watch();
+  }
+
   Stream<PlanOccurrence?> watchOccurrenceById(String id) => (select(
     planOccurrences,
   )..where((o) => o.id.equals(id))).watchSingleOrNull();
@@ -145,6 +179,15 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
           planOccurrences,
         )..where((o) => o.planId.equals(planId) & o.scheduledDate.equals(date)))
         .watchSingleOrNull();
+  }
+
+  /// One-shot version of [watchOccurrenceOnDate] — §8.4 point 4's conflict
+  /// check needs a single read, not a subscription.
+  Future<PlanOccurrence?> getOccurrenceOnDate(String planId, String date) {
+    return (select(
+          planOccurrences,
+        )..where((o) => o.planId.equals(planId) & o.scheduledDate.equals(date)))
+        .getSingleOrNull();
   }
 
   Future<void> upsertOccurrence(PlanOccurrencesCompanion entry) =>
@@ -159,6 +202,7 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
     String? scheduledDate,
     int? completedAt,
     bool clearCompletedAt = false,
+    bool? isException,
   }) {
     return (update(planOccurrences)..where((o) => o.id.equals(id))).write(
       PlanOccurrencesCompanion(
@@ -169,6 +213,32 @@ class PlanDao extends DatabaseAccessor<AppDatabase> with _$PlanDaoMixin {
         completedAt: clearCompletedAt
             ? const Value(null)
             : (completedAt == null ? const Value.absent() : Value(completedAt)),
+        isException: isException == null
+            ? const Value.absent()
+            : Value(isException),
+      ),
+    );
+  }
+
+  Future<void> setOccurrenceNote(String id, String? note) {
+    return (update(planOccurrences)..where((o) => o.id.equals(id))).write(
+      PlanOccurrencesCompanion(note: Value(note)),
+    );
+  }
+
+  /// §8.4 step 1: the move itself — sets `originalDate`, the new
+  /// `scheduledDate`, `isException = true`, and `status = pending`.
+  Future<void> moveOccurrence(
+    String id, {
+    required String originalDate,
+    required String newDate,
+  }) {
+    return (update(planOccurrences)..where((o) => o.id.equals(id))).write(
+      PlanOccurrencesCompanion(
+        originalDate: Value(originalDate),
+        scheduledDate: Value(newDate),
+        isException: const Value(true),
+        status: const Value('pending'),
       ),
     );
   }

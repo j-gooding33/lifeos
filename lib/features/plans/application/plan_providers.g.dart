@@ -48,7 +48,7 @@ final class PlanRepositoryProvider
   }
 }
 
-String _$planRepositoryHash() => r'7742b320b44af129aea0b93f400351f2bcd553ba';
+String _$planRepositoryHash() => r'3752ed5b48d8c7bb4331d1db79c7bb8e4dea832c';
 
 @ProviderFor(activePlans)
 const activePlansProvider = ActivePlansProvider._();
@@ -584,6 +584,266 @@ final class TodayOccurrenceForPlanFamily extends $Family
 
   @override
   String toString() => r'todayOccurrenceForPlanProvider';
+}
+
+@ProviderFor(occurrenceById)
+const occurrenceByIdProvider = OccurrenceByIdFamily._();
+
+final class OccurrenceByIdProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<AppOccurrence?>,
+          AppOccurrence?,
+          Stream<AppOccurrence?>
+        >
+    with $FutureModifier<AppOccurrence?>, $StreamProvider<AppOccurrence?> {
+  const OccurrenceByIdProvider._({
+    required OccurrenceByIdFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'occurrenceByIdProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$occurrenceByIdHash();
+
+  @override
+  String toString() {
+    return r'occurrenceByIdProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<AppOccurrence?> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<AppOccurrence?> create(Ref ref) {
+    final argument = this.argument as String;
+    return occurrenceById(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is OccurrenceByIdProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$occurrenceByIdHash() => r'2eb66648f44ac82c69104c8899aa7623dcde67aa';
+
+final class OccurrenceByIdFamily extends $Family
+    with $FunctionalFamilyOverride<Stream<AppOccurrence?>, String> {
+  const OccurrenceByIdFamily._()
+    : super(
+        retry: null,
+        name: r'occurrenceByIdProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  OccurrenceByIdProvider call(String occurrenceId) =>
+      OccurrenceByIdProvider._(argument: occurrenceId, from: this);
+
+  @override
+  String toString() => r'occurrenceByIdProvider';
+}
+
+@ProviderFor(planOccurrencesInRange)
+const planOccurrencesInRangeProvider = PlanOccurrencesInRangeFamily._();
+
+final class PlanOccurrencesInRangeProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppOccurrence>>,
+          List<AppOccurrence>,
+          Stream<List<AppOccurrence>>
+        >
+    with
+        $FutureModifier<List<AppOccurrence>>,
+        $StreamProvider<List<AppOccurrence>> {
+  const PlanOccurrencesInRangeProvider._({
+    required PlanOccurrencesInRangeFamily super.from,
+    required (String, CivilDate, CivilDate) super.argument,
+  }) : super(
+         retry: null,
+         name: r'planOccurrencesInRangeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$planOccurrencesInRangeHash();
+
+  @override
+  String toString() {
+    return r'planOccurrencesInRangeProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppOccurrence>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppOccurrence>> create(Ref ref) {
+    final argument = this.argument as (String, CivilDate, CivilDate);
+    return planOccurrencesInRange(ref, argument.$1, argument.$2, argument.$3);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is PlanOccurrencesInRangeProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$planOccurrencesInRangeHash() =>
+    r'f273783d6f3f9ee48d6973720ab8c529fdb3a899';
+
+final class PlanOccurrencesInRangeFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          Stream<List<AppOccurrence>>,
+          (String, CivilDate, CivilDate)
+        > {
+  const PlanOccurrencesInRangeFamily._()
+    : super(
+        retry: null,
+        name: r'planOccurrencesInRangeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  PlanOccurrencesInRangeProvider call(
+    String planId,
+    CivilDate from,
+    CivilDate through,
+  ) => PlanOccurrencesInRangeProvider._(
+    argument: (planId, from, through),
+    from: this,
+  );
+
+  @override
+  String toString() => r'planOccurrencesInRangeProvider';
+}
+
+/// §14.5: one range query per visible calendar period, shared by every
+/// unified-calendar view.
+
+@ProviderFor(occurrencesInRange)
+const occurrencesInRangeProvider = OccurrencesInRangeFamily._();
+
+/// §14.5: one range query per visible calendar period, shared by every
+/// unified-calendar view.
+
+final class OccurrencesInRangeProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppOccurrence>>,
+          List<AppOccurrence>,
+          Stream<List<AppOccurrence>>
+        >
+    with
+        $FutureModifier<List<AppOccurrence>>,
+        $StreamProvider<List<AppOccurrence>> {
+  /// §14.5: one range query per visible calendar period, shared by every
+  /// unified-calendar view.
+  const OccurrencesInRangeProvider._({
+    required OccurrencesInRangeFamily super.from,
+    required (CivilDate, CivilDate) super.argument,
+  }) : super(
+         retry: null,
+         name: r'occurrencesInRangeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$occurrencesInRangeHash();
+
+  @override
+  String toString() {
+    return r'occurrencesInRangeProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppOccurrence>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppOccurrence>> create(Ref ref) {
+    final argument = this.argument as (CivilDate, CivilDate);
+    return occurrencesInRange(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is OccurrencesInRangeProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$occurrencesInRangeHash() =>
+    r'207745a2eeb3fcabb6ca2a97c8b7af281107aabc';
+
+/// §14.5: one range query per visible calendar period, shared by every
+/// unified-calendar view.
+
+final class OccurrencesInRangeFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          Stream<List<AppOccurrence>>,
+          (CivilDate, CivilDate)
+        > {
+  const OccurrencesInRangeFamily._()
+    : super(
+        retry: null,
+        name: r'occurrencesInRangeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// §14.5: one range query per visible calendar period, shared by every
+  /// unified-calendar view.
+
+  OccurrencesInRangeProvider call(CivilDate from, CivilDate through) =>
+      OccurrencesInRangeProvider._(argument: (from, through), from: this);
+
+  @override
+  String toString() => r'occurrencesInRangeProvider';
 }
 
 /// §9.5 trigger: run once whenever the Plans list is opened, so occurrence

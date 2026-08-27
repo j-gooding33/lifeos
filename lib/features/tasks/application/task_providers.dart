@@ -50,6 +50,13 @@ Stream<List<AppTask>> allTasksDueToday(Ref ref) async* {
   yield* ref.watch(taskRepositoryProvider).watchAllDueOn(userId, _today());
 }
 
+/// §14.5: one range query per visible calendar period.
+@riverpod
+Stream<List<AppTask>> tasksDueInRange(Ref ref, CivilDate from, CivilDate through) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  yield* ref.watch(taskRepositoryProvider).watchDueInRange(userId, from, through);
+}
+
 @riverpod
 Stream<List<AppTask>> recentlyCreatedTasks(Ref ref) async* {
   final userId = await ref.watch(currentUserIdProvider.future);

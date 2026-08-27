@@ -4,6 +4,44 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M7 — Plan calendar + unified calendar (2026-08-27)
+
+### Occurrence status stays at five values; "moved" is derived, not stored
+**Decision:** §8.1 lists six statuses (`pending | completed | skipped | missed | moved | cancelled`), but `OccurrenceStatus` only has five — `moved` isn't one of them. A moved occurrence's calendar glyph is rendered by checking `pending && originalDate != null` instead.
+**Why:** §8.4 step 1 itself sets a moved occurrence's status to `pending` (not `moved`) — the six-value list and the move algorithm's own first step disagree, and the algorithm is the more specific, mechanism-describing text. Storing a `moved` status that the spec's own move procedure never actually writes would create a column value nothing ever produces.
+
+### Skip and the missed-policy "skip" outcome are different things, both real
+**Decision:** M6 already used `status = 'cancelled'` for §9.6's `missedPolicy: skip` outcome and for pause-window occurrences (both spec'd verbatim that way). M7 adds a genuinely distinct `status = 'skipped'` for §8.5's user-initiated "Skip" action. Both are neutral for streaks and completion rate; they're just different sources (system-applied vs. an active user choice) and now have different history labels ("cancelled" vs. "skipped") so a user can tell which happened.
+
+### Occurrence CRUD stays on `PlanRepository`; no separate `OccurrenceRepository`
+**Decision:** §8.7 names `PlanRepository` and `OccurrenceRepository` as separate deliverables; this session kept everything on one `PlanRepository` (move/skip/remove/add-extra joined the create/edit/complete methods already there from M6). See the class doc comment in `plan_repository.dart` for the reasoning — every occurrence operation already needs its plan's rule/`missedPolicy`/`scheduleMode`, so splitting the class would just relocate that dependency rather than remove it.
+
+### Unified calendar: Month and Day views only; Week and 3-day deferred
+**Decision:** built the two views that between them prove out both layout paradigms (a grid and a time-ordered list with `LDayRail`) and satisfy the DoD's own "month view... 60fps" line. Week and 3-day — each essentially N columns of the Day view's hour-rail layout side by side — aren't built.
+**Why:** Week and 3-day are real, additional work (a multi-column variant of the Day view, with its own horizontal-scroll/column-sizing logic), not a rendering tweak, and neither is named in M7's DoD checklist. Building two views well read as better use of the time than four views built thin.
+**How to apply:** implement Week as N `_DayView`-style columns sharing one `LDayRail`-per-column layout; 3-day is the same component with `N=3`. Both can reuse `_CalendarData` and `_CalendarItem` unchanged.
+
+### Pinch-to-morph between calendar views is a segmented toggle instead
+**Decision:** §14.2 asks for "pinch to move between Day → 3-day → Week → Month"; this session built a plain Day/Month `LSegmented` toggle.
+**Why:** a real pinch gesture that continuously morphs between four distinct layouts (not just zooms a single canvas) is a substantial custom-gesture-recognizer-plus-cross-fade-animation project on its own, disproportionate to the rest of M7 and not covered by the DoD. Swipe-to-change-period (§14.2's other gesture) is also not wired up yet for the same reason — "Today" and the chevron buttons cover period navigation for now.
+**How to apply:** revisit once Week/3-day exist too (above) — a 4-way pinch is more meaningfully testable once there are 4 real views to morph between.
+
+### Device calendar read-only import is not built
+**Decision:** §14.4's `device_calendar` integration (permission flow, per-calendar toggles, grey read-only imported events) isn't implemented. The `Events.source`/`externalId` columns exist in the schema and `AppEvent.isFromDevice` is already there for when this lands, but nothing writes a `source = 'device'` row yet.
+**Why:** same category as M4's Supabase auth — a third-party plugin needing a real OS permission dialog to verify, which isn't meaningfully testable on this Windows dev machine without a device. Unlike Supabase (needed for core sign-in), this is also an explicitly opt-in, additive feature the app already works fully without (§14.4: "if permission is denied, the calendar still works with Life OS's own events").
+**How to apply:** add the `device_calendar` dependency and settings screen once there's a device to grant the calendar permission on and verify the import against.
+
+### Events don't support recurrence yet
+**Decision:** `Events.recurrenceRule` exists in the schema (§23.3) but `AppEvent`/`EventRepository` don't read or write it — every event created through `EventDetailScreen` is a single occurrence.
+**Why:** a recurring-event materialiser would be a second, event-shaped implementation of the same idea Plans already solve properly with a tested engine; §7.1's "don't build the hardest logic twice" reasoning (binding for habits-as-plans) applies just as much here, and nothing in M7's DoD calls for recurring events specifically.
+**How to apply:** if recurring events turn out to be genuinely needed, prefer teaching the calendar to render a Plan/occurrence as a "system event" over building a parallel recurrence path for the `events` table.
+
+### The unified calendar merges tasks, events and plan occurrences — not all seven §14.1 sources
+**Decision:** §14.1 lists events, tasks, plan occurrences, habit occurrences, goal milestone dates, reminders, and scheduled films/study sessions. Habit occurrences need no separate handling (§7.1: habits are plans, so they're already plan occurrences). Goal milestones (M8), reminders (M17) and scheduled films/study sessions (the Plan↔Library link, M12) aren't on the timeline yet because none of those data sources exist.
+**How to apply:** each source folds into `_CalendarData`'s `items` list the same way tasks/events/occurrences already do, the moment its owning milestone ships real data — same pattern as Home's `focus` card and M6's Plans-list sort options.
+
+---
+
 ## M6 — Recurrence engine + Plans (2026-08-27)
 
 ### Occurrence CRUD lives on `PlanRepository`, not a separate `OccurrenceRepository`

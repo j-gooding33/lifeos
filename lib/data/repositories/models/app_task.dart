@@ -6,7 +6,8 @@ enum TaskPriority {
   medium,
   high;
 
-  static TaskPriority fromValue(int value) => TaskPriority.values[value.clamp(0, 3)];
+  static TaskPriority fromValue(int value) =>
+      TaskPriority.values[value.clamp(0, 3)];
 }
 
 class AppSubtask {

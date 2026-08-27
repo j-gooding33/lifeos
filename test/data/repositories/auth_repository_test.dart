@@ -15,7 +15,10 @@ void main() {
   });
 
   test('signInWithEmail fails clearly when unconfigured', () async {
-    final result = await repository.signInWithEmail('a@example.com', 'password');
+    final result = await repository.signInWithEmail(
+      'a@example.com',
+      'password',
+    );
     result.when(
       ok: (_) => fail('expected Err'),
       err: (failure) => expect(failure, isA<AuthFailure>()),
@@ -23,7 +26,10 @@ void main() {
   });
 
   test('signUpWithEmail fails clearly when unconfigured', () async {
-    final result = await repository.signUpWithEmail('a@example.com', 'password');
+    final result = await repository.signUpWithEmail(
+      'a@example.com',
+      'password',
+    );
     result.when(
       ok: (_) => fail('expected Err'),
       err: (failure) => expect(failure, isA<AuthFailure>()),

@@ -5,7 +5,8 @@ import 'package:life_os/data/local/tables/preferences_table.dart';
 part 'preferences_dao.g.dart';
 
 @DriftAccessor(tables: [Preferences])
-class PreferencesDao extends DatabaseAccessor<AppDatabase> with _$PreferencesDaoMixin {
+class PreferencesDao extends DatabaseAccessor<AppDatabase>
+    with _$PreferencesDaoMixin {
   PreferencesDao(super.db);
 
   Stream<String?> watchValue(String userId, String key) {

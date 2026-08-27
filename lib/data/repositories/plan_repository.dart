@@ -7,6 +7,7 @@ import 'package:life_os/core/scheduling/recurrence_rule.dart';
 import 'package:life_os/core/scheduling/recurrence_rule_json.dart';
 import 'package:life_os/core/scheduling/recurrence_rule_reanchor.dart';
 import 'package:life_os/core/utils/result.dart';
+import 'package:life_os/data/local/daos/activity_log_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/database.dart' as db;
 import 'package:life_os/data/repositories/models/app_plan.dart';
@@ -14,18 +15,20 @@ import 'package:uuid/uuid.dart';
 
 /// §7, §8.1, §9.5–§9.7. Plans and their materialised occurrences. Every
 /// write that can change *which dates should exist* — create, edit,
-/// pause/resume, a rolling-mode completion — goes through [_regenerate],
-/// which is the one place that knows how to touch occurrences without
-/// disturbing history or exceptions (§7.6 pitfall 3).
+/// pause/resume, a rolling-mode completion, a move — goes through
+/// [_regenerate], which is the one place that knows how to touch
+/// occurrences without disturbing history or exceptions (§7.6 pitfall 3).
 class PlanRepository {
   PlanRepository(
-    this._dao, {
+    this._dao,
+    this._activityLog, {
     Materialiser? materialiser,
     MissedSweep? missedSweep,
   }) : _materialiser = materialiser ?? const Materialiser(),
        _missedSweep = missedSweep ?? const MissedSweep();
 
   final PlanDao _dao;
+  final ActivityLogDao _activityLog;
   final Materialiser _materialiser;
   final MissedSweep _missedSweep;
 
@@ -62,6 +65,32 @@ class PlanRepository {
     return _dao
         .watchAllForPlan(planId)
         .map((rows) => _computeStats(rows, _today));
+  }
+
+  Stream<List<AppOccurrence>> watchOccurrencesInRange(
+    String userId,
+    CivilDate from,
+    CivilDate through,
+  ) {
+    return _dao
+        .watchOccurrencesInRange(userId, from.toIso(), through.toIso())
+        .map(_toOccurrenceList);
+  }
+
+  Stream<List<AppOccurrence>> watchPlanOccurrencesInRange(
+    String planId,
+    CivilDate from,
+    CivilDate through,
+  ) {
+    return _dao
+        .watchOccurrencesInRangeForPlan(planId, from.toIso(), through.toIso())
+        .map(_toOccurrenceList);
+  }
+
+  Stream<AppOccurrence?> watchOccurrenceById(String occurrenceId) {
+    return _dao
+        .watchOccurrenceById(occurrenceId)
+        .map((row) => row == null ? null : _toOccurrence(row));
   }
 
   Stream<AppOccurrence?> watchOccurrenceOn(String planId, CivilDate date) {
@@ -271,6 +300,140 @@ class PlanRepository {
     }
   }
 
+  /// §8.4. Moves [occurrence] to [to]. Under `fixed` scheduling this never
+  /// touches any other occurrence — the rest of the series still comes from
+  /// `anchorDate`, unchanged (point 2). Under `rolling`, future
+  /// pending/non-exception occurrences are recomputed from [to] as the new
+  /// effective anchor (point 3). If another occurrence of the same plan
+  /// already sits on [to] (point 4: "Merge, or keep both?"): with neither
+  /// flag set, returns [OccurrenceConflictFailure] so the caller can ask;
+  /// [keepBoth] proceeds and leaves both rows (the partial unique index on
+  /// generated rows already permits an exception alongside one); [mergeInto]
+  /// removes the existing one first so only [occurrence] ends up at [to].
+  Future<Result<void, Failure>> moveOccurrence(
+    AppOccurrence occurrence,
+    AppPlan plan, {
+    required CivilDate to,
+    bool keepBoth = false,
+    bool mergeInto = false,
+  }) async {
+    try {
+      final conflict = await _dao.getOccurrenceOnDate(plan.id, to.toIso());
+      if (conflict != null && conflict.id != occurrence.id) {
+        if (mergeInto) {
+          await _dao.deleteOccurrence(conflict.id);
+        } else if (!keepBoth) {
+          return Err(OccurrenceConflictFailure(conflict.id));
+        }
+      }
+
+      await _dao.moveOccurrence(
+        occurrence.id,
+        originalDate: occurrence.scheduledDate.toIso(),
+        newDate: to.toIso(),
+      );
+      await _activityLog.log(
+        id: const Uuid().v4(),
+        userId: plan.userId,
+        entityType: 'plan_occurrence',
+        entityId: occurrence.id,
+        action: 'moved',
+        payload:
+            '{"from":"${occurrence.scheduledDate.toIso()}","to":"${to.toIso()}"}',
+      );
+
+      if (plan.scheduleMode == ScheduleMode.rolling) {
+        final reanchored = plan.copyWith(
+          rule: reanchorRule(plan.rule, to),
+          generationVersion: plan.generationVersion + 1,
+        );
+        await _savePlan(reanchored);
+        await _regenerate(reanchored);
+      }
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('moveOccurrence failed: $e'));
+    }
+  }
+
+  /// §8.5. Skipping is an active, honest choice: it never counts as missed
+  /// and never breaks a streak (`_computeStats` treats `skipped` the same
+  /// as `cancelled`), unlike `missed` which the [MissedSweep] applies
+  /// passively when nothing was done in time.
+  Future<Result<void, Failure>> skipOccurrence(AppOccurrence occurrence) async {
+    try {
+      await _dao.updateOccurrenceStatus(
+        occurrence.id,
+        status: 'skipped',
+        isException: true,
+      );
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('skipOccurrence failed: $e'));
+    }
+  }
+
+  Future<Result<void, Failure>> setOccurrenceNote(
+    String occurrenceId,
+    String? note,
+  ) async {
+    try {
+      await _dao.setOccurrenceNote(occurrenceId, note);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('setOccurrenceNote failed: $e'));
+    }
+  }
+
+  /// §8.3 "Remove this date" — a hard delete, matching how stale generated
+  /// rows are already cleaned up in [_regenerate]; occurrences have no
+  /// established soft-delete convention to preserve here.
+  Future<Result<void, Failure>> removeOccurrence(String occurrenceId) async {
+    try {
+      await _dao.deleteOccurrence(occurrenceId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('removeOccurrence failed: $e'));
+    }
+  }
+
+  /// §8.2 long-press on a blank calendar day: a genuinely extra occurrence,
+  /// not one the rule would generate — random id (§9.7: "user-created
+  /// extras use uuidV4"), `isException = true` so regeneration never
+  /// touches or duplicates it.
+  Future<Result<AppOccurrence, Failure>> addExtraOccurrence(
+    AppPlan plan,
+    CivilDate date,
+  ) async {
+    try {
+      final id = const Uuid().v4();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await _dao.upsertOccurrence(
+        db.PlanOccurrencesCompanion.insert(
+          id: id,
+          planId: plan.id,
+          userId: plan.userId,
+          scheduledDate: date.toIso(),
+          status: const Value('pending'),
+          isException: const Value(true),
+          generationVersion: Value(plan.generationVersion),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      return Ok(
+        AppOccurrence(
+          id: id,
+          planId: plan.id,
+          scheduledDate: date,
+          isException: true,
+        ),
+      );
+    } on Object catch (e) {
+      return Err(DatabaseFailure('addExtraOccurrence failed: $e'));
+    }
+  }
+
   /// §9.6, run opportunistically whenever the Plans list loads rather than
   /// by a true midnight-triggered background job — see DECISIONS.md (same
   /// category of deferral as Home's date-rollover service in M5).
@@ -375,11 +538,20 @@ class PlanRepository {
       rule: plan.rule,
       through: horizon,
       existing: [
-        for (final r in existingRows)
+        for (final r in existingRows) ...[
           ExistingOccurrence(
             CivilDate.parse(r.scheduledDate),
             isException: r.isException,
           ),
+          // §8.4: a moved occurrence's *vacated* date must also stay
+          // vacant on regeneration — otherwise the rule, blind to the
+          // move, would happily re-fill the date it left behind.
+          if (r.isException && r.originalDate != null)
+            ExistingOccurrence(
+              CivilDate.parse(r.originalDate!),
+              isException: true,
+            ),
+        ],
       ],
       pauseFrom: plan.pauseFrom,
       pauseUntil: plan.pauseUntil,
@@ -449,7 +621,9 @@ class PlanRepository {
     for (final row in pastRows) {
       if (row.status == 'completed') {
         streak++;
-      } else if (row.status == 'cancelled') {
+      } else if (row.status == 'cancelled' || row.status == 'skipped') {
+        // §8.5: skipped is an active, honest choice — never breaks a
+        // streak, same as a pause-window/skip-policy cancellation.
         continue;
       } else {
         break;

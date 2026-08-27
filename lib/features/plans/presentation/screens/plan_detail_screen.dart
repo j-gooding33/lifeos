@@ -13,8 +13,10 @@ import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/plans/application/plan_icons.dart';
 import 'package:life_os/features/plans/application/plan_providers.dart';
+import 'package:life_os/features/plans/presentation/occurrence_status_style.dart';
 import 'package:life_os/features/plans/presentation/plan_colour.dart';
 import 'package:life_os/features/plans/presentation/rule_description.dart';
+import 'package:life_os/features/plans/presentation/widgets/occurrence_sheet.dart';
 import 'package:life_os/features/plans/presentation/widgets/plan_actions_menu.dart';
 
 const _weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -151,7 +153,7 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
           _UpcomingSection(plan: plan),
           const SizedBox(height: LifeSpace.cardGap),
           _HistorySection(
-            planId: plan.id,
+            plan: plan,
             limit: _historyLimit,
             onLoadMore: () => setState(() => _historyLimit += 20),
           ),
@@ -223,35 +225,53 @@ class _UpcomingSection extends ConsumerWidget {
               return Column(
                 children: [
                   for (final occurrence in occurrences)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: LifeSpace.s4,
+                    InkWell(
+                      onTap: () => OccurrenceSheet.show(
+                        context,
+                        occurrence: occurrence,
+                        plan: plan,
                       ),
-                      child: Row(
-                        children: [
-                          LCheckCircle(
-                            checked: occurrence.isCompleted,
-                            semanticLabel: _formatDate(
-                              occurrence.scheduledDate,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: LifeSpace.s4,
+                        ),
+                        child: Row(
+                          children: [
+                            LCheckCircle(
+                              checked: occurrence.isCompleted,
+                              semanticLabel: _formatDate(
+                                occurrence.scheduledDate,
+                              ),
+                              onChanged: (checked) {
+                                final repository = ref.read(
+                                  planRepositoryProvider,
+                                );
+                                if (checked) {
+                                  repository.completeOccurrence(
+                                    occurrence,
+                                    plan,
+                                  );
+                                } else {
+                                  repository.uncompleteOccurrence(occurrence);
+                                }
+                              },
                             ),
-                            onChanged: (checked) {
-                              final repository = ref.read(
-                                planRepositoryProvider,
-                              );
-                              if (checked) {
-                                repository.completeOccurrence(occurrence, plan);
-                              } else {
-                                repository.uncompleteOccurrence(occurrence);
-                              }
-                            },
-                          ),
-                          Text(
-                            _formatDate(occurrence.scheduledDate),
-                            style: context.textStyles.body.copyWith(
-                              color: colors.neutrals.ink,
+                            Text(
+                              _formatDate(occurrence.scheduledDate),
+                              style: context.textStyles.body.copyWith(
+                                color: colors.neutrals.ink,
+                              ),
                             ),
-                          ),
-                        ],
+                            if (occurrence.originalDate != null) ...[
+                              const SizedBox(width: LifeSpace.s8),
+                              Icon(
+                                Icons.subdirectory_arrow_right,
+                                size: 14,
+                                color: colors.neutrals.ink3,
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                 ],
@@ -266,12 +286,12 @@ class _UpcomingSection extends ConsumerWidget {
 
 class _HistorySection extends ConsumerWidget {
   const _HistorySection({
-    required this.planId,
+    required this.plan,
     required this.limit,
     required this.onLoadMore,
   });
 
-  final String planId;
+  final AppPlan plan;
   final int limit;
   final VoidCallback onLoadMore;
 
@@ -279,7 +299,7 @@ class _HistorySection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final asyncOccurrences = ref.watch(
-      historyOccurrencesProvider(planId, limit: limit),
+      historyOccurrencesProvider(plan.id, limit: limit),
     );
     return LCard(
       child: Column(
@@ -303,32 +323,42 @@ class _HistorySection extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (final occurrence in occurrences)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: LifeSpace.s4,
+                    InkWell(
+                      onTap: () => OccurrenceSheet.show(
+                        context,
+                        occurrence: occurrence,
+                        plan: plan,
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _iconFor(occurrence.status),
-                            size: 18,
-                            color: _colorFor(context, occurrence.status),
-                          ),
-                          const SizedBox(width: LifeSpace.s8),
-                          Text(
-                            _formatDate(occurrence.scheduledDate),
-                            style: context.textStyles.body.copyWith(
-                              color: colors.neutrals.ink,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: LifeSpace.s4,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              occurrenceStatusIcon(occurrence.status),
+                              size: 18,
+                              color: occurrenceStatusColor(
+                                context,
+                                occurrence.status,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: LifeSpace.s8),
-                          Text(
-                            _labelFor(occurrence.status),
-                            style: context.textStyles.caption.copyWith(
-                              color: colors.neutrals.ink2,
+                            const SizedBox(width: LifeSpace.s8),
+                            Text(
+                              _formatDate(occurrence.scheduledDate),
+                              style: context.textStyles.body.copyWith(
+                                color: colors.neutrals.ink,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: LifeSpace.s8),
+                            Text(
+                              occurrenceStatusLabel(occurrence.status),
+                              style: context.textStyles.caption.copyWith(
+                                color: colors.neutrals.ink2,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   if (occurrences.length >= limit)
@@ -344,28 +374,4 @@ class _HistorySection extends ConsumerWidget {
       ),
     );
   }
-
-  IconData _iconFor(OccurrenceStatus status) => switch (status) {
-    OccurrenceStatus.completed => Icons.check_circle,
-    OccurrenceStatus.missed => Icons.cancel_outlined,
-    OccurrenceStatus.cancelled => Icons.remove_circle_outline,
-    OccurrenceStatus.pending => Icons.schedule,
-  };
-
-  Color _colorFor(BuildContext context, OccurrenceStatus status) {
-    final colors = context.colors;
-    return switch (status) {
-      OccurrenceStatus.completed => colors.semantic('success').base,
-      OccurrenceStatus.missed => colors.semantic('danger').base,
-      OccurrenceStatus.cancelled => colors.neutrals.ink3,
-      OccurrenceStatus.pending => colors.neutrals.ink3,
-    };
-  }
-
-  String _labelFor(OccurrenceStatus status) => switch (status) {
-    OccurrenceStatus.completed => 'done',
-    OccurrenceStatus.missed => 'missed',
-    OccurrenceStatus.cancelled => 'skipped',
-    OccurrenceStatus.pending => 'pending',
-  };
 }

@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:life_os/data/local/daos/activity_log_dao.dart';
+import 'package:life_os/data/local/daos/event_dao.dart';
 import 'package:life_os/data/local/daos/preferences_dao.dart';
 import 'package:life_os/data/local/daos/profile_dao.dart';
 import 'package:life_os/data/local/migrations/v1_indexes.dart';
@@ -74,7 +76,7 @@ part 'database.g.dart';
     Outbox,
     SyncState,
   ],
-  daos: [ProfileDao, PreferencesDao],
+  daos: [ProfileDao, PreferencesDao, ActivityLogDao, EventDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());

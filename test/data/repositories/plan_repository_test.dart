@@ -7,6 +7,7 @@ import 'package:life_os/core/scheduling/materialiser.dart';
 import 'package:life_os/core/scheduling/missed_sweep.dart';
 import 'package:life_os/core/scheduling/recurrence_rule.dart';
 import 'package:life_os/core/utils/result.dart';
+import 'package:life_os/data/local/daos/activity_log_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/database.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
@@ -17,6 +18,12 @@ AppPlan _okPlan(Result<AppPlan, Failure> result) => result.when(
   err: (f) => throw StateError('expected Ok, got ${f.message}'),
 );
 
+AppOccurrence _okOccurrence(Result<AppOccurrence, Failure> result) =>
+    result.when(
+      ok: (o) => o,
+      err: (f) => throw StateError('expected Ok, got ${f.message}'),
+    );
+
 void main() {
   late AppDatabase database;
   late PlanDao dao;
@@ -26,7 +33,7 @@ void main() {
   setUp(() {
     database = AppDatabase.forTesting(NativeDatabase.memory());
     dao = PlanDao(database);
-    repository = PlanRepository(dao);
+    repository = PlanRepository(dao, ActivityLogDao(database));
     today = CivilDate.fromDateTime(DateTime.now());
   });
 
@@ -299,4 +306,240 @@ void main() {
       isNot(contains(plan.id)),
     );
   });
+
+  test(
+    'moving one occurrence provably does not shift the series (M7 DoD)',
+    () async {
+      final rule = IntervalDays(3, anchor: today);
+      final created = await repository.createPlan(
+        userId: 'u1',
+        title: 'Every 3 days',
+        rule: rule,
+      );
+      final plan = _okPlan(created);
+
+      final beforeDates = (await dao.getOccurrencesForPlan(plan.id))
+          .map((o) => o.scheduledDate)
+          .toSet();
+      final originalDate = today.addDays(3);
+      final toMove = (await dao.getOccurrencesForPlan(plan.id))
+          .firstWhere((o) => o.scheduledDate == originalDate.toIso());
+      final moveTo = today.addDays(
+        10,
+      ); // 10 % 3 != 0 — not already a generated date.
+
+      final result = await repository.moveOccurrence(
+        AppOccurrence(
+          id: toMove.id,
+          planId: plan.id,
+          scheduledDate: originalDate,
+        ),
+        plan,
+        to: moveTo,
+      );
+      expect(result.isOk, isTrue);
+
+      final afterRows = await dao.getOccurrencesForPlan(plan.id);
+      final afterDates = afterRows.map((o) => o.scheduledDate).toSet();
+
+      // Every date that existed before, other than the one that moved, is
+      // exactly where it was — fixed scheduling means the rest of the series
+      // is still computed straight from the anchor, untouched by the move.
+      final expectedUnchanged = beforeDates.difference({originalDate.toIso()});
+      expect(afterDates.intersection(expectedUnchanged), expectedUnchanged);
+
+      final moved = afterRows.firstWhere((o) => o.id == toMove.id);
+      expect(moved.scheduledDate, moveTo.toIso());
+      expect(moved.originalDate, originalDate.toIso());
+      expect(moved.isException, isTrue);
+      expect(moved.status, 'pending');
+
+      // Re-running materialisation (e.g. the detail screen reopening) must
+      // not resurrect an occurrence at the vacated date — the move is
+      // permanent, not just a one-time skip.
+      await repository.ensureMaterialised(plan);
+      final afterRegenerate = (await dao.getOccurrencesForPlan(plan.id))
+          .map((o) => o.scheduledDate)
+          .toSet();
+      expect(afterRegenerate.contains(originalDate.toIso()), isFalse);
+    },
+  );
+
+  test(
+    'moving onto an occupied date conflicts unless merged (§8.4 point 4)',
+    () async {
+      final rule = IntervalDays(3, anchor: today);
+      final created = await repository.createPlan(
+        userId: 'u1',
+        title: 'Every 3 days',
+        rule: rule,
+      );
+      final plan = _okPlan(created);
+
+      final rows = await dao.getOccurrencesForPlan(plan.id);
+      final toMove = rows.firstWhere((o) => o.scheduledDate == today.toIso());
+      final destination = today.addDays(
+        3,
+      ); // already occupied by a generated occurrence.
+
+      final conflictResult = await repository.moveOccurrence(
+        AppOccurrence(id: toMove.id, planId: plan.id, scheduledDate: today),
+        plan,
+        to: destination,
+      );
+      expect(conflictResult.isOk, isFalse);
+      final failure = conflictResult.when(ok: (_) => null, err: (f) => f);
+      expect(failure, isA<OccurrenceConflictFailure>());
+
+      final mergedResult = await repository.moveOccurrence(
+        AppOccurrence(id: toMove.id, planId: plan.id, scheduledDate: today),
+        plan,
+        to: destination,
+        mergeInto: true,
+      );
+      expect(mergedResult.isOk, isTrue);
+
+      final afterRows = await dao.getOccurrencesForPlan(plan.id);
+      // Exactly one occurrence remains at the destination date — the one
+      // that moved there, not the one that was already there.
+      final atDestination = afterRows.where(
+        (o) => o.scheduledDate == destination.toIso(),
+      );
+      expect(atDestination, hasLength(1));
+      expect(atDestination.single.id, toMove.id);
+    },
+  );
+
+  test('moving an occurrence on a rolling plan recomputes future occurrences from the new date', () async {
+    final rule = IntervalDays(5, anchor: today);
+    final created = await repository.createPlan(
+      userId: 'u1',
+      title: 'Rolling plan',
+      rule: rule,
+      scheduleMode: ScheduleMode.rolling,
+    );
+    final plan = _okPlan(created);
+
+    final anchorOccurrence = (await dao.getOccurrencesForPlan(plan.id))
+        .firstWhere((o) => o.scheduledDate == today.toIso());
+    final moveTo = today.addDays(2);
+    await repository.moveOccurrence(
+      AppOccurrence(
+        id: anchorOccurrence.id,
+        planId: plan.id,
+        scheduledDate: today,
+      ),
+      plan,
+      to: moveTo,
+    );
+
+    final row = await dao.getById(plan.id);
+    expect(row!.generationVersion, plan.generationVersion + 1);
+
+    final pendingDates =
+        (await dao.getOccurrencesForPlan(plan.id))
+            .where((o) => o.status == 'pending' && !o.isException)
+            .map((o) => CivilDate.parse(o.scheduledDate))
+            .toList()
+          ..sort();
+    expect(pendingDates.first, moveTo.addDays(5));
+  });
+
+  test('skipping an occurrence never breaks the streak (§8.5)', () async {
+    final rule = IntervalDays(1, anchor: today.addDays(-2));
+    final created = await repository.createPlan(
+      userId: 'u1',
+      title: 'Daily thing',
+      rule: rule,
+    );
+    final plan = _okPlan(created);
+
+    final rows = await dao.getOccurrencesForPlan(plan.id);
+    // Complete two days ago and yesterday, skip today.
+    await repository.completeOccurrence(
+      AppOccurrence(
+        id: rows
+            .firstWhere((o) => o.scheduledDate == today.addDays(-2).toIso())
+            .id,
+        planId: plan.id,
+        scheduledDate: today.addDays(-2),
+      ),
+      plan,
+    );
+    await repository.completeOccurrence(
+      AppOccurrence(
+        id: rows
+            .firstWhere((o) => o.scheduledDate == today.addDays(-1).toIso())
+            .id,
+        planId: plan.id,
+        scheduledDate: today.addDays(-1),
+      ),
+      plan,
+    );
+    final todayOccurrence = rows.firstWhere(
+      (o) => o.scheduledDate == today.toIso(),
+    );
+    final skipResult = await repository.skipOccurrence(
+      AppOccurrence(
+        id: todayOccurrence.id,
+        planId: plan.id,
+        scheduledDate: today,
+      ),
+    );
+    expect(skipResult.isOk, isTrue);
+
+    final updated = (await dao.getOccurrencesForPlan(plan.id))
+        .firstWhere((o) => o.id == todayOccurrence.id);
+    expect(updated.status, 'skipped');
+    expect(updated.isException, isTrue);
+
+    final stats = await repository.watchStats(plan.id).first;
+    expect(stats.streak, 2);
+    expect(stats.missed, 0);
+  });
+
+  test('removing an occurrence deletes the row', () async {
+    final rule = IntervalDays(1, anchor: today);
+    final created = await repository.createPlan(
+      userId: 'u1',
+      title: 'Daily thing',
+      rule: rule,
+    );
+    final plan = _okPlan(created);
+    final target = (await dao.getOccurrencesForPlan(plan.id)).first;
+
+    final result = await repository.removeOccurrence(target.id);
+    expect(result.isOk, isTrue);
+    final remaining = await dao.getOccurrencesForPlan(plan.id);
+    expect(remaining.any((o) => o.id == target.id), isFalse);
+  });
+
+  test(
+    'adding an extra occurrence creates an exception row outside the schedule',
+    () async {
+      final rule = IntervalDays(7, anchor: today);
+      final created = await repository.createPlan(
+        userId: 'u1',
+        title: 'Weekly thing',
+        rule: rule,
+      );
+      final plan = _okPlan(created);
+
+      final extraDate = today.addDays(2); // not a date the rule would generate.
+      final result = await repository.addExtraOccurrence(plan, extraDate);
+      final extra = _okOccurrence(result);
+      expect(extra.isException, isTrue);
+      expect(extra.scheduledDate, extraDate);
+
+      final rows = await dao.getOccurrencesForPlan(plan.id);
+      final row = rows.firstWhere((o) => o.id == extra.id);
+      expect(row.scheduledDate, extraDate.toIso());
+      expect(row.isException, isTrue);
+
+      // A later regeneration must not remove the manually-added extra.
+      await repository.ensureMaterialised(plan);
+      final afterRegenerate = await dao.getOccurrencesForPlan(plan.id);
+      expect(afterRegenerate.any((o) => o.id == extra.id), isTrue);
+    },
+  );
 }

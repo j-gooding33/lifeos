@@ -14,7 +14,8 @@ import 'package:uuid/uuid.dart';
 /// one stays in history — it does not pre-materialise a calendar the way
 /// Plans do (§10.2).
 class TaskRepository {
-  TaskRepository(this._dao, {RecurrenceEngine? engine}) : _engine = engine ?? const RecurrenceEngine();
+  TaskRepository(this._dao, {RecurrenceEngine? engine})
+    : _engine = engine ?? const RecurrenceEngine();
 
   final TaskDao _dao;
   final RecurrenceEngine _engine;
@@ -41,6 +42,16 @@ class TaskRepository {
     return _dao.watchAllDueOn(userId, date.toIso()).map(_toDomainList);
   }
 
+  Stream<List<AppTask>> watchDueInRange(
+    String userId,
+    CivilDate from,
+    CivilDate through,
+  ) {
+    return _dao
+        .watchDueInRange(userId, from.toIso(), through.toIso())
+        .map(_toDomainList);
+  }
+
   Stream<List<AppTask>> watchRecentlyCreated(String userId, {int limit = 5}) {
     return _dao.watchRecentlyCreated(userId, limit: limit).map(_toDomainList);
   }
@@ -49,7 +60,10 @@ class TaskRepository {
     return _dao.watchById(id).map((row) => row == null ? null : _toDomain(row));
   }
 
-  Stream<List<AppTask>> watchCompleted(String userId, {int retentionDays = 90}) {
+  Stream<List<AppTask>> watchCompleted(
+    String userId, {
+    int retentionDays = 90,
+  }) {
     final since = DateTime.now()
         .subtract(Duration(days: retentionDays))
         .millisecondsSinceEpoch;
@@ -101,7 +115,9 @@ class TaskRepository {
       final now = DateTime.now();
       await _save(task.copyWith(completedAt: now));
 
-      if (task.recurrenceRule == null || task.dueDate == null) return const Ok(null);
+      if (task.recurrenceRule == null || task.dueDate == null) {
+        return const Ok(null);
+      }
 
       final rule = recurrenceRuleFromJsonString(task.recurrenceRule!);
       final currentDue = CivilDate.parse(task.dueDate!);
@@ -147,21 +163,23 @@ class TaskRepository {
   }
 
   Stream<List<AppSubtask>> watchSubtasks(String taskId) {
-    return _dao.watchSubtasks(taskId).map(
-      (rows) => rows
-          .map(
-            (r) => AppSubtask(
-              id: r.id,
-              taskId: r.taskId,
-              title: r.title,
-              completedAt: r.completedAt == null
-                  ? null
-                  : DateTime.fromMillisecondsSinceEpoch(r.completedAt!),
-              sortIndex: r.sortIndex ?? 0,
-            ),
-          )
-          .toList(),
-    );
+    return _dao
+        .watchSubtasks(taskId)
+        .map(
+          (rows) => rows
+              .map(
+                (r) => AppSubtask(
+                  id: r.id,
+                  taskId: r.taskId,
+                  title: r.title,
+                  completedAt: r.completedAt == null
+                      ? null
+                      : DateTime.fromMillisecondsSinceEpoch(r.completedAt!),
+                  sortIndex: r.sortIndex ?? 0,
+                ),
+              )
+              .toList(),
+        );
   }
 
   Future<Result<void, Failure>> addSubtask(String taskId, String title) async {
@@ -182,14 +200,19 @@ class TaskRepository {
     }
   }
 
-  Future<Result<void, Failure>> setSubtaskCompleted(AppSubtask subtask, {required bool completed}) async {
+  Future<Result<void, Failure>> setSubtaskCompleted(
+    AppSubtask subtask, {
+    required bool completed,
+  }) async {
     try {
       await _dao.upsertSubtask(
         db.SubtasksCompanion(
           id: Value(subtask.id),
           taskId: Value(subtask.taskId),
           title: Value(subtask.title),
-          completedAt: Value(completed ? DateTime.now().millisecondsSinceEpoch : null),
+          completedAt: Value(
+            completed ? DateTime.now().millisecondsSinceEpoch : null,
+          ),
           updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
         ),
       );
@@ -222,7 +245,8 @@ class TaskRepository {
     );
   }
 
-  List<AppTask> _toDomainList(List<db.Task> rows) => rows.map(_toDomain).toList();
+  List<AppTask> _toDomainList(List<db.Task> rows) =>
+      rows.map(_toDomain).toList();
 
   AppTask _toDomain(db.Task row) {
     return AppTask(
@@ -238,8 +262,12 @@ class TaskRepository {
       goalId: row.goalId,
       recurrenceRule: row.recurrenceRule,
       sortIndex: row.sortIndex,
-      completedAt: row.completedAt == null ? null : DateTime.fromMillisecondsSinceEpoch(row.completedAt!),
-      createdAt: row.createdAt == null ? DateTime.now() : DateTime.fromMillisecondsSinceEpoch(row.createdAt!),
+      completedAt: row.completedAt == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(row.completedAt!),
+      createdAt: row.createdAt == null
+          ? DateTime.now()
+          : DateTime.fromMillisecondsSinceEpoch(row.createdAt!),
     );
   }
 }

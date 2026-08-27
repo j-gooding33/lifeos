@@ -10,7 +10,8 @@ class PreferencesRepository {
 
   final PreferencesDao _dao;
 
-  Stream<String?> watch(String userId, String key) => _dao.watchValue(userId, key);
+  Stream<String?> watch(String userId, String key) =>
+      _dao.watchValue(userId, key);
 
   Future<Result<String?, Failure>> get(String userId, String key) async {
     try {
@@ -20,7 +21,11 @@ class PreferencesRepository {
     }
   }
 
-  Future<Result<void, Failure>> set(String userId, String key, String value) async {
+  Future<Result<void, Failure>> set(
+    String userId,
+    String key,
+    String value,
+  ) async {
     try {
       await _dao.setValue(userId, key, value);
       return const Ok(null);

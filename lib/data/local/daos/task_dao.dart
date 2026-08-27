@@ -42,7 +42,11 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   Stream<List<Task>> watchNoDate(String userId) {
     final query = select(tasks)
       ..where(
-        (t) => t.userId.equals(userId) & t.deletedAt.isNull() & t.completedAt.isNull() & t.dueDate.isNull(),
+        (t) =>
+            t.userId.equals(userId) &
+            t.deletedAt.isNull() &
+            t.completedAt.isNull() &
+            t.dueDate.isNull(),
       )
       ..orderBy([(t) => OrderingTerm.asc(t.sortIndex)]);
     return query.watch();
@@ -53,7 +57,29 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   /// the pending items the Today view shows.
   Stream<List<Task>> watchAllDueOn(String userId, String date) {
     final query = select(tasks)
-      ..where((t) => t.userId.equals(userId) & t.deletedAt.isNull() & t.dueDate.equals(date));
+      ..where(
+        (t) =>
+            t.userId.equals(userId) &
+            t.deletedAt.isNull() &
+            t.dueDate.equals(date),
+      );
+    return query.watch();
+  }
+
+  /// One range query per visible calendar period (§14.5), not one per cell.
+  Stream<List<Task>> watchDueInRange(
+    String userId,
+    String from,
+    String through,
+  ) {
+    final query = select(tasks)
+      ..where(
+        (t) =>
+            t.userId.equals(userId) &
+            t.deletedAt.isNull() &
+            t.dueDate.isBiggerOrEqualValue(from) &
+            t.dueDate.isSmallerOrEqualValue(through),
+      );
     return query.watch();
   }
 
@@ -83,10 +109,13 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
   Stream<Task?> watchById(String id) =>
       (select(tasks)..where((t) => t.id.equals(id))).watchSingleOrNull();
 
-  Future<void> upsert(TasksCompanion entry) => into(tasks).insertOnConflictUpdate(entry);
+  Future<void> upsert(TasksCompanion entry) =>
+      into(tasks).insertOnConflictUpdate(entry);
 
   Future<void> softDelete(String id, int now) =>
-      (update(tasks)..where((t) => t.id.equals(id))).write(TasksCompanion(deletedAt: Value(now)));
+      (update(tasks)..where((t) => t.id.equals(id))).write(
+        TasksCompanion(deletedAt: Value(now)),
+      );
 
   Stream<List<Subtask>> watchSubtasks(String taskId) {
     final query = select(subtasks)
@@ -95,9 +124,11 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     return query.watch();
   }
 
-  Future<void> upsertSubtask(SubtasksCompanion entry) => into(subtasks).insertOnConflictUpdate(entry);
+  Future<void> upsertSubtask(SubtasksCompanion entry) =>
+      into(subtasks).insertOnConflictUpdate(entry);
 
-  Future<void> deleteSubtask(String id, int now) => (update(
-    subtasks,
-  )..where((s) => s.id.equals(id))).write(SubtasksCompanion(deletedAt: Value(now)));
+  Future<void> deleteSubtask(String id, int now) =>
+      (update(subtasks)..where((s) => s.id.equals(id))).write(
+        SubtasksCompanion(deletedAt: Value(now)),
+      );
 }

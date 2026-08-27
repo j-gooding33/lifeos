@@ -23,3 +23,13 @@ class NotFoundFailure extends Failure {
 class AuthFailure extends Failure {
   const AuthFailure(super.message);
 }
+
+/// §8.4 point 4: moving an occurrence onto a date that already holds one
+/// for the same plan. Carries the id of the row already there so the
+/// caller can offer "Merge, or keep both?" and re-call with a resolution.
+class OccurrenceConflictFailure extends Failure {
+  const OccurrenceConflictFailure(this.conflictingOccurrenceId)
+    : super('An occurrence already exists on that date.');
+
+  final String conflictingOccurrenceId;
+}

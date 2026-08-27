@@ -284,6 +284,94 @@ final class AllTasksDueTodayProvider
 
 String _$allTasksDueTodayHash() => r'a1961a4cdceb761fd5cad60f7fcd7fb8746006c9';
 
+/// §14.5: one range query per visible calendar period.
+
+@ProviderFor(tasksDueInRange)
+const tasksDueInRangeProvider = TasksDueInRangeFamily._();
+
+/// §14.5: one range query per visible calendar period.
+
+final class TasksDueInRangeProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppTask>>,
+          List<AppTask>,
+          Stream<List<AppTask>>
+        >
+    with $FutureModifier<List<AppTask>>, $StreamProvider<List<AppTask>> {
+  /// §14.5: one range query per visible calendar period.
+  const TasksDueInRangeProvider._({
+    required TasksDueInRangeFamily super.from,
+    required (CivilDate, CivilDate) super.argument,
+  }) : super(
+         retry: null,
+         name: r'tasksDueInRangeProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$tasksDueInRangeHash();
+
+  @override
+  String toString() {
+    return r'tasksDueInRangeProvider'
+        ''
+        '$argument';
+  }
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppTask>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppTask>> create(Ref ref) {
+    final argument = this.argument as (CivilDate, CivilDate);
+    return tasksDueInRange(ref, argument.$1, argument.$2);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is TasksDueInRangeProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$tasksDueInRangeHash() => r'83dc0f9b63b01f4da642b2699f9258fa381b86fa';
+
+/// §14.5: one range query per visible calendar period.
+
+final class TasksDueInRangeFamily extends $Family
+    with
+        $FunctionalFamilyOverride<
+          Stream<List<AppTask>>,
+          (CivilDate, CivilDate)
+        > {
+  const TasksDueInRangeFamily._()
+    : super(
+        retry: null,
+        name: r'tasksDueInRangeProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// §14.5: one range query per visible calendar period.
+
+  TasksDueInRangeProvider call(CivilDate from, CivilDate through) =>
+      TasksDueInRangeProvider._(argument: (from, through), from: this);
+
+  @override
+  String toString() => r'tasksDueInRangeProvider';
+}
+
 @ProviderFor(recentlyCreatedTasks)
 const recentlyCreatedTasksProvider = RecentlyCreatedTasksProvider._();
 

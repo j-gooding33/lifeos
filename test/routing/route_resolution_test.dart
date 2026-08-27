@@ -182,14 +182,16 @@ void main() {
       await tester.pump(Duration.zero);
     });
 
-    testWidgets('/occurrence/:id -> honest placeholder (needs M7 repository)', (
-      tester,
-    ) async {
+    testWidgets('/occurrence/:id -> occurrence detail', (tester) async {
       final router = buildRouter();
       await tester.pumpWidget(_pumpableApp(router));
       router.go('/occurrence/occ1');
       await tester.pumpAndSettle();
-      expect(find.text('Occurrence'), findsOneWidget);
+      // A real screen now (M7) — occ1 doesn't exist in the fresh test
+      // database, so it resolves to the "no longer exists" state rather
+      // than a placeholder, which is itself proof the route landed on the
+      // real occurrence screen rather than somewhere else.
+      expect(find.text('This occurrence no longer exists.'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       await tester.pump(Duration.zero);
     });

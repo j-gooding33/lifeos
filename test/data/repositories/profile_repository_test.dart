@@ -42,7 +42,9 @@ void main() {
     final events = <AppProfile?>[];
     final subscription = stream.listen(events.add);
 
-    await repository.saveProfile(const AppProfile(id: 'user-1', displayName: 'Alex'));
+    await repository.saveProfile(
+      const AppProfile(id: 'user-1', displayName: 'Alex'),
+    );
     await Future<void>.delayed(Duration.zero);
 
     await subscription.cancel();

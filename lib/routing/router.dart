@@ -2,9 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
+import 'package:life_os/features/calendar/presentation/screens/calendar_screen.dart';
+import 'package:life_os/features/calendar/presentation/screens/event_detail_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/plan_calendar_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_create_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plan_detail_screen.dart';
+import 'package:life_os/features/plans/presentation/screens/plan_occurrence_screen.dart';
 import 'package:life_os/features/plans/presentation/screens/plans_screen.dart';
 import 'package:life_os/features/quick_add/presentation/quick_add_sheet.dart';
 import 'package:life_os/features/tasks/presentation/screens/task_detail_screen.dart';
@@ -66,12 +70,35 @@ GoRouter buildRouter() {
                 builder: (context, state) =>
                     PlanCreateScreen(planId: state.pathParameters['id']),
               ),
-              _placeholderRoute(Routes.planCalendar, 'Plan calendar'),
-              _placeholderRoute(Routes.planOccurrence, 'Occurrence detail'),
+              GoRoute(
+                path: Routes.planCalendar,
+                builder: (context, state) =>
+                    PlanCalendarScreen(planId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: Routes.planOccurrence,
+                builder: (context, state) => PlanOccurrenceScreen(
+                  occurrenceId: state.pathParameters['occId']!,
+                ),
+              ),
               _placeholderRoute(Routes.habits, 'Habits'),
               _placeholderRoute(Routes.habitDetail, 'Habit detail'),
-              _placeholderRoute(Routes.calendar, 'Calendar'),
-              _placeholderRoute(Routes.calendarEvent, 'Event detail'),
+              GoRoute(
+                path: Routes.calendar,
+                builder: (context, state) => const CalendarScreen(),
+              ),
+              GoRoute(
+                path: Routes.calendarEvent,
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  if (id == 'new') {
+                    return EventDetailScreen(
+                      initialDate: state.extra as DateTime?,
+                    );
+                  }
+                  return EventDetailScreen(eventId: id);
+                },
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -161,7 +188,14 @@ GoRouter buildRouter() {
 
       GoRoute(path: Routes.deepLinkTask, redirect: taskDeepLinkRedirect),
       GoRoute(path: Routes.deepLinkPlan, redirect: planDeepLinkRedirect),
-      _placeholderRoute(Routes.deepLinkOccurrence, 'Occurrence'),
+      // No redirect needed (unlike the other aliases above): an occurrence
+      // can now be looked up by its own id alone, without knowing its
+      // parent plan's id up front (M7's `PlanRepository.watchOccurrenceById`).
+      GoRoute(
+        path: Routes.deepLinkOccurrence,
+        builder: (context, state) =>
+            PlanOccurrenceScreen(occurrenceId: state.pathParameters['id']!),
+      ),
       GoRoute(path: Routes.deepLinkDay, redirect: dayDeepLinkRedirect),
       GoRoute(
         path: Routes.deepLinkQuickAdd,
