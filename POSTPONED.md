@@ -5,7 +5,6 @@ Deliberately not built in v1. Recorded per §37.2 of `LIFE_OS_SPEC.md` so the de
 | Item | Reason |
 |---|---|
 | Two-way device calendar sync | v1 ships read-only import only; two-way sync needs a conflict story with a third-party calendar, out of scope until sync (M19) is proven with our own data first |
-| Per-episode TV tracking | Series-level tracking covers the primary use case; per-episode adds a data model dimension (seasons/episodes/watch progress) not needed for v1 |
 | Semantic search | Candidate for Premium post-M16; needs an embeddings pipeline and vector storage not justified before the FTS5 baseline (M14) ships |
 | Smart collections | Depends on stats/rollups (M15) being stable first |
 | Web app and desktop | Explicit non-goal, §1.5; architecture must not prevent it later but nothing is built now |

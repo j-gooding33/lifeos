@@ -17,7 +17,10 @@ jobs:
       - run: flutter pub get
       - run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter analyze
-      - run: flutter test
+      # `live`-tagged tests hit a real external API (only Open Library,
+      # M8 — no key needed, but a real network dependency); excluded here
+      # so CI never depends on a live third-party service being up.
+      - run: flutter test --exclude-tags=live
 
   android-build:
     needs: analyze-and-test

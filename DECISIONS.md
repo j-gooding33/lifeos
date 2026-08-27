@@ -4,6 +4,62 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## M8 — Media Library, Rankings, Personal Lists & School Timetable (2026-08-27, ongoing)
+
+### M8 is a custom milestone brief, not `LIFE_OS_SPEC.md`'s own M8
+**Decision:** the project owner supplied a large, self-contained M8 spec (Media Library covering Films/TV/Books with ratings, Top-N lists and Plan-based scheduling, plus an entirely new School Timetable system) that reorganises and significantly expands `LIFE_OS_SPEC.md`'s own M8 (Goals) through M13 (Books/Notes) and pulls pieces of M16 (AI) forward. Treating the pasted brief as this milestone's actual spec, the same way `LIFE_OS_SPEC.md` itself is treated elsewhere — cross-referenced against the existing spec's relevant sections (§15, §16, §19) rather than ignored, since much of the existing architecture (see below) was already designed for exactly this.
+**How to apply:** `LIFE_OS_SPEC.md`'s own M8 (Goals)/M9 (Projects)/M10 (Habits) are deferred until after this M8 — Goals/Projects still show `NotBuiltYetScreen`, unchanged.
+
+### Films/TV/Books reuse `library_items`, not new per-type tables
+**Decision:** the brief's Part 41 proposes separate `Film`/`TVShow`/`Book`/`FilmRating`/`FilmLog`/… tables. Built on the existing `library_items` polymorphic table (§16.3, from M4) instead — it already has `mediaType`, `status` (wishlist/inProgress/done/abandoned — one vocabulary for "want to watch/reading/watched" per §16.3), `rating`, `isFavourite`, `notes` (the personal log), `startedAt`/`finishedAt`, poster/genre/creator fields.
+**Why:** the brief's own Part 45 rules say "identify reusable components" and "do not duplicate existing functionality" — `library_items` already *is* Part 41's proposed schema, just unified across the three media types the way §16.3 deliberately designed it, so the query/sort/filter layer (rating history, stats, watchlist) is one implementation instead of three.
+**How to apply:** only build new tables for what `library_items` genuinely can't express — per-episode TV data and Top-N rankings (both below).
+
+### Per-episode TV tracking is un-postponed
+**Decision:** M1's `POSTPONED.md` explicitly deferred per-episode tracking ("series-level tracking covers the primary use case"). The project owner explicitly asked to reverse that for M8 (Parts 10-15, including 1-6★ episode ratings) when asked directly. New `tv_episodes` table: one row per episode, combining cached TMDB metadata with the user's own watched/rating/log state — same shape `library_items` already uses for the show itself.
+**How to apply:** `POSTPONED.md`'s entry is removed rather than struck through, per that file's own convention ("if something later gets built, move it out ... instead of deleting the row") — moved here instead, since this *is* the note of which milestone shipped it.
+
+### The 6-star episode rating is a distinct tier, never averaged as "out of 5"
+**Decision:** `tv_episodes.rating` stores 0–6 in 0.5 steps; `AppTvEpisode.isPersonalFavourite` is `rating >= 6`. Nothing derives a show's overall rating from its episodes' ratings, or vice versa (Part 42, explicit) — `library_items.rating` (the show) and `tv_episodes.rating` (each episode) are written by entirely separate repository methods with no cross-reference.
+
+### Top-N lists ("Top 5 Films", "Top 5 TV Shows", "Top 3 Books") are their own table
+**Decision:** a new `top_list_items(id, userId, mediaType, libraryItemId, rank)` table, not a repurposed `collections` row.
+**Why:** considered modelling a Top-N list as a system-managed `Collections` row (it's structurally an ordered, capped list of item refs, which `collections`/`collection_items` already are). Rejected because a Top-N list has exactly one instance per `(userId, mediaType)`, a hard cap the repository enforces (5/5/3 — Part 42), and specific "1./2./3." ranking UI — bolting that onto the general-purpose, arbitrarily-many, user-named `collections` concept would mean filtering "system" rows out of every collections query for the rest of the app's life. A plain `MediaCollection` for user-named lists (Part 28) still reuses `collections`/`collection_items` directly — that one *is* the same shape.
+**How to apply:** `reorder()` writes ranks in two passes (negative placeholders, then final values) — a straight one-pass rewrite can transiently collide with the table's `(userId, mediaType, rank)` unique index when a permutation asks for a rank another not-yet-moved row still holds. Caught by a real test (`reorder rewrites ranks to match the given order`), not spotted in review.
+
+### A recurring `insertOnConflictUpdate` footgun, now a house rule
+**Decision/finding:** `into(table).insertOnConflictUpdate(companion)` is only safe for a **sparse** partial update (a companion that omits some of the table's `NOT NULL` columns) when the row doesn't already exist in a way that matters — for an *existing* row it can silently fail to apply, the same bug M7's `PlanRepository._setArchived` hit and fixed by switching to `update(table).where(...).write(companion)`. `TvEpisodeDao` hit it again this milestone (`updateUserState`) before a test caught it.
+**How to apply, going forward:** use `insertOnConflictUpdate` only when the companion supplies every `NOT NULL` column (a full-row rewrite, `library_items`' and `plans`' own `_save` pattern) or for genuine insert-or-fully-replace cases. Use `update(table).where(...).write(companion)` for any partial/sparse update to a row that may already exist — this is now the default choice for new sparse-update DAO methods, not `insertOnConflictUpdate`.
+
+### `MediaMetadataProvider` returns `Result`, not the spec's bare `Future`
+**Decision:** §16.2's own interface sketch uses plain `Future<...>` return types. Implemented with `Future<Result<T, Failure>>` instead, matching every other repository in this codebase.
+**Why:** a bare `Future` that can throw would be the only error-handling convention in the app that doesn't go through `Result`/`Failure` — every call site would need a special try/catch just for media calls. `TmdbMetadataProvider`/`OpenLibraryProvider` still implement the exact same *shape* (search/detail/trending/imageUrl) §16.2 asks for.
+
+### TMDB: built code-complete now, key supplied later
+**Decision:** `TmdbMetadataProvider` is a real implementation against TMDB's documented v3 API (search, detail with credits, season/episode listing, trending), gated by `isConfigured` exactly like `isSupabaseConfigured` — the project owner will register for a free TMDB API key and supply it via `--dart-define=TMDB_API_KEY=...` when ready, the same pattern as Supabase's URL/anon key.
+**Why:** same category as M4's Supabase auth — creating an account is something only the project owner can do. Unlike Supabase, this doesn't block anything else in the milestone: Books (Open Library, no key) can ship and be verified live in the meantime, and Films/TV UI can be built and tested against a fake `http.Client` now, then smoke-tested for real the moment a key exists.
+**How to apply:** run with `flutter run --dart-define=TMDB_API_KEY=your_key_here` once a key exists. Until then, `isTmdbConfigured` is false and Films/TV search shows the honest "not configured" state (§16.7) — manual add remains available.
+
+### TMDB's genre list is embedded as a static map, not fetched
+**Decision:** `tmdb_genres.dart` hard-codes TMDB's published `/genre/movie/list` and `/genre/tv/list` taxonomies (19 and 16 entries) rather than calling those endpoints.
+**Why:** this is TMDB's fixed, publicly documented vocabulary, not their catalogue or search results — embedding it avoids a network round-trip on every single search purely to resolve `genre_ids`, and isn't the "bulk-caching their catalogue" §16.2 actually prohibits.
+
+### Provider tests: fake client for CI, one real call kept separate and tagged `live`
+**Decision:** `tmdb_metadata_provider_test.dart`/`open_library_provider_test.dart` use an injectable fake `http.Client` (deterministic, no network, no key needed) and are what `flutter test`/CI run. `open_library_provider_live_test.dart` makes one genuine call to the real Open Library API (the one provider this session can verify live, needing no key) — tagged `live`, run via plain `dart test` (not `flutter test`, whose `TestWidgetsFlutterBinding` forces every real `HttpClient` request to fail with a fake 400), and excluded from the standard suite (`ci.yaml` now runs `flutter test --exclude-tags=live`) so a flaky network or an Open Library outage never breaks CI.
+**How to apply:** any future live-network check follows this same file-per-check, `live`-tagged, plain-`dart test` pattern.
+
+### The School week-parity engine re-anchors on drift rather than modelling holiday conventions
+**Decision:** `weekLabelFor` computes Week A/B purely as calendar-weeks-since-anchor, parity-alternating, regardless of closures. If a holiday breaks the alternation in a way a school announces explicitly (returning as "Week B" after an odd-length break) rather than lets fall out of pure week-counting, the fix is the user editing `SchoolProfile.anchorDate`/`anchorWeekLabel` to the actual return day, not the engine guessing school-specific conventions.
+**Why:** real schools' holiday-length-vs-parity conventions vary and aren't knowable in general; a single, always-correctable anchor is simple, testable, and matches how the recurrence engine's own `anchor` field works — one source of truth the rest of the maths derives from, correctable rather than clever.
+**How to apply:** if this genuinely causes friction (frequent manual re-anchoring), the fix is a UI convenience — "set this week's label" — that just rewrites the anchor, not a change to the engine's maths.
+
+### AI (Parts 35-40): shell only, no live model calls
+**Decision:** built nothing that calls a real language model this milestone. §19.1 is explicit and non-negotiable — the model API key must never exist on the device; the real architecture is a Supabase Edge Function the client calls over HTTPS, which needs a live Supabase project (still blocked, same as M4/M19) and a deployed function, neither of which exists.
+**Why:** there's no way to build a working AI chat without that infrastructure regardless of how much of the rest of M8 ships. What's genuinely buildable now — and where the effort actually goes — is the Settings → AI permission-scopes UI (inert until there's a backend to enforce it) and making sure the media/school/plan repositories built this milestone are already shaped like the eventual tools (§19.4's `get_films()`, `get_timetable()`, `assign_media_to_occurrence()` etc. are, or will be, just repository methods — no separate "AI-facing" API layer to build later).
+**How to apply:** when Supabase + an Edge Function exist (this needs the project owner's account, same as M4), wire the permission scopes to actually gate context building, and give the Edge Function the repository methods as its tool implementations.
+
+---
+
 ## M7 — Plan calendar + unified calendar (2026-08-27)
 
 ### Occurrence status stays at five values; "moved" is derived, not stored

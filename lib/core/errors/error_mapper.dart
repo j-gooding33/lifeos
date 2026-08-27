@@ -10,5 +10,12 @@ String mapFailureToMessage(Failure failure) {
     AuthFailure() => "That didn't work. Check your details and try again.",
     OccurrenceConflictFailure() =>
       "There's already one on that day. Merge, or keep both?",
+    ConfigurationFailure(:final message) => message,
+    NetworkFailure(isRateLimited: true) =>
+      'Searching is busy right now — try again in a moment.',
+    NetworkFailure() =>
+      "Couldn't reach the internet. Check your connection and try again.",
+    TopListFullFailure(:final cap) =>
+      'This list already has $cap items — remove one first, or replace it.',
   };
 }

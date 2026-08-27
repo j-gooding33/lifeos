@@ -1,0 +1,8 @@
+tags:
+  live:
+    # Hits a real external API (currently just Open Library, M8 — no key
+    # needed). Not skipped by default; `ci.yaml` runs `flutter test
+    # --exclude-tags=live` explicitly so CI never depends on a live
+    # third-party service. Run these deliberately with
+    # `dart test --tags=live` (or by file path) when you want to verify
+    # against the real API.

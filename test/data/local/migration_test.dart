@@ -27,6 +27,23 @@ void main() {
     await db.close();
   });
 
+  test('v2 schema creates cleanly', () async {
+    final connection = await verifier.startAt(2);
+    final db = AppDatabase.forTesting(connection.executor);
+    await verifier.migrateAndValidate(db, 2);
+    await db.close();
+  });
+
+  test(
+    'v1 to v2 migrates cleanly (M8: TV episodes, top lists, School)',
+    () async {
+      final connection = await verifier.startAt(1);
+      final db = AppDatabase.forTesting(connection.executor);
+      await verifier.migrateAndValidate(db, 2);
+      await db.close();
+    },
+  );
+
   test('a real AppDatabase opens against an in-memory executor', () async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     await db.customSelect('SELECT 1').get();
