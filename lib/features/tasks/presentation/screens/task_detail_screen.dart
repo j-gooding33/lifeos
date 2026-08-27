@@ -154,9 +154,9 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
                 ],
               ),
             ),
-          LTextField(controller: _titleController, placeholder: 'Task title'),
+          LTextField(controller: _titleController, label: 'Title', outlined: true),
           const SizedBox(height: LifeSpace.s12),
-          LTextField(controller: _notesController, placeholder: 'Notes'),
+          LTextField(controller: _notesController, label: 'Notes', outlined: true),
           const SizedBox(height: LifeSpace.s12),
           LDatePicker(date: _dueDate, onChanged: (date) => setState(() => _dueDate = date)),
           if (task != null) ...[
@@ -166,7 +166,13 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             _SubtasksSection(taskId: task.id),
           ],
           const SizedBox(height: LifeSpace.s24),
-          LButton(label: _isNew ? 'Create' : 'Save', onPressed: _save),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _titleController,
+            builder: (context, value, _) {
+              final canSave = value.text.trim().isNotEmpty;
+              return LButton(label: _isNew ? 'Create' : 'Save', onPressed: canSave ? _save : null);
+            },
+          ),
         ],
       ),
     );

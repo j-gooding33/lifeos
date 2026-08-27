@@ -25,8 +25,8 @@ class LButton extends StatelessWidget {
     final colors = context.colors;
     final danger = colors.semantic('danger');
 
-    late final Color background;
-    late final Color foreground;
+    late Color background;
+    late Color foreground;
     switch (variant) {
       case LButtonVariant.filled:
         background = colors.accent.base;
@@ -40,6 +40,12 @@ class LButton extends StatelessWidget {
       case LButtonVariant.destructive:
         background = danger.base;
         foreground = danger.on;
+    }
+
+    final disabled = onPressed == null;
+    if (disabled) {
+      background = variant == LButtonVariant.plain ? background : colors.neutrals.surfaceAlt;
+      foreground = colors.neutrals.ink3;
     }
 
     return ConstrainedBox(
