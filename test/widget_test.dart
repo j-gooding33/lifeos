@@ -33,13 +33,16 @@ void main() {
     await tester.pump(Duration.zero);
   });
 
-  testWidgets('shows all five tabs', (tester) async {
+  testWidgets('shows the four built tabs, Stats hidden until built', (tester) async {
     await tester.pumpWidget(_appUnderTest());
     await tester.pumpAndSettle();
 
-    for (final label in ['Plans', 'Tasks', 'Library', 'Stats']) {
+    for (final label in ['Plans', 'Tasks', 'Library']) {
       expect(find.text(label), findsAtLeastNWidgets(1));
     }
+    // Stats is deliberately off the bar (see shell_scaffold.dart) until it
+    // has a real screen behind it — its route stays reachable by deep link.
+    expect(find.text('Stats'), findsNothing);
     // "Home" is both a tab label and, on the Home screen itself, only ever
     // the AppBar's greeting text now — not the literal word "Home" — so it
     // no longer needs the double-match note the other labels don't have.
