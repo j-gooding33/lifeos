@@ -32,6 +32,16 @@ Stream<List<AppTask>> upcomingTasks(Ref ref) async* {
   yield* ref.watch(taskRepositoryProvider).watchUpcoming(userId, _today());
 }
 
+/// Future-dated only, excluding undated tasks — feeds the Today tab's
+/// "beyond today" section specifically (see `tasks_screen.dart`), which
+/// orders undated before future-dated rather than [upcomingTasksProvider]'s
+/// dated-first ordering.
+@riverpod
+Stream<List<AppTask>> futureDatedTasks(Ref ref) async* {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  yield* ref.watch(taskRepositoryProvider).watchFutureDatedOnly(userId, _today());
+}
+
 @riverpod
 Stream<List<AppTask>> somedayTasks(Ref ref) async* {
   final userId = await ref.watch(currentUserIdProvider.future);

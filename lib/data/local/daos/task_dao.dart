@@ -25,7 +25,31 @@ class TaskDao extends DatabaseAccessor<AppDatabase> with _$TaskDaoMixin {
     return query.watch();
   }
 
+  /// Future-dated tasks *and* undated ones (§10.3's "Upcoming" must not
+  /// silently drop tasks with no date — see DECISIONS.md). Dated rows sort
+  /// first by date; undated rows follow, by `sortIndex`.
   Stream<List<Task>> watchUpcoming(String userId, String afterDate) {
+    final query = select(tasks)
+      ..where(
+        (t) =>
+            t.userId.equals(userId) &
+            t.deletedAt.isNull() &
+            t.completedAt.isNull() &
+            (t.dueDate.isNull() | t.dueDate.isBiggerThanValue(afterDate)),
+      )
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.dueDate.isNull()),
+        (t) => OrderingTerm.asc(t.dueDate),
+        (t) => OrderingTerm.asc(t.sortIndex),
+      ]);
+    return query.watch();
+  }
+
+  /// Strictly future-dated, excluding undated tasks — the Today tab's
+  /// "beyond today" section needs undated and future-dated tasks as two
+  /// separately-ordered groups (undated first), so it can't use
+  /// [watchUpcoming]'s combined ordering. See `task_providers.dart`.
+  Stream<List<Task>> watchFutureDatedOnly(String userId, String afterDate) {
     final query = select(tasks)
       ..where(
         (t) =>

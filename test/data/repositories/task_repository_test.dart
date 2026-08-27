@@ -52,6 +52,35 @@ void main() {
   );
 
   test(
+    'an undated task appears in watchUpcoming but not watchFutureDatedOnly',
+    () async {
+      final today = CivilDate.fromDateTime(DateTime.now());
+      await repository.createTask(userId: 'u1', title: 'Someday idea');
+
+      final upcoming = await repository.watchUpcoming('u1', today).first;
+      final futureOnly = await repository.watchFutureDatedOnly('u1', today).first;
+      expect(upcoming.map((t) => t.title), contains('Someday idea'));
+      expect(futureOnly.map((t) => t.title), isNot(contains('Someday idea')));
+    },
+  );
+
+  test(
+    'watchUpcoming orders dated tasks before undated ones',
+    () async {
+      final today = CivilDate.fromDateTime(DateTime.now());
+      await repository.createTask(userId: 'u1', title: 'No date');
+      await repository.createTask(
+        userId: 'u1',
+        title: 'Dated',
+        dueDate: today.addDays(1).toIso(),
+      );
+
+      final upcoming = await repository.watchUpcoming('u1', today).first;
+      expect(upcoming.map((t) => t.title).toList(), ['Dated', 'No date']);
+    },
+  );
+
+  test(
     'completing a task sets completedAt and it leaves the open views',
     () async {
       final today = CivilDate.fromDateTime(DateTime.now());

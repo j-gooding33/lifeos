@@ -167,6 +167,59 @@ final class UpcomingTasksProvider
 
 String _$upcomingTasksHash() => r'47363686a99c16a034506e65039deed754db4efb';
 
+/// Future-dated only, excluding undated tasks — feeds the Today tab's
+/// "beyond today" section specifically (see `tasks_screen.dart`), which
+/// orders undated before future-dated rather than [upcomingTasksProvider]'s
+/// dated-first ordering.
+
+@ProviderFor(futureDatedTasks)
+const futureDatedTasksProvider = FutureDatedTasksProvider._();
+
+/// Future-dated only, excluding undated tasks — feeds the Today tab's
+/// "beyond today" section specifically (see `tasks_screen.dart`), which
+/// orders undated before future-dated rather than [upcomingTasksProvider]'s
+/// dated-first ordering.
+
+final class FutureDatedTasksProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<AppTask>>,
+          List<AppTask>,
+          Stream<List<AppTask>>
+        >
+    with $FutureModifier<List<AppTask>>, $StreamProvider<List<AppTask>> {
+  /// Future-dated only, excluding undated tasks — feeds the Today tab's
+  /// "beyond today" section specifically (see `tasks_screen.dart`), which
+  /// orders undated before future-dated rather than [upcomingTasksProvider]'s
+  /// dated-first ordering.
+  const FutureDatedTasksProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'futureDatedTasksProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$futureDatedTasksHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<AppTask>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<AppTask>> create(Ref ref) {
+    return futureDatedTasks(ref);
+  }
+}
+
+String _$futureDatedTasksHash() => r'215fc07eb44a8b815b06a7dc4962dbab18da0af1';
+
 @ProviderFor(somedayTasks)
 const somedayTasksProvider = SomedayTasksProvider._();
 

@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/data/repositories/models/app_task.dart';
+import 'package:life_os/data/repositories/task_repository.dart';
 import 'package:life_os/design/components/l_empty_state.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
+import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_segmented.dart';
+import 'package:life_os/design/components/l_squiggle_divider.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/tasks/application/task_providers.dart';
@@ -63,12 +66,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget _buildSegment() {
     switch (_segment) {
       case _TaskSegment.today:
-        final async = ref.watch(todayTasksProvider);
-        return _TaskList(
-          asyncTasks: async,
-          emptyTitle: "Today's clear",
-          onRetry: () => ref.invalidate(todayTasksProvider),
-        );
+        return const _TodayTaskList();
       case _TaskSegment.upcoming:
         final async = ref.watch(upcomingTasksProvider);
         return _TaskList(
@@ -127,22 +125,93 @@ class _TaskList extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: LifeSpace.s16, vertical: LifeSpace.s8),
           itemCount: tasks.length,
           separatorBuilder: (_, _) => const SizedBox(height: LifeSpace.s4),
-          itemBuilder: (context, index) {
-            final task = tasks[index];
-            return TaskRow(
-              task: task,
-              onToggleComplete: (checked) {
-                if (checked) {
-                  repository.completeTask(task);
-                } else {
-                  repository.uncompleteTask(task);
-                }
-              },
-              onDelete: () => repository.deleteTask(task.id),
-            );
-          },
+          itemBuilder: (context, index) => _buildTaskRow(repository, tasks[index]),
         );
       },
+    );
+  }
+}
+
+Widget _buildTaskRow(TaskRepository repository, AppTask task) {
+  return TaskRow(
+    task: task,
+    onToggleComplete: (checked) {
+      if (checked) {
+        repository.completeTask(task);
+      } else {
+        repository.uncompleteTask(task);
+      }
+    },
+    onDelete: () => repository.deleteTask(task.id),
+  );
+}
+
+/// Today's own segment (§10.3/M9): today's dated tasks first, then — only
+/// if there's anything beyond today — a subtle squiggle divider, a "Beyond
+/// today" label, undated tasks, then future-dated tasks. Combines three
+/// independent streams rather than one query, since "undated first, future
+/// second" here is the opposite order `upcomingTasksProvider` uses for the
+/// Next tab (see `task_providers.dart`).
+class _TodayTaskList extends ConsumerWidget {
+  const _TodayTaskList();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncToday = ref.watch(todayTasksProvider);
+    final asyncUndated = ref.watch(somedayTasksProvider);
+    final asyncFuture = ref.watch(futureDatedTasksProvider);
+    final repository = ref.read(taskRepositoryProvider);
+
+    if (asyncToday.isLoading || asyncUndated.isLoading || asyncFuture.isLoading) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(horizontal: LifeSpace.s16),
+        child: Column(
+          children: [LLoadingShimmer(height: 56), SizedBox(height: LifeSpace.s8), LLoadingShimmer(height: 56)],
+        ),
+      );
+    }
+    if (asyncToday.hasError || asyncUndated.hasError || asyncFuture.hasError) {
+      return LErrorState(
+        message: "Couldn't load your tasks.",
+        onRetry: () {
+          ref
+            ..invalidate(todayTasksProvider)
+            ..invalidate(somedayTasksProvider)
+            ..invalidate(futureDatedTasksProvider);
+        },
+      );
+    }
+
+    final today = asyncToday.requireValue;
+    final undated = asyncUndated.requireValue;
+    final future = asyncFuture.requireValue;
+    final hasBeyondToday = undated.isNotEmpty || future.isNotEmpty;
+
+    if (today.isEmpty && !hasBeyondToday) {
+      return const LEmptyState(
+        icon: Icons.check_circle_outline,
+        title: "Today's clear",
+        message: 'Add a task with the + button.',
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: LifeSpace.s16, vertical: LifeSpace.s8),
+      children: [
+        for (final task in today) ...[_buildTaskRow(repository, task), const SizedBox(height: LifeSpace.s4)],
+        if (hasBeyondToday) ...[
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: LifeSpace.s4),
+            child: LSquiggleDivider(),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(bottom: LifeSpace.s8),
+            child: LSectionHeader(title: 'Beyond today'),
+          ),
+          for (final task in undated) ...[_buildTaskRow(repository, task), const SizedBox(height: LifeSpace.s4)],
+          for (final task in future) ...[_buildTaskRow(repository, task), const SizedBox(height: LifeSpace.s4)],
+        ],
+      ],
     );
   }
 }

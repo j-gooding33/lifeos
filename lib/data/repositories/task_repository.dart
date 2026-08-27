@@ -34,6 +34,10 @@ class TaskRepository {
     return _dao.watchUpcoming(userId, today.toIso()).map(_toDomainList);
   }
 
+  Stream<List<AppTask>> watchFutureDatedOnly(String userId, CivilDate today) {
+    return _dao.watchFutureDatedOnly(userId, today.toIso()).map(_toDomainList);
+  }
+
   Stream<List<AppTask>> watchSomeday(String userId) {
     return _dao.watchNoDate(userId).map(_toDomainList);
   }
