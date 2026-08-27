@@ -27,30 +27,53 @@ this commit:
 | M5 | Tasks, Home v1, Quick Add |
 | M6 | Pure-Dart recurrence engine, golden-tested |
 | M7 | Plans on the recurrence engine, plan calendar, unified calendar |
-| M8 (in progress) | Media library (Films/TV/Books), personal Top-N lists, School timetable data model, AI shell. See below. |
+| M8 | Media library (Films/TV/Books), rankings, personal lists, School timetable, AI permission shell, plan-based scheduling. Custom brief — see below. |
+| Habits (§13) | Habits are Plans (`kind = 'habit'`) — creation, list with a 7-day dot strip, detail with streak/best-streak/year heatmap. |
+| Projects (§11) | Full CRUD, task grouping (To do/Done, inline add), derived progress, deadline chips. |
+| Goals (§12) | Full CRUD, all six goal types, honest projection arithmetic, milestones, and automatic progress from completed Plan occurrences. |
+
+`LIFE_OS_SPEC.md`'s own M8 (Goals), M9 (Projects) and M10 (Habits) were
+deferred until the custom M8 brief below shipped; all three are now done.
 
 ### M8 — Media Library & School Timetable (custom brief, see `DECISIONS.md`)
 
-Done:
-- Data architecture: `library_items` (films/TV/books, one polymorphic
-  table), `tv_episodes` (per-episode 0–6★ tracking, the 6th star a distinct
-  "personal favourite" tier), `top_list_items` (capped, manually curated
-  Top 5/Top 5/Top 3 — independent of star ratings), and the School tables
-  (`school_profile`, `school_lessons`, `school_terms`, `school_closures`,
-  `school_events`) plus a pure-Dart week-A/B parity engine
-  (`lib/core/school/school_week_engine.dart`).
-- Real metadata providers: `TmdbMetadataProvider` (films/TV, needs a free
-  API key — see "Running the app" below) and `OpenLibraryProvider` (books,
-  no key needed), both behind one `MediaMetadataProvider` interface so the
-  provider is swappable later.
-- Films, end to end: search → add → watchlist/watched/favourites grid →
-  detail (interactive rating, favourite, watched log) → sortable rating
-  history → reorderable Top 5.
+Done, end to end:
+- **Films/TV/Books**: search → add → watchlist/in-progress/done/favourites
+  grid → detail (interactive rating, favourite, watched/finished log) →
+  sortable rating history (per type and unified) → reorderable Top 5/Top 5/
+  Top 3. TV additionally tracks per-episode watched state and a distinct
+  0–6★ "personal favourite" tier, never averaged into the show's own 1–5★
+  rating.
+- **Media Collections**: named, ordered, polymorphic lists (a collection
+  can hold a film, a show and a book together) — create/rename/delete, add
+  from any item's own menu, reachable from the Library home hub.
+- **Per-media-type stats**: watched/read this year and this month, average
+  rating, most common genre, total runtime (year-scoped, films/TV only),
+  and a rating-distribution bar — computed live from `library_items`, no
+  rollup table needed at this scale.
+- **School timetable**: profile setup (one-week or two-week A/B, computed
+  by a pure week-parity engine — `lib/core/school/school_week_engine.dart`),
+  manual lesson entry, term dates and closures, and a dashboard showing
+  today's Week A/B, open/closed status, and today's lessons.
+- **AI permission-scopes shell**: a real, working Settings → AI screen
+  (master switch, write permission, ten per-domain read scopes) that saves
+  real preferences now, with no model or backend behind it yet — see
+  "Not yet built" below.
+- **Plan-based scheduling (§16.5, "the flagship flow")**: a Plan occurrence
+  can be linked to a film/show/book from either side (the occurrence's own
+  sheet, or "Schedule this" on the item's detail screen); completing a
+  linked occurrence marks the item watched/finished and offers an optional
+  rating prompt.
 
-Not yet built: TV shows UI, Books UI, School timetable UI, media
-collections, unified media/ratings overview, stats screens, and the live
-AI backend (the permission-scopes shell exists; there is no Supabase
-project or Edge Function yet to call).
+Not yet built: the live AI backend (needs a Supabase project and an Edge
+Function — same blocker as sync), Notes/Links/Documents, Universal Search,
+Journal, Finance, and the general cross-domain Stats tab (needs the
+`daily_rollups` rollup-table architecture `§20.1` calls for — a
+meaningfully bigger feature than the per-media-type stats above). See
+`DECISIONS.md` for the full list of smaller, deliberate cuts within each
+shipped feature (e.g. "Fill from watchlist," the counter-habit stepper,
+Projects' Files/Activity sections, five of Goals' six automatic-progress
+rows).
 
 ## Running the app
 
