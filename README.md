@@ -38,6 +38,7 @@ this commit:
 | Universal Search (§18) | Keyword search (SQLite FTS5) across tasks, plans/habits, projects, goals, notes, journal, films/TV/books and links — grouped by type, ranked, capped at 8 with "Show all." Reached from Home's search icon. |
 | Links (§17.3) | Save a URL instantly, editable title/tags, open in the browser. Open Graph enrichment isn't built. |
 | Settings (§22.5) | Profile, Notifications and Privacy (real saved preferences, no delivery/collection behind them yet), Data (storage used, rebuild search index, clear image cache), Integrations (honest TMDB/Open Library status), About (version, licences). Account, Home dashboard, Calendar and Subscription stay the honest "not built yet" placeholder — each needs a real auth session, a card catalogue, a native calendar permission, or IAP. |
+| Statistics & Your Year (§20, §21) | Cross-domain Stats tab (today/week/month/year/all-time, computed on demand — no rollup table) covering Tasks, Plans & Habits, Goals, Library and Finance. Your Year's full-year activity grid (a `CustomPainter`, not 365 widgets) with a milestone notch and tap-through to a read-only Day Detail screen, shared by `/home/day/:date`. Reached from Home's "⋯" menu. |
 
 `LIFE_OS_SPEC.md`'s own M8 (Goals), M9 (Projects) and M10 (Habits) were
 deferred until the custom M8 brief below shipped; all three are now done,
@@ -77,14 +78,14 @@ Not yet built: the live AI backend (needs a Supabase project and an Edge
 Function — same blocker as sync), Documents (Links itself now ships — see
 the Status table above; Documents needs a file picker and local storage
 this pass didn't build), semantic search (§18.3, layered on top of the FTS5
-keyword search that does now exist), and the general cross-domain Stats tab
-(needs the `daily_rollups` rollup-table architecture `§20.1` calls for — a
-meaningfully bigger feature than the per-media-type stats above or
-Finance's own lighter-weight totals). See `DECISIONS.md` for the full list
-of smaller, deliberate cuts within each shipped feature (e.g. "Fill from
-watchlist," the counter-habit stepper, Projects' Files/Activity sections,
-five of Goals' six automatic-progress rows, Journal's auto-generated
-context strip, Finance's recurring expenses, Links' Open Graph enrichment).
+keyword search that does now exist), and Insights (§20.3's deterministic
+generated sentences on top of Stats, plus "Compare to last year" and
+"Share your year" PNG export on Your Year). See `DECISIONS.md` for the full
+list of smaller, deliberate cuts within each shipped feature (e.g. "Fill
+from watchlist," the counter-habit stepper, Projects' Files/Activity
+sections, five of Goals' six automatic-progress rows, Journal's
+auto-generated context strip, Finance's recurring expenses, Links' Open
+Graph enrichment, Stats' 30-day-median-relative activity scoring).
 
 ## Running the app
 

@@ -4,6 +4,44 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §20, §21 — Statistics, Your Year (2026-08-28)
+
+The two largest remaining spec sections. Both compute their numbers on demand from the repositories that already exist, rather than the spec's own heavier rollup architecture.
+
+### On-demand aggregation, not a `daily_rollups` table
+**Decision:** `StatsRepository` (new) has no persisted rollup state at all — every method (`statsForPeriod`, `dailyActivityScores`, `datesWithCompletedMilestone`, `dayDetail`) reads straight from `TaskRepository`/`PlanRepository`/`GoalRepository`/`LibraryItemRepository`/`JournalRepository` and aggregates in Dart, every time it's called.
+**Why:** §20's own architecture — a `daily_rollups` table (schema already exists, unused, since `daily_rollups_table.dart`) kept current by a `StatsRecorder` subscribed to domain events, plus a nightly reconcile job — needs a domain-event bus and a background job scheduler that don't exist anywhere else in this app. Building both just to unlock Stats would be a bigger, riskier undertaking than Stats itself, and would be the first code in the whole app that other features would eventually be pressured to route through. At this app's actual scale (one person's data, thousands of rows at most) computing aggregates on demand is fast enough and — unlike a cached rollup — can never silently drift from the source data.
+**How to apply:** if a domain-event bus and job scheduler get built for some other reason later, `daily_rollups` is sitting there ready and this repository is the one to revisit. Constructed from raw DAOs in `stats_providers.dart` rather than importing Tasks/Plans/Goals/Library/Journal's own provider files — CLAUDE.md rule 4, same pattern as Settings → Integrations reading TMDB/Open Library's provider classes directly.
+
+### `Stream.first` hangs forever under `NativeDatabase` in widget tests — found and fixed
+**Bug:** every `StatsRepository` method originally ended each sub-query with `await someRepo.watchXxx(...).first`. In a plain `test()` block this resolved instantly; inside a `testWidgets` test exercising the real provider (`AppDatabase.forTesting(NativeDatabase.memory())`, the same setup `route_resolution_test.dart` already used successfully elsewhere), the returned `Future` never completed — no error, no timeout, just permanently pending. `pumpAndSettle` reported a generic timeout, which was a red herring: replacing the loading widget with a plain `Text` (not an animating `CircularProgressIndicator`) proved `pumpAndSettle` itself wasn't broken — the `Future` genuinely never resolved. Bisected down to the smallest possible repro (a hand-written, non-codegen `FutureProvider` doing `ref.watch(appDatabaseProvider)` → one DAO call → `.watchXxx(...).first`, no `currentUserIdProvider`, no Riverpod chaining) and confirmed a `StreamProvider` exposing the *same* stream with no `.first` resolves on the very next pump — the stream itself is fine.
+**Root cause:** `Stream.first`'s own implementation calls `subscription.cancel()` *synchronously inside* the `onData` callback that delivers the first event, before completing its returned future. Drift's `QueryStream` (what every `watchXxx` method returns) races with that synchronous cancel under `NativeDatabase` and the future is left permanently pending.
+**Fix:** `stats_repository.dart` has a private `_firstValue<T>(Stream<T> stream)` helper that subscribes manually and defers the subscription's `cancel()` to the next microtask (`Future.microtask(subscription.cancel)`) instead of calling it inline from `onData`. Every `.first` call in the repository goes through this helper now.
+**How to apply:** this is a live landmine, not something unique to Stats — `plan_repository.dart`'s `applyMissedSweep` also does `await _dao.watchXxx(...).first` and hasn't hit this in existing tests only because nothing currently awaits it from inside a `testWidgets` pump loop the way a `FutureProvider` watched by a widget does. Any *new* one-shot read built on top of a Drift `.watch()` stream should use `_firstValue`-style deferred-cancel, or better, a real one-shot DAO query, not `.first`, until this is fixed upstream in Drift itself or `plan_repository.dart` is revisited.
+
+### `YearGrid` is a `CustomPainter`, not `LHeatmapGrid`
+**Decision:** a new `YearGrid` widget paints the whole year (up to 371 cells) in one `CustomPaint`, rather than reusing `LHeatmapGrid` (`Wrap` + one `Container` per cell — fine at Habits' 12-cell month view, not built for a year).
+**Why:** §21.3 says this directly — "365 cells must not be 365 widgets rebuilding." No new chart dependency either (`fl_chart` is in the spec; this session has consistently reused existing components or hand-built a `CustomPainter` instead — same call as the rating-distribution bar, the habit heatmap, and Finance's donut).
+**How to apply:** week columns, weekday rows, `CivilDate.startOfWeek()`/`addDays`/`daysBetween` for all grid-alignment math (never raw `DateTime`, same DST reasoning as everywhere else). Auto-scrolls to the current week on open.
+
+### Activity score is fixed-threshold, not relative to a 30-day median
+**Decision:** `dailyActivityScores` buckets a day's completion count into 5 levels with fixed cutoffs (0 / 1-2 / 3-4 / 5-7 / 8+), not §20.1's "relative to the user's own 30-day median."
+**Why:** the adaptive version needs a rolling-window query and reads oddly for a brand-new user with no 30-day history yet; fixed thresholds are simpler, predictable, and good enough for the grid's actual job (show *some* days as more active than others).
+**How to apply:** if this reads badly against real usage patterns, revisit the bucketing function (`StatsRepository._bucketScore`) alone — nothing else depends on the specific thresholds.
+
+### Stats Overview ships 5 of the spec's 9 domain cards
+**Decision:** `StatsOverviewScreen` has real cards for Tasks, Plans & Habits, Goals, Library, and Finance (a link-through). Projects and Study aren't built as their own stat cards yet — deferred, not silently dropped.
+**Deferred:** Insights (§20.3's deterministic sentences, e.g. "You completed 40% more tasks this week"), "Compare to last year" and "Share your year" PNG export on Your Year, and an accessible "view as table" alternative to the grid.
+
+### `DayDetailScreen` serves both `/home/day/:date` and Your Year's tapped cell
+**Decision:** one screen, `DayDetailScreen(date: CivilDate)`, backs both `Routes.homeDay` and the destination of tapping a cell in `YearGrid`.
+**Why:** §21.2 says so directly — "the same screen... built once." It's read-only (a summary, not an editor) — tapping through to actually edit a task or occurrence is left to the screen that already owns that action, not duplicated here.
+
+### A `LStat` row overflow, found live-testing on a 320dp emulator
+**Bug:** the Stats Overview 4-up headline row (`'tasks done'`, `'plans done'`, `'watched/read'`, `'journal days'`) and Your Year's 3-up row (`'active days'`, `'completions'`, `'longest streak'`) both overflowed horizontally on the Pixel emulator profile this session tests against. `LStat`'s `Column` sizes to its `Text` children's natural width, and every *other* existing 3-4up `LStat` row in the app (Plan detail's `'done'`/`'rate'`/`'streak'`/`'missed'`) already used short, single-word captions — this pass just didn't follow that convention.
+**Fix:** shortened to `'tasks'`/`'plans'`/`'media'`/`'journal'` and `'days'`/`'done'`/`'streak'`.
+**How to apply:** any future `Row` of 3+ `LStat`s needs single-word captions; `LStat` itself has no built-in truncation or wrapping, and adding one would fix the symptom for future callers at the cost of silently truncating captions no one notices until it's already shipped — matching the existing convention is the more honest fix.
+
 ## §22.5 — Settings (2026-08-28)
 
 Of the 12 sections §22.5 lists, 3 (Appearance, AI, and the root list itself) were already built. This pass builds 6 more — Profile, Notifications, Privacy, Data, Integrations, About — and leaves 4 as the honest "not built yet" placeholder, on purpose.
