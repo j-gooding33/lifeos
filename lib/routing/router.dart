@@ -52,8 +52,14 @@ import 'package:life_os/features/school/presentation/screens/school_setup_screen
 import 'package:life_os/features/school/presentation/screens/school_terms_screen.dart';
 import 'package:life_os/features/school/presentation/screens/school_timetable_screen.dart';
 import 'package:life_os/features/search/presentation/screens/universal_search_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/about_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/ai_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/data_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/integrations_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/notification_settings_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/privacy_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/profile_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/goal_create_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/goal_detail_screen.dart';
@@ -385,23 +391,41 @@ GoRouter buildRouter() {
         builder: (context, state) => const SettingsScreen(),
       ),
       _placeholderRoute(Routes.settingsAccount, 'Account'),
-      _placeholderRoute(Routes.settingsProfile, 'Profile'),
+      GoRoute(
+        path: Routes.settingsProfile,
+        builder: (context, state) => const ProfileScreen(),
+      ),
       GoRoute(
         path: Routes.settingsAppearance,
         builder: (context, state) => const AppearanceScreen(),
       ),
       _placeholderRoute(Routes.settingsHome, 'Home settings'),
-      _placeholderRoute(Routes.settingsNotifications, 'Notifications'),
+      GoRoute(
+        path: Routes.settingsNotifications,
+        builder: (context, state) => const NotificationSettingsScreen(),
+      ),
       GoRoute(
         path: Routes.settingsAi,
         builder: (context, state) => const AiSettingsScreen(),
       ),
-      _placeholderRoute(Routes.settingsPrivacy, 'Privacy'),
-      _placeholderRoute(Routes.settingsData, 'Data'),
+      GoRoute(
+        path: Routes.settingsPrivacy,
+        builder: (context, state) => const PrivacyScreen(),
+      ),
+      GoRoute(
+        path: Routes.settingsData,
+        builder: (context, state) => const DataScreen(),
+      ),
       _placeholderRoute(Routes.settingsCalendar, 'Calendar settings'),
-      _placeholderRoute(Routes.settingsIntegrations, 'Integrations'),
+      GoRoute(
+        path: Routes.settingsIntegrations,
+        builder: (context, state) => const IntegrationsScreen(),
+      ),
       _placeholderRoute(Routes.settingsSubscription, 'Subscription'),
-      _placeholderRoute(Routes.settingsAbout, 'About'),
+      GoRoute(
+        path: Routes.settingsAbout,
+        builder: (context, state) => const AboutScreen(),
+      ),
 
       if (kDebugMode)
         GoRoute(
