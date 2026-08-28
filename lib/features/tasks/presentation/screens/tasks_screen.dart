@@ -40,6 +40,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             tooltip: 'Projects',
             onPressed: () => context.push(Routes.projects),
           ),
+          IconButton(
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: 'Goals',
+            onPressed: () => context.push(Routes.goals),
+          ),
         ],
       ),
       body: Column(

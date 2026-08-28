@@ -58,6 +58,11 @@ class _PlansScreenState extends ConsumerState<PlansScreen> {
             tooltip: 'Calendar',
             onPressed: () => context.push(Routes.calendar),
           ),
+          IconButton(
+            icon: const Icon(Icons.track_changes_outlined),
+            tooltip: 'Habit tracker',
+            onPressed: () => context.push(Routes.habits),
+          ),
         ],
       ),
       body: Column(
