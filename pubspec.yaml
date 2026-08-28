@@ -49,6 +49,7 @@ dependencies:
   sentry_flutter: ^9.0.0
   sqlite3_flutter_libs: ^0.5.28
   supabase_flutter: ^2.9.0
+  url_launcher: ^6.3.2
   uuid: ^4.5.1
 
 dev_dependencies:
