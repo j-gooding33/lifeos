@@ -26,6 +26,7 @@ import 'package:life_os/features/library/presentation/screens/film_top5_screen.d
 import 'package:life_os/features/library/presentation/screens/films_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_home_screen.dart';
 import 'package:life_os/features/library/presentation/screens/library_stats_screen.dart';
+import 'package:life_os/features/library/presentation/screens/links_screen.dart';
 import 'package:life_os/features/library/presentation/screens/note_editor_screen.dart';
 import 'package:life_os/features/library/presentation/screens/notes_screen.dart';
 import 'package:life_os/features/library/presentation/screens/season_episodes_screen.dart';
@@ -50,6 +51,7 @@ import 'package:life_os/features/school/presentation/screens/school_dashboard_sc
 import 'package:life_os/features/school/presentation/screens/school_setup_screen.dart';
 import 'package:life_os/features/school/presentation/screens/school_terms_screen.dart';
 import 'package:life_os/features/school/presentation/screens/school_timetable_screen.dart';
+import 'package:life_os/features/search/presentation/screens/universal_search_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/ai_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
@@ -315,7 +317,10 @@ GoRouter buildRouter() {
                 path: Routes.libraryCollectionDetail,
                 builder: (context, state) => CollectionDetailScreen(collectionId: state.pathParameters['id']!),
               ),
-              _placeholderRoute(Routes.libraryLinks, 'Links'),
+              GoRoute(
+                path: Routes.libraryLinks,
+                builder: (context, state) => const LinksScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -368,7 +373,10 @@ GoRouter buildRouter() {
         builder: (context, state) => const SchoolTermsScreen(),
       ),
 
-      _placeholderRoute(Routes.search, 'Search'),
+      GoRoute(
+        path: Routes.search,
+        builder: (context, state) => const UniversalSearchScreen(),
+      ),
       _placeholderRoute(Routes.ai, 'AI assistant'),
       _placeholderRoute(Routes.aiConversation, 'AI conversation'),
 

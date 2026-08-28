@@ -20,9 +20,9 @@ class HomeScreen extends ConsumerWidget {
 
   String _greeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Morning';
+    if (hour < 18) return 'Afternoon';
+    return 'Evening';
   }
 
   @override
@@ -33,8 +33,13 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
       appBar: AppBar(
-        title: Text(_greeting()),
+        title: Text(_greeting(), maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () => context.push(Routes.search),
+          ),
           Builder(
             builder: (buttonContext) => IconButton(
               icon: const Icon(Icons.more_horiz),
