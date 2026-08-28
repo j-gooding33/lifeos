@@ -76,4 +76,27 @@ void main() {
     final groups = await repository.search('mum"::*');
     expect(groups.single.results.single.entityId, 't1');
   });
+
+  test('rebuild repopulates from source tables without duplicating existing rows', () async {
+    await database.into(database.tasks).insert(TasksCompanion.insert(id: 't1', userId: 'u1', title: 'Original task'));
+    expect((await repository.search('original')).single.results, hasLength(1));
+
+    await repository.rebuild();
+
+    final groups = await repository.search('original');
+    expect(groups.single.results, hasLength(1));
+    expect(groups.single.results.single.entityId, 't1');
+  });
+
+  test('rebuild drops entries for rows that were deleted before triggers existed', () async {
+    // Simulates index corruption / a stale entry with no backing row.
+    await database.customStatement('''
+      INSERT INTO search_index(entity_type, entity_id, title, body, tags) VALUES ('task', 'ghost', 'Ghost task', '', '');
+    ''');
+    expect((await repository.search('ghost')).single.results, hasLength(1));
+
+    await repository.rebuild();
+
+    expect(await repository.search('ghost'), isEmpty);
+  });
 }

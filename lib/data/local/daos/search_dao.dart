@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:life_os/data/local/database.dart';
+import 'package:life_os/data/local/search_index_sql.dart';
 
 class SearchIndexRow {
   const SearchIndexRow({required this.entityType, required this.entityId, required this.title, required this.body});
@@ -45,5 +46,16 @@ class SearchDao {
           body: row.read<String>('body'),
         ),
     ];
+  }
+
+  /// §18.2's "Rebuild command available in Settings → Data for corruption
+  /// recovery" — clears and re-populates the whole index from source
+  /// tables. Uses the same statements the v3 migration's one-time backfill
+  /// does (`searchIndexBackfillStatements`), so the two can't drift apart.
+  Future<void> rebuild() async {
+    await _db.customStatement('DELETE FROM search_index;');
+    for (final sql in searchIndexBackfillStatements) {
+      await _db.customStatement(sql);
+    }
   }
 }

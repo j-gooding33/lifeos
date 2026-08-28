@@ -42,6 +42,8 @@ class SearchRepository {
     return [for (final entry in byType.entries) SearchResultGroup(entityType: entry.key, results: entry.value)];
   }
 
+  Future<void> rebuild() => _dao.rebuild();
+
   String _snippet(String body) => body.length <= 120 ? body : '${body.substring(0, 120)}…';
 
   /// FTS5's query syntax treats punctuation and bare `"`/`*`/`:`/`-` as

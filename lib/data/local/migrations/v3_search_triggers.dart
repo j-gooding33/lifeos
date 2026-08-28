@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:life_os/data/local/search_index_sql.dart';
 
 /// §18.2: "maintained by triggers on every searchable table." `search_index`
 /// (the FTS5 virtual table) has existed since v1 but nothing wrote to it —
@@ -42,10 +43,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
       DELETE FROM search_index WHERE entity_type = 'task' AND entity_id = OLD.id;
     END;
   ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'task', id, title, COALESCE(notes, ''), '' FROM tasks WHERE deleted_at IS NULL;
-  ''');
 
   // notes
   await db.customStatement('''
@@ -67,10 +64,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
     CREATE TRIGGER trg_notes_search_ad AFTER DELETE ON notes BEGIN
       DELETE FROM search_index WHERE entity_type = 'note' AND entity_id = OLD.id;
     END;
-  ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'note', id, COALESCE(title, ''), COALESCE(plain_text, ''), '' FROM notes WHERE deleted_at IS NULL;
   ''');
 
   // plans (habits included — kind = 'habit' is still a plan row)
@@ -94,10 +87,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
       DELETE FROM search_index WHERE entity_type = 'plan' AND entity_id = OLD.id;
     END;
   ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'plan', id, title, COALESCE(notes, ''), '' FROM plans WHERE deleted_at IS NULL;
-  ''');
 
   // projects
   await db.customStatement('''
@@ -119,10 +108,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
     CREATE TRIGGER trg_projects_search_ad AFTER DELETE ON projects BEGIN
       DELETE FROM search_index WHERE entity_type = 'project' AND entity_id = OLD.id;
     END;
-  ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'project', id, title, COALESCE(description, ''), '' FROM projects WHERE deleted_at IS NULL;
   ''');
 
   // goals
@@ -146,10 +131,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
       DELETE FROM search_index WHERE entity_type = 'goal' AND entity_id = OLD.id;
     END;
   ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'goal', id, title, COALESCE(description, ''), '' FROM goals WHERE deleted_at IS NULL;
-  ''');
 
   // events
   await db.customStatement('''
@@ -171,10 +152,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
     CREATE TRIGGER trg_events_search_ad AFTER DELETE ON events BEGIN
       DELETE FROM search_index WHERE entity_type = 'event' AND entity_id = OLD.id;
     END;
-  ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'event', id, title, COALESCE(notes, ''), '' FROM events WHERE deleted_at IS NULL;
   ''');
 
   // journal_entries — entity_id is the entry's date, not its row id: the
@@ -201,10 +178,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
       DELETE FROM search_index WHERE entity_type = 'journal' AND entity_id = OLD.date;
     END;
   ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'journal', date, date, COALESCE(plain_text, ''), '' FROM journal_entries WHERE deleted_at IS NULL;
-  ''');
 
   // library_items — entity_type is the row's own media_type (film/tv/book),
   // so results group by that instead of one generic "library" bucket.
@@ -228,10 +201,6 @@ Future<void> createV3SearchTriggers(Migrator m) async {
       DELETE FROM search_index WHERE entity_type = OLD.media_type AND entity_id = OLD.id;
     END;
   ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT media_type, id, title, COALESCE(overview, ''), '' FROM library_items WHERE deleted_at IS NULL;
-  ''');
 
   // links
   await db.customStatement('''
@@ -254,8 +223,8 @@ Future<void> createV3SearchTriggers(Migrator m) async {
       DELETE FROM search_index WHERE entity_type = 'link' AND entity_id = OLD.id;
     END;
   ''');
-  await db.customStatement('''
-    INSERT INTO search_index(entity_type, entity_id, title, body, tags)
-    SELECT 'link', id, COALESCE(title, url), url, COALESCE(tags, '') FROM links WHERE deleted_at IS NULL;
-  ''');
+
+  for (final sql in searchIndexBackfillStatements) {
+    await db.customStatement(sql);
+  }
 }
