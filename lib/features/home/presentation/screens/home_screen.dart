@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
+import 'package:life_os/design/components/l_menu.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/home/application/home_providers.dart';
@@ -34,10 +35,24 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(_greeting()),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.school_outlined),
-            tooltip: 'School',
-            onPressed: () => context.push(Routes.schoolDashboard),
+          Builder(
+            builder: (buttonContext) => IconButton(
+              icon: const Icon(Icons.more_horiz),
+              tooltip: 'More',
+              onPressed: () {
+                final box = buttonContext.findRenderObject()! as RenderBox;
+                final position = box.localToGlobal(box.size.center(Offset.zero));
+                LMenu.showAt(
+                  context: context,
+                  position: position,
+                  items: [
+                    LMenuItem(label: 'Journal', icon: Icons.book_outlined, onTap: () => context.push(Routes.journal)),
+                    LMenuItem(label: 'Finance', icon: Icons.account_balance_wallet_outlined, onTap: () => context.push(Routes.finance)),
+                    LMenuItem(label: 'School', icon: Icons.school_outlined, onTap: () => context.push(Routes.schoolDashboard)),
+                  ],
+                );
+              },
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
