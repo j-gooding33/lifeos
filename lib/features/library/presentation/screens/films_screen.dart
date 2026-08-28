@@ -76,11 +76,6 @@ class _FilmsScreenState extends ConsumerState<FilmsScreen> {
           Expanded(child: _buildSegment()),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.libraryFilmsSearch),
-        tooltip: 'Add a film',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 

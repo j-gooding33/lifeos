@@ -31,7 +31,12 @@ class HabitsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
-      appBar: AppBar(title: const Text('Habits')),
+      appBar: AppBar(
+        title: const Text('Habits'),
+        actions: [
+          IconButton(icon: const Icon(Icons.add), tooltip: 'New habit', onPressed: () => context.push(Routes.habitsNew)),
+        ],
+      ),
       body: asyncHabits.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => LErrorState(message: "Couldn't load your habits.", onRetry: () => ref.invalidate(habitPlansProvider)),
@@ -50,11 +55,6 @@ class HabitsScreen extends ConsumerWidget {
             itemBuilder: (context, index) => _HabitRow(plan: habits[index]),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.habitsNew),
-        tooltip: 'New habit',
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -104,9 +104,9 @@ class _HabitRow extends ConsumerWidget {
               data: (occurrences) {
                 final byDate = {for (final o in occurrences) o.scheduledDate: o};
                 return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    for (var i = 6; i >= 0; i--) _dayDot(context, repository, weekStart.addDays(6 - i), byDate),
+                    for (var i = 6; i >= 0; i--)
+                      Expanded(child: _dayDot(context, repository, weekStart.addDays(6 - i), byDate)),
                   ],
                 );
               },

@@ -78,11 +78,6 @@ class _TvShowsScreenState extends ConsumerState<TvShowsScreen> {
           Expanded(child: _buildSegment()),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.libraryTvSearch),
-        tooltip: 'Add a show',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 

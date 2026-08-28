@@ -25,7 +25,10 @@ class NotesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
-      appBar: AppBar(title: const Text('Notes')),
+      appBar: AppBar(
+        title: const Text('Notes'),
+        actions: [IconButton(icon: const Icon(Icons.add), tooltip: 'New note', onPressed: () => _createNote(context, ref))],
+      ),
       body: asyncNotes.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => LErrorState(message: "Couldn't load your notes.", onRetry: () => ref.invalidate(allNotesProvider)),
@@ -48,11 +51,6 @@ class NotesScreen extends ConsumerWidget {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _createNote(context, ref),
-        tooltip: 'New note',
-        child: const Icon(Icons.add),
       ),
     );
   }

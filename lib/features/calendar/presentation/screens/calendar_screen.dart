@@ -119,6 +119,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         actions: [
           if (!_isTodayVisible)
             TextButton(onPressed: _goToToday, child: const Text('Today')),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'New event',
+            onPressed: () => context.push(
+              Routes.calendarEvent.replaceFirst(':id', 'new'),
+              extra: DateTime(
+                _selectedDate.year,
+                _selectedDate.month,
+                _selectedDate.day,
+              ),
+            ),
+          ),
         ],
       ),
       body: Column(
@@ -148,18 +160,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(
-          Routes.calendarEvent.replaceFirst(':id', 'new'),
-          extra: DateTime(
-            _selectedDate.year,
-            _selectedDate.month,
-            _selectedDate.day,
-          ),
-        ),
-        tooltip: 'New event',
-        child: const Icon(Icons.add),
       ),
     );
   }

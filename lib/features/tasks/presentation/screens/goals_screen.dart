@@ -36,7 +36,12 @@ class GoalsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
-      appBar: AppBar(title: const Text('Goals')),
+      appBar: AppBar(
+        title: const Text('Goals'),
+        actions: [
+          IconButton(icon: const Icon(Icons.add), tooltip: 'New goal', onPressed: () => context.push(Routes.goalsNew)),
+        ],
+      ),
       body: asyncGoals.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => LErrorState(message: "Couldn't load your goals.", onRetry: () => ref.invalidate(allGoalsProvider)),
@@ -56,11 +61,6 @@ class GoalsScreen extends ConsumerWidget {
             itemBuilder: (context, index) => _GoalRow(goal: active[index]),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.goalsNew),
-        tooltip: 'New goal',
-        child: const Icon(Icons.add),
       ),
     );
   }

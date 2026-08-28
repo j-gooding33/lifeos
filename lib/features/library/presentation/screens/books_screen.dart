@@ -77,11 +77,6 @@ class _BooksScreenState extends ConsumerState<BooksScreen> {
           Expanded(child: _buildSegment()),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(Routes.libraryBooksSearch),
-        tooltip: 'Add a book',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
