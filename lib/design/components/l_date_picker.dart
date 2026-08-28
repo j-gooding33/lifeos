@@ -50,9 +50,12 @@ class LDatePicker extends StatelessWidget {
             children: [
               Icon(Icons.calendar_today, size: 16, color: colors.neutrals.ink2),
               const SizedBox(width: LifeSpace.s8),
-              Text(
-                label,
-                style: context.textStyles.mono.copyWith(color: colors.neutrals.ink),
+              Flexible(
+                child: Text(
+                  label,
+                  style: context.textStyles.mono.copyWith(color: colors.neutrals.ink),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ),
