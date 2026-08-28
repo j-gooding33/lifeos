@@ -61,6 +61,9 @@ import 'package:life_os/features/settings/presentation/screens/notification_sett
 import 'package:life_os/features/settings/presentation/screens/privacy_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/profile_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/settings_screen.dart';
+import 'package:life_os/features/stats/presentation/screens/day_detail_screen.dart';
+import 'package:life_os/features/stats/presentation/screens/stats_overview_screen.dart';
+import 'package:life_os/features/stats/presentation/screens/your_year_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/goal_create_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/goal_detail_screen.dart';
 import 'package:life_os/features/tasks/presentation/screens/goals_screen.dart';
@@ -103,7 +106,10 @@ GoRouter buildRouter() {
                 path: Routes.home,
                 builder: (context, state) => const HomeScreen(),
               ),
-              _placeholderRoute(Routes.homeDay, 'Day detail'),
+              GoRoute(
+                path: Routes.homeDay,
+                builder: (context, state) => DayDetailScreen(date: CivilDate.parse(state.pathParameters['date']!)),
+              ),
               _placeholderRoute(Routes.homeBriefing, 'Briefing'),
               _placeholderRoute(Routes.homeCustomise, 'Customise dashboard'),
             ],
@@ -331,8 +337,14 @@ GoRouter buildRouter() {
           ),
           StatefulShellBranch(
             routes: [
-              _placeholderRoute(Routes.stats, 'Stats'),
-              _placeholderRoute(Routes.statsYear, 'Your Year'),
+              GoRoute(
+                path: Routes.stats,
+                builder: (context, state) => const StatsOverviewScreen(),
+              ),
+              GoRoute(
+                path: Routes.statsYear,
+                builder: (context, state) => const YourYearScreen(),
+              ),
               _placeholderRoute(Routes.statsDomain, 'Domain stats'),
               GoRoute(
                 path: Routes.journal,

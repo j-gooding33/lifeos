@@ -167,7 +167,12 @@ void main() {
       await tester.pumpWidget(_pumpableApp(router));
       router.go('/day/2026-09-01');
       await tester.pumpAndSettle();
-      expect(find.text('Day detail'), findsOneWidget);
+      // A real screen now (Stats/Your Year milestone) — 2026-09-01 has no
+      // data in the fresh test database, so it resolves to the empty state
+      // rather than a placeholder, proof the redirect landed on the real
+      // day-detail route. The AppBar title is the formatted date itself.
+      expect(find.text('1 Sep 2026'), findsOneWidget);
+      expect(find.text('Nothing recorded'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
       await tester.pump(Duration.zero);
     });

@@ -51,6 +51,7 @@ class HomeScreen extends ConsumerWidget {
                   context: context,
                   position: position,
                   items: [
+                    LMenuItem(label: 'Stats', icon: Icons.bar_chart_outlined, onTap: () => context.push(Routes.stats)),
                     LMenuItem(label: 'Journal', icon: Icons.book_outlined, onTap: () => context.push(Routes.journal)),
                     LMenuItem(label: 'Finance', icon: Icons.account_balance_wallet_outlined, onTap: () => context.push(Routes.finance)),
                     LMenuItem(label: 'School', icon: Icons.school_outlined, onTap: () => context.push(Routes.schoolDashboard)),
