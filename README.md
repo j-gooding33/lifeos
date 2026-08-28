@@ -35,6 +35,8 @@ this commit:
 | Note linking (§17.2) | A "Linked notes" section — link an existing note or create one inline — on Task, Plan, Project, Goal, Film and Book detail screens. |
 | Journal (§22.1) | One entry per day, editable any day; mood (1–5) plus the same block editor Notes uses. Reached from Home's "⋯" menu. |
 | Finance (§22.2) | Manual expense/income entry (amount-keypad-first quick add), categories, monthly budgets with progress bars, a category-breakdown donut. Reached from Home's "⋯" menu. |
+| Universal Search (§18) | Keyword search (SQLite FTS5) across tasks, plans/habits, projects, goals, notes, journal, films/TV/books and links — grouped by type, ranked, capped at 8 with "Show all." Reached from Home's search icon. |
+| Links (§17.3) | Save a URL instantly, editable title/tags, open in the browser. Open Graph enrichment isn't built. |
 
 `LIFE_OS_SPEC.md`'s own M8 (Goals), M9 (Projects) and M10 (Habits) were
 deferred until the custom M8 brief below shipped; all three are now done,
@@ -71,15 +73,17 @@ Done, end to end:
   rating prompt.
 
 Not yet built: the live AI backend (needs a Supabase project and an Edge
-Function — same blocker as sync), Links/Documents (Notes and note-linking
-now ship — see the Status table above), Universal Search, and the general
-cross-domain Stats tab (needs the `daily_rollups` rollup-table architecture
-`§20.1` calls for — a meaningfully bigger feature than the per-media-type
-stats above or Finance's own lighter-weight totals). See `DECISIONS.md` for
-the full list of smaller, deliberate cuts within each shipped feature (e.g.
-"Fill from watchlist," the counter-habit stepper, Projects' Files/Activity
-sections, five of Goals' six automatic-progress rows, Journal's
-auto-generated context strip, Finance's recurring expenses).
+Function — same blocker as sync), Documents (Links itself now ships — see
+the Status table above; Documents needs a file picker and local storage
+this pass didn't build), semantic search (§18.3, layered on top of the FTS5
+keyword search that does now exist), and the general cross-domain Stats tab
+(needs the `daily_rollups` rollup-table architecture `§20.1` calls for — a
+meaningfully bigger feature than the per-media-type stats above or
+Finance's own lighter-weight totals). See `DECISIONS.md` for the full list
+of smaller, deliberate cuts within each shipped feature (e.g. "Fill from
+watchlist," the counter-habit stepper, Projects' Files/Activity sections,
+five of Goals' six automatic-progress rows, Journal's auto-generated
+context strip, Finance's recurring expenses, Links' Open Graph enrichment).
 
 ## Running the app
 
