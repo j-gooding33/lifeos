@@ -1,11 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:life_os/core/scheduling/civil_date.dart';
 import 'package:life_os/data/media/media_types.dart';
 import 'package:life_os/design/dev_gallery/dev_component_gallery_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/calendar_screen.dart';
 import 'package:life_os/features/calendar/presentation/screens/event_detail_screen.dart';
+import 'package:life_os/features/finance/presentation/screens/expense_edit_screen.dart';
+import 'package:life_os/features/finance/presentation/screens/finance_budgets_screen.dart';
+import 'package:life_os/features/finance/presentation/screens/finance_overview_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
+import 'package:life_os/features/journal/presentation/screens/journal_entry_screen.dart';
+import 'package:life_os/features/journal/presentation/screens/journal_list_screen.dart';
 import 'package:life_os/features/library/presentation/screens/book_detail_screen.dart';
 import 'package:life_os/features/library/presentation/screens/book_ratings_screen.dart';
 import 'package:life_os/features/library/presentation/screens/book_search_screen.dart';
@@ -317,11 +323,29 @@ GoRouter buildRouter() {
               _placeholderRoute(Routes.stats, 'Stats'),
               _placeholderRoute(Routes.statsYear, 'Your Year'),
               _placeholderRoute(Routes.statsDomain, 'Domain stats'),
-              _placeholderRoute(Routes.journal, 'Journal'),
-              _placeholderRoute(Routes.journalDate, 'Journal entry'),
-              _placeholderRoute(Routes.finance, 'Finance'),
-              _placeholderRoute(Routes.financeExpense, 'Expense'),
-              _placeholderRoute(Routes.financeBudgets, 'Budgets'),
+              GoRoute(
+                path: Routes.journal,
+                builder: (context, state) => const JournalListScreen(),
+              ),
+              GoRoute(
+                path: Routes.journalDate,
+                builder: (context, state) => JournalEntryScreen(date: CivilDate.parse(state.pathParameters['date']!)),
+              ),
+              GoRoute(
+                path: Routes.finance,
+                builder: (context, state) => const FinanceOverviewScreen(),
+              ),
+              GoRoute(
+                path: Routes.financeExpense,
+                builder: (context, state) {
+                  final id = state.pathParameters['id'];
+                  return ExpenseEditScreen(expenseId: id == 'new' ? null : id);
+                },
+              ),
+              GoRoute(
+                path: Routes.financeBudgets,
+                builder: (context, state) => const FinanceBudgetsScreen(),
+              ),
             ],
           ),
         ],
