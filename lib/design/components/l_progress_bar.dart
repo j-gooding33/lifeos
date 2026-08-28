@@ -19,8 +19,10 @@ class LProgressBar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(4),
         child: SizedBox(
+          width: double.infinity,
           height: 8,
           child: Stack(
+            fit: StackFit.expand,
             children: [
               ColoredBox(color: colors.neutrals.surfaceSunken),
               TweenAnimationBuilder<double>(
