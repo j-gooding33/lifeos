@@ -11,6 +11,7 @@ import 'package:life_os/data/local/daos/top_list_dao.dart';
 import 'package:life_os/data/local/daos/tv_episode_dao.dart';
 import 'package:life_os/data/local/migrations/v1_indexes.dart';
 import 'package:life_os/data/local/migrations/v2_indexes.dart';
+import 'package:life_os/data/local/migrations/v3_search_triggers.dart';
 import 'package:life_os/data/local/tables/activity_log_table.dart';
 import 'package:life_os/data/local/tables/ai_conversations_table.dart';
 import 'package:life_os/data/local/tables/ai_messages_table.dart';
@@ -28,6 +29,7 @@ import 'package:life_os/data/local/tables/goal_milestones_table.dart';
 import 'package:life_os/data/local/tables/goals_table.dart';
 import 'package:life_os/data/local/tables/journal_entries_table.dart';
 import 'package:life_os/data/local/tables/library_items_table.dart';
+import 'package:life_os/data/local/tables/links_table.dart';
 import 'package:life_os/data/local/tables/media_metadata_cache_table.dart';
 import 'package:life_os/data/local/tables/note_links_table.dart';
 import 'package:life_os/data/local/tables/notes_table.dart';
@@ -75,6 +77,7 @@ part 'database.g.dart';
     CollectionItems,
     Notes,
     NoteLinks,
+    Links,
     JournalEntries,
     Categories,
     Expenses,
@@ -110,7 +113,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -118,6 +121,7 @@ class AppDatabase extends _$AppDatabase {
       await m.createAll();
       await createV1IndexesAndFts(m);
       await createV2Indexes(m);
+      await createV3SearchTriggers(m);
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -129,6 +133,10 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(schoolClosures);
         await m.createTable(schoolEvents);
         await createV2Indexes(m);
+      }
+      if (from < 3 && to >= 3) {
+        await m.createTable(links);
+        await createV3SearchTriggers(m);
       }
     },
   );

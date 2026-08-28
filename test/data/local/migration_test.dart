@@ -34,12 +34,40 @@ void main() {
     await db.close();
   });
 
+  test('v3 schema creates cleanly', () async {
+    final connection = await verifier.startAt(3);
+    final db = AppDatabase.forTesting(connection.executor);
+    await verifier.migrateAndValidate(db, 3);
+    await db.close();
+  });
+
   test(
     'v1 to v2 migrates cleanly (M8: TV episodes, top lists, School)',
     () async {
       final connection = await verifier.startAt(1);
       final db = AppDatabase.forTesting(connection.executor);
       await verifier.migrateAndValidate(db, 2);
+      await db.close();
+    },
+  );
+
+  test(
+    'v2 to v3 migrates cleanly (Links table, search_index triggers)',
+    () async {
+      // A real v2-era database always already has `search_index` — it's
+      // created via raw SQL in v1's onCreate (§18.2, not a Drift-typed
+      // table, so `schema dump`/the v1/v2 fixtures below can't see it).
+      // Recreate that real precondition before exercising the v2->v3
+      // upgrade, which is the first migration to assume it's there.
+      final schema = await verifier.schemaAt(2);
+      schema.rawDatabase.execute('''
+        CREATE VIRTUAL TABLE search_index USING fts5(
+          entity_type UNINDEXED, entity_id UNINDEXED, title, body, tags,
+          tokenize='unicode61 remove_diacritics 2'
+        );
+      ''');
+      final db = AppDatabase.forTesting(schema.newConnection().executor);
+      await verifier.migrateAndValidate(db, 3);
       await db.close();
     },
   );
