@@ -32,6 +32,9 @@ this commit:
 | Projects (§11) | Full CRUD, task grouping (To do/Done, inline add), derived progress, deadline chips. |
 | Goals (§12) | Full CRUD, all six goal types, honest projection arithmetic, milestones, and automatic progress from completed Plan occurrences. |
 | Notes (§17.1) | A custom block editor (paragraph/heading/checklist/bullet/quote/divider/code), pinning, plain-text projection. |
+| Note linking (§17.2) | A "Linked notes" section — link an existing note or create one inline — on Task, Plan, Project, Goal, Film and Book detail screens. |
+| Journal (§22.1) | One entry per day, editable any day; mood (1–5) plus the same block editor Notes uses. Reached from Home's "⋯" menu. |
+| Finance (§22.2) | Manual expense/income entry (amount-keypad-first quick add), categories, monthly budgets with progress bars, a category-breakdown donut. Reached from Home's "⋯" menu. |
 
 `LIFE_OS_SPEC.md`'s own M8 (Goals), M9 (Projects) and M10 (Habits) were
 deferred until the custom M8 brief below shipped; all three are now done,
@@ -68,15 +71,15 @@ Done, end to end:
   rating prompt.
 
 Not yet built: the live AI backend (needs a Supabase project and an Edge
-Function — same blocker as sync), Links/Documents (Notes itself now ships —
-see the Status table above), note-linking into other detail screens,
-Universal Search, Journal, Finance, and the general cross-domain Stats tab
-(needs the `daily_rollups` rollup-table architecture `§20.1` calls for — a
-meaningfully bigger feature than the per-media-type stats above). See
-`DECISIONS.md` for the full list of smaller, deliberate cuts within each
-shipped feature (e.g. "Fill from watchlist," the counter-habit stepper,
-Projects' Files/Activity sections, five of Goals' six automatic-progress
-rows).
+Function — same blocker as sync), Links/Documents (Notes and note-linking
+now ship — see the Status table above), Universal Search, and the general
+cross-domain Stats tab (needs the `daily_rollups` rollup-table architecture
+`§20.1` calls for — a meaningfully bigger feature than the per-media-type
+stats above or Finance's own lighter-weight totals). See `DECISIONS.md` for
+the full list of smaller, deliberate cuts within each shipped feature (e.g.
+"Fill from watchlist," the counter-habit stepper, Projects' Files/Activity
+sections, five of Goals' six automatic-progress rows, Journal's
+auto-generated context strip, Finance's recurring expenses).
 
 ## Running the app
 
