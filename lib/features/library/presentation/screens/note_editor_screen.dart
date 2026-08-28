@@ -106,9 +106,22 @@ class _NoteEditorBodyState extends ConsumerState<_NoteEditorBody> {
     });
   }
 
+  static const _textEditableTypes = {
+    NoteBlockType.paragraph,
+    NoteBlockType.heading,
+    NoteBlockType.checklistItem,
+    NoteBlockType.bullet,
+    NoteBlockType.quote,
+    NoteBlockType.code,
+  };
+
   Future<void> _save() async {
+    // Divider/image/linkCard blocks have no bound TextField (their
+    // controller is always empty) — applying it here would overwrite
+    // their real `text: null` with `''`.
     final blocks = [
-      for (var i = 0; i < _blocks.length; i++) _blocks[i].copyWith(text: _blockControllers[i].text),
+      for (var i = 0; i < _blocks.length; i++)
+        if (_textEditableTypes.contains(_blocks[i].type)) _blocks[i].copyWith(text: _blockControllers[i].text) else _blocks[i],
     ];
     final title = _titleController.text.trim();
     await ref
