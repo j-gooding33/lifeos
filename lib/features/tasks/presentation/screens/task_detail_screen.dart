@@ -9,6 +9,7 @@ import 'package:life_os/design/components/l_confirm_dialog.dart';
 import 'package:life_os/design/components/l_date_picker.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
+import 'package:life_os/design/components/l_notes_section.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_text_field.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
@@ -164,6 +165,8 @@ class _TaskDetailScreenState extends ConsumerState<TaskDetailScreen> {
             const LSectionHeader(title: 'Subtasks'),
             const SizedBox(height: LifeSpace.s8),
             _SubtasksSection(taskId: task.id),
+            const SizedBox(height: LifeSpace.s24),
+            LNotesSection(entityType: 'task', entityId: task.id),
           ],
           const SizedBox(height: LifeSpace.s24),
           ValueListenableBuilder<TextEditingValue>(

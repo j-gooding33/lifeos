@@ -8,6 +8,7 @@ import 'package:life_os/design/components/l_button.dart';
 import 'package:life_os/design/components/l_confirm_dialog.dart';
 import 'package:life_os/design/components/l_empty_state.dart';
 import 'package:life_os/design/components/l_error_state.dart';
+import 'package:life_os/design/components/l_notes_section.dart';
 import 'package:life_os/design/components/l_poster_tile.dart';
 import 'package:life_os/design/components/l_star_rating.dart';
 import 'package:life_os/design/components/l_toast.dart';
@@ -194,6 +195,8 @@ class _BookDetailBody extends ConsumerWidget {
               );
             },
           ),
+          const SizedBox(height: LifeSpace.s24),
+          LNotesSection(entityType: 'book', entityId: item.id),
           const SizedBox(height: LifeSpace.s24),
           LButton(
             label: 'Remove from library',

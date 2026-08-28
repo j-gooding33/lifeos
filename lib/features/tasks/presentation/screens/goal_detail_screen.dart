@@ -10,6 +10,7 @@ import 'package:life_os/design/components/l_date_picker.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
+import 'package:life_os/design/components/l_notes_section.dart';
 import 'package:life_os/design/components/l_progress_ring.dart';
 import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/components/l_section_header.dart';
@@ -209,6 +210,8 @@ class _GoalDetailBody extends ConsumerWidget {
             );
           },
         ),
+        const SizedBox(height: LifeSpace.cardGap),
+        LNotesSection(entityType: 'goal', entityId: goal.id),
       ],
     );
   }

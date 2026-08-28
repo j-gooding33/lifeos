@@ -7,6 +7,7 @@ import 'package:life_os/design/components/l_check_circle.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_heatmap_grid.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
+import 'package:life_os/design/components/l_notes_section.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_stat.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
@@ -157,6 +158,8 @@ class _PlanDetailScreenState extends ConsumerState<PlanDetailScreen> {
             limit: _historyLimit,
             onLoadMore: () => setState(() => _historyLimit += 20),
           ),
+          const SizedBox(height: LifeSpace.cardGap),
+          LNotesSection(entityType: 'plan', entityId: plan.id),
         ],
       ),
     );

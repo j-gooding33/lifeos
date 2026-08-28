@@ -10,6 +10,7 @@ import 'package:life_os/design/components/l_confirm_dialog.dart';
 import 'package:life_os/design/components/l_date_picker.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
+import 'package:life_os/design/components/l_notes_section.dart';
 import 'package:life_os/design/components/l_progress_ring.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_text_field.dart';
@@ -247,6 +248,8 @@ class _ProjectDetailBody extends ConsumerWidget {
             );
           },
         ),
+        const SizedBox(height: LifeSpace.cardGap),
+        LNotesSection(entityType: 'project', entityId: project.id),
       ],
     );
   }

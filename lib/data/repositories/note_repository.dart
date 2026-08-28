@@ -23,6 +23,30 @@ class NoteRepository {
 
   Stream<AppNote?> watchById(String id) => _dao.watchById(id).map((row) => row == null ? null : _toDomain(row));
 
+  /// §17.2. Notes linked to another entity (task, plan, project, goal,
+  /// occurrence, film, book, journal entry) — bidirectional in the UI, but
+  /// `note_links` itself only stores the note→entity direction.
+  Stream<List<AppNote>> watchLinkedTo(String entityType, String entityId) =>
+      _dao.watchLinkedTo(entityType, entityId).map(_toDomainList);
+
+  Future<Result<void, Failure>> linkNote({required String noteId, required String entityType, required String entityId}) async {
+    try {
+      await _dao.link(noteId: noteId, entityType: entityType, entityId: entityId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('linkNote failed: $e'));
+    }
+  }
+
+  Future<Result<void, Failure>> unlinkNote({required String noteId, required String entityType, required String entityId}) async {
+    try {
+      await _dao.unlink(noteId: noteId, entityType: entityType, entityId: entityId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('unlinkNote failed: $e'));
+    }
+  }
+
   Future<Result<AppNote, Failure>> createNote({
     required String userId,
     String? title,

@@ -5,4 +5,5 @@ part of 'note_dao.dart';
 // ignore_for_file: type=lint
 mixin _$NoteDaoMixin on DatabaseAccessor<AppDatabase> {
   $NotesTable get notes => attachedDatabase.notes;
+  $NoteLinksTable get noteLinks => attachedDatabase.noteLinks;
 }

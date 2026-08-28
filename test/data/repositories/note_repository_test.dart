@@ -89,4 +89,43 @@ void main() {
     final all = await repository.watchAll('u1').first;
     expect(all.map((n) => n.title), ['Mine']);
   });
+
+  test('linkNote makes the note appear in watchLinkedTo for that entity, and only that entity', () async {
+    final note = _okNote(await repository.createNote(userId: 'u1', title: 'Meeting notes'));
+    await repository.linkNote(noteId: note.id, entityType: 'task', entityId: 't1');
+
+    final linkedToTask = await repository.watchLinkedTo('task', 't1').first;
+    expect(linkedToTask.map((n) => n.id), [note.id]);
+
+    final linkedToOtherTask = await repository.watchLinkedTo('task', 't2').first;
+    expect(linkedToOtherTask, isEmpty);
+  });
+
+  test('the same note can be linked to more than one entity', () async {
+    final note = _okNote(await repository.createNote(userId: 'u1', title: 'Shared'));
+    await repository.linkNote(noteId: note.id, entityType: 'task', entityId: 't1');
+    await repository.linkNote(noteId: note.id, entityType: 'plan', entityId: 'p1');
+
+    expect((await repository.watchLinkedTo('task', 't1').first).single.id, note.id);
+    expect((await repository.watchLinkedTo('plan', 'p1').first).single.id, note.id);
+  });
+
+  test('unlinkNote removes just that one link', () async {
+    final note = _okNote(await repository.createNote(userId: 'u1', title: 'Shared'));
+    await repository.linkNote(noteId: note.id, entityType: 'task', entityId: 't1');
+    await repository.linkNote(noteId: note.id, entityType: 'plan', entityId: 'p1');
+
+    await repository.unlinkNote(noteId: note.id, entityType: 'task', entityId: 't1');
+
+    expect(await repository.watchLinkedTo('task', 't1').first, isEmpty);
+    expect((await repository.watchLinkedTo('plan', 'p1').first).single.id, note.id);
+  });
+
+  test('a soft-deleted note drops out of watchLinkedTo even if the link row still exists', () async {
+    final note = _okNote(await repository.createNote(userId: 'u1', title: 'Doomed'));
+    await repository.linkNote(noteId: note.id, entityType: 'task', entityId: 't1');
+    await repository.deleteNote(note.id);
+
+    expect(await repository.watchLinkedTo('task', 't1').first, isEmpty);
+  });
 }
