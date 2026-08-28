@@ -4,6 +4,27 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §22.5 — Settings (2026-08-28)
+
+Of the 12 sections §22.5 lists, 3 (Appearance, AI, and the root list itself) were already built. This pass builds 6 more — Profile, Notifications, Privacy, Data, Integrations, About — and leaves 4 as the honest "not built yet" placeholder, on purpose.
+
+### Which sections got built, and why exactly these six
+**Decision:** Profile (name, week start, currency, date format — all real `Profiles` columns since M4), Notifications (preferences only, nothing scheduled), Privacy (opt-out toggles plus a static "what leaves this device" panel), Data (storage used, rebuild search index, clear image cache), Integrations (TMDB/Open Library connected status), About (version, licences, TMDB attribution).
+**Why exactly these:** each has something *real* to show or do without a new native dependency or backend. Account (needs a real auth session — this app is local-first with no Supabase session established anywhere, per `ensureLocalIdentity`'s own doc comment), Home dashboard (only 3 hardcoded Home cards exist — `DashboardCards` the table is ready, but there's no card catalogue to add from), Calendar (needs `device_calendar`, a new native permission-gated dependency), and Subscription (needs IAP) all stay placeholders — CLAUDE.md rule 1 is explicit that a screen should honestly say "not built" rather than fake a feature that isn't there, and a disabled-everything shell for any of these four would be exactly that fake.
+**How to apply:** if `device_calendar` or an IAP package is added later, or Home's card catalogue grows past the 3 M5 cards, or real Supabase auth lands — that's the point to revisit the corresponding placeholder, not before.
+
+### Notifications and Privacy toggles are real, saved preferences with nothing behind them yet
+**Decision:** every switch in both screens reads/writes the key/value `Preferences` table via two new generic helpers, `boolPreference`/`setBoolPreference` (`lib/features/settings/application/preference_toggle.dart`) — not a new typed column per switch, and not wired to anything that actually fires a notification or collects analytics.
+**Why:** matches the exact shape Settings → AI already established for the same problem ("these switches save real preferences now... with no model or backend behind it yet"). Building the preferences shell now means nothing needs re-asking once `flutter_local_notifications`/an analytics SDK actually exist — the alternative (waiting to build the UI until the backend exists) would silently lose whatever the user had already configured. Every toggle defaults to `false` (unset reads as off) — the safer, more honest default for switches that don't yet do anything, over guessing the user wants everything on by default.
+
+### "Rebuild search index" and "storage used" are real actions, not decoration
+**Decision:** `SearchDao.rebuild()` clears and re-populates `search_index` from the same statements the v3 migration's one-time backfill uses (extracted into a shared `searchIndexBackfillStatements` list in `lib/data/local/search_index_sql.dart` so the two can't drift apart) — exactly §18.2's own "Rebuild command available in Settings → Data for corruption recovery." "Storage used" reads the real SQLite file's size off disk (same path `AppDatabase._openConnection` uses). "Clear image cache" calls `DefaultCacheManager().emptyCache()` (from `flutter_cache_manager`, already a transitive dependency of `cached_network_image` — promoted to direct, same as `url_launcher`/`package_info_plus` this pass, since all three are used directly now rather than only through another package's internals).
+**What's not built:** export/import (a meaningfully bigger feature — the whole local database as portable JSON) and "rebuild statistics" (no rollup/Stats pipeline exists yet to rebuild).
+
+### Integrations reads the real provider classes' own `isConfigured`, not a separate status flag
+**Decision:** `IntegrationsScreen` instantiates `TmdbMetadataProvider()`/`OpenLibraryProvider()` directly and reads `.isConfigured` — the exact same objects Films/TV/Books search calls into, not a parallel "is TMDB set up" preference that could say something different from what search actually does.
+**Why:** a status screen that can lie (says "connected" while search actually fails, or vice versa) is worse than no status screen — reading the real object's real state is the only way this stays honest as `TMDB_API_KEY` changes across builds. Constructed directly rather than importing Library's own provider file, for the same CLAUDE.md rule 4 reason `LNotesSection`/`resolveDomainColour` do — neither `TmdbMetadataProvider` nor `OpenLibraryProvider` needs a database, so this one doesn't even need a wrapper provider, just a plain constructor call.
+
 ## §18, §17.3 — Universal Search, Links (2026-08-28)
 
 `schemaVersion` moves to 3. The first migration since M8 — everything through Finance reused M4-era tables/columns; this pass needed one genuinely new table (`Links`) and, more consequentially, the first real use of the `search_index` FTS5 virtual table that's existed since v1 (`v1_indexes.dart`'s own comment: "not touched by any code before M14").
