@@ -7,8 +7,8 @@ import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/design/components/l_empty_state.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
+import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/components/l_sheet.dart';
-import 'package:life_os/design/components/l_text_field.dart';
 import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
@@ -98,19 +98,8 @@ class AddToCollectionSheet extends ConsumerWidget {
   }
 
   Future<void> _createAndAdd(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
-    final title = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New collection'),
-        content: LTextField(controller: controller, label: 'Title', outlined: true, autofocus: true),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()), child: const Text('Create')),
-        ],
-      ),
-    );
-    if (title == null || title.isEmpty || !context.mounted) return;
+    final title = await LPromptDialog.show(context, title: 'New collection', label: 'Title', confirmLabel: 'Create');
+    if (title == null || !context.mounted) return;
     final userId = await ref.read(currentUserIdProvider.future);
     final result = await ref.read(collectionRepositoryProvider).create(userId: userId, title: title);
     if (!context.mounted) return;

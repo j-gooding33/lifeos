@@ -10,6 +10,7 @@ import 'package:life_os/data/repositories/models/app_task.dart';
 import 'package:life_os/design/components/l_empty_state.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
+import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/tasks/application/task_providers.dart';
@@ -29,7 +30,12 @@ class ProjectsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
-      appBar: AppBar(title: const Text('Projects')),
+      appBar: AppBar(
+        title: const Text('Projects'),
+        actions: [
+          IconButton(icon: const Icon(Icons.add), tooltip: 'New project', onPressed: () => _createProject(context, ref)),
+        ],
+      ),
       body: asyncProjects.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => LErrorState(message: "Couldn't load your projects.", onRetry: () => ref.invalidate(allProjectsProvider)),
@@ -50,28 +56,12 @@ class ProjectsScreen extends ConsumerWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _createProject(context, ref),
-        tooltip: 'New project',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
   Future<void> _createProject(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
-    final title = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New project'),
-        content: TextField(controller: controller, autofocus: true, decoration: const InputDecoration(hintText: 'Title')),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()), child: const Text('Create')),
-        ],
-      ),
-    );
-    if (title == null || title.isEmpty || !context.mounted) return;
+    final title = await LPromptDialog.show(context, title: 'New project', label: 'Title', confirmLabel: 'Create');
+    if (title == null || !context.mounted) return;
     final result = await ref.read(projectsRepositoryProvider).createProject(userId: await _userId(ref), title: title);
     if (!context.mounted) return;
     result.when(

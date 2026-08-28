@@ -9,7 +9,7 @@ import 'package:life_os/design/components/l_empty_state.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_menu.dart';
 import 'package:life_os/design/components/l_poster_tile.dart';
-import 'package:life_os/design/components/l_text_field.dart';
+import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/library/application/library_providers.dart';
@@ -80,19 +80,8 @@ class CollectionDetailScreen extends ConsumerWidget {
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref, AppCollection collection) async {
-    final controller = TextEditingController(text: collection.title);
-    final title = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Rename collection'),
-        content: LTextField(controller: controller, label: 'Title', outlined: true, autofocus: true),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()), child: const Text('Save')),
-        ],
-      ),
-    );
-    if (title == null || title.isEmpty || !context.mounted) return;
+    final title = await LPromptDialog.show(context, title: 'Rename collection', label: 'Title', initialValue: collection.title);
+    if (title == null || !context.mounted) return;
     await ref.read(collectionRepositoryProvider).rename(collection.id, title);
   }
 
