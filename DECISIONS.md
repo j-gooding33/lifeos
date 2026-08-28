@@ -4,6 +4,43 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## Post-M8 cleanup pass — fix and polish (2026-08-28)
+
+Every milestone through Notes had been verified with `flutter analyze` + `flutter test` only — never actually run on a device. None of those two checks can catch a runtime zone-initialisation crash, a layout overflow, a widget rendering behind another, or a screen nobody's code ever navigates to. This pass ran the app on an emulator for the first time this session and fixed what only showed up there, plus a code-duplication pass unrelated to runtime behaviour.
+
+### `bootstrap.dart` threw "Zone mismatch" on every single launch
+**Decision:** moved `WidgetsFlutterBinding.ensureInitialized()` to run inside the same zone as `runApp` — inside `runZonedGuarded`'s callback, and inside `SentryFlutter.init`'s `appRunner`, instead of before either.
+**Why:** `runApp` executing in a different zone than the one the binding was initialised in throws that assertion unconditionally; this had been present since M1 and never surfaced because nothing had actually launched the app.
+**How to apply:** any future code that needs to run before `runApp` belongs inside whichever zone-establishing call wraps it, never before it.
+
+### Fixed-width `Row` children overflow on narrower screens: date/time pickers and the habit week-strip
+**Decision:** `LTimePicker`/`LDatePicker`'s label `Text` is now wrapped in `Flexible(overflow: TextOverflow.ellipsis)`; `HabitsScreen`'s 7-day dot strip now wraps each day in `Expanded` instead of relying on `mainAxisAlignment: spaceBetween` to fit seven fixed 44px circles.
+**Why:** a `Row` doesn't shrink fixed-size children to fit — `spaceBetween`/`MainAxisSize.min` only affects *layout*, not sizing, so anything tight enough (a narrow device, a larger system font, several side-by-side fields) throws a `RenderFlex` overflow. Both bugs were only visible by actually rendering the screen at a real width.
+**How to apply:** any new `Row` of several fixed-size or unbounded-`Text` children needs an explicit `Expanded`/`Flexible` per child unless the total width is provably safe at every supported size.
+
+### The shell's global FAB silently duplicated/hid behind every screen-local FAB
+**Decision:** `ShellScaffold` (`lib/routing/shell_scaffold.dart`) renders the active tab via `Positioned.fill` and paints the bottom nav bar + a global Quick Add FAB on top of it in the same `Stack`. Any nested screen that declared its own `Scaffold.floatingActionButton` got that button positioned for the *full* screen, then visually clipped/hidden by the shell's own FAB painted afterwards. Removed the local FAB from every affected screen (Films, TV Shows, Books, Collections, Habits, Projects, Goals, Notes, Calendar) and, where that FAB had no other way to trigger its action, replaced it with an `AppBar` `actions` `IconButton` instead.
+**Why:** this is the same bug an earlier pass in this session had already found and "fixed" — but only for Tasks and Plans, treating it as a two-screen bug rather than the shell's structural one. It silently reappeared in every screen built afterwards (7 more, across two milestones) because the root cause was never addressed.
+**How to apply:** **no screen nested inside `StatefulShellBranch` should ever set `Scaffold.floatingActionButton`.** If a screen needs a primary action, it goes in the `AppBar`'s `actions`. This should be treated as a lint-worthy rule, not a per-screen judgement call — the next screen that ignores it will reproduce the same bug a third time.
+
+### `HabitsScreen` and `GoalsScreen` were fully built and completely unreachable
+**Decision:** both are registered `GoRoute`s (`/habits`, `/goals`) with real, non-placeholder screens, but nothing in the app ever called `context.push`/`go` on either path. `PlansScreen`'s AppBar gained a "Habit tracker" icon pushing `Routes.habits` (next to its existing "Calendar" icon); `TasksScreen`'s AppBar gained a "Goals" icon pushing `Routes.goals` (next to its existing "Projects" icon).
+**Why:** `PlansScreen`'s own "Habits" segmented tab and `HabitsScreen` look superficially similar (both list habit-kind plans), which likely made the missing link easy to miss — but they're not equivalent: the segmented tab renders the generic `PlanRow` (today-only, one tap to complete), while `HabitsScreen`'s `_HabitRow` is the §13.2-specified 7-day retroactive-completion strip, and `HabitDetailScreen`/`GoalDetailScreen` (also otherwise unreachable) are richer than anything the generic lists open. Mirroring the existing "Projects" icon pattern on `TasksScreen` was the smallest, lowest-risk fix that makes both reachable without restructuring either screen.
+**How to apply:** any screen wired into the router but never referenced by a `context.push`/`.go` call anywhere else in `lib/` is either dead code to remove or a missing link to add — worth an occasional grep sweep (`grep -rn "Routes\.<name>\b" lib/` excluding `router.dart`/`routes.dart`) after adding new top-level screens. `Stats`/`Journal`/`Finance`/`Search`/`Ai` are correctly unreached — those are still `_placeholderRoute`s, not built features.
+
+### `ProjectRepository.setStatus`/`GoalRepository.setStatus` had no UI caller
+**Decision:** added `showProjectActionsMenu`/`showGoalActionsMenu` (`lib/features/tasks/presentation/widgets/{project,goal}_actions_menu.dart`, mirroring `plan_actions_menu.dart`'s `LMenu`-based pattern), wired to a new "⋯" `IconButton` on `ProjectDetailScreen`/`GoalDetailScreen`'s `AppBar`, between the existing Edit and Delete icons.
+**Why:** both repositories' status-transition methods were fully implemented and tested, but `ProjectStatus.onHold/done/archived` and `GoalStatus.ended/archived` could never actually be reached by a user — no button, menu, or gesture anywhere called `setStatus`. `ProjectsScreen`/`GoalsScreen` already filter out archived items and `GoalsScreen` already renders a distinct icon for `ended`, so the display side was ready and waiting for a way to actually set those states.
+**How to apply:** each menu shows only the transitions valid from the item's current status (e.g. "Put on hold" only while active, "Reactivate" only once it isn't) — extending either enum needs a matching case added to its menu, the same way `showPlanActionsMenu` already handles Plans' pause/resume/archive states.
+
+### Shared-code consolidation: three copies of the same colour resolver, five copies of the same prompt dialog
+**Decision:** `resolvePlanColour`/`resolveProjectColour`/`resolveGoalColour` are now thin wrappers around one shared `resolveDomainColour` (`lib/design/theme/domain_colour.dart`). Five separate `showDialog<String>` single-text-field blocks (collection create/rename, project create, goal milestone add, add-to-collection) became one `LPromptDialog.show(...)` call each (`lib/design/components/l_prompt_dialog.dart`).
+**Why:** each milestone had independently reimplemented the same ~15-line pattern rather than reusing the previous milestone's version — harmless individually, but the kind of duplication that was worth collapsing once it reached three/five copies. No behaviour changed at any call site.
+
+### `NoteBlock.copyWith(text: ...)` silently corrupted divider/image/linkCard blocks on every save
+**Decision:** `NoteEditorScreen._save()` now only applies the bound `TextField` controller's text to block types that actually have one (paragraph, heading, checklist item, bullet, quote, code) — divider/image/linkCard blocks pass through unchanged.
+**Why:** `copyWith(text: _blockControllers[i].text)` was called unconditionally for every block; a divider/image/linkCard has no bound controller, so its controller's empty string silently overwrote the block's real `text: null` on the very first save. Found by static review, not live testing — `copyWith`'s null-vs-unchanged ambiguity (§ see `AppPlan`/`AppProject`/`AppGoal`'s `clearXxx`-flag convention, which `NoteBlock` skipped) is a bug class worth checking for again wherever a model's `copyWith` takes a nullable field without an explicit "clear" flag.
+
 ## §17.1 — Notes (2026-08-28)
 
 The `notes` table existed since the original schema (M4) with every §17.1 field already present (`blocksJson` as `blocks`, `plainText`, `folderId`, `pinned`, `colour`) — this is the first repository/UI built against it.

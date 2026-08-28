@@ -80,11 +80,13 @@ rows).
 
 ## Running the app
 
-### Quickest: Chrome (no setup needed)
-
-```bash
-flutter run -d chrome
-```
+Web is not a supported target: `drift`/`sqlite3_flutter_libs` use
+`dart:ffi` for native SQLite, which doesn't exist on the web platform at
+all (`flutter run -d chrome` fails at compile time with "Dart library
+'dart:ffi' is not available on this platform" across every `sqlite3`/`ffi`
+file — not a missing-config issue `flutter create .` would fix). Android
+(emulator or device) is the fastest way to actually run this app; iOS
+needs a Mac.
 
 ### Android emulator (one-time setup on this machine)
 
