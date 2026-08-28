@@ -377,3 +377,42 @@ final class DayDetailFamily extends $Family
   @override
   String toString() => r'dayDetailProvider';
 }
+
+@ProviderFor(insights)
+const insightsProvider = InsightsProvider._();
+
+final class InsightsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Insight>>,
+          List<Insight>,
+          FutureOr<List<Insight>>
+        >
+    with $FutureModifier<List<Insight>>, $FutureProvider<List<Insight>> {
+  const InsightsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'insightsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$insightsHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Insight>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Insight>> create(Ref ref) {
+    return insights(ref);
+  }
+}
+
+String _$insightsHash() => r'a3f5b229701b03d9ce80b388f57c7b3f82cf851e';

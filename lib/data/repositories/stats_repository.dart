@@ -7,6 +7,7 @@ import 'package:life_os/data/repositories/journal_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/models/day_detail.dart';
+import 'package:life_os/data/repositories/models/insight.dart';
 import 'package:life_os/data/repositories/models/period_stats.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
 import 'package:life_os/data/repositories/task_repository.dart';
@@ -198,4 +199,79 @@ class StatsRepository {
       goalsProgressed: goalsProgressed,
     );
   }
+
+  /// §20.3. Three fixed, deterministic checks — not a general insight
+  /// engine. Each is gated on its own minimum sample size and, where the
+  /// insight is a comparison, a minimum gap — "only surface ... with at
+  /// least 14 days of data and a difference above a fixed threshold."
+  /// Never phrased as a judgement: each sentence states what happened, not
+  /// whether that's good or bad.
+  Future<List<Insight>> insights({required String userId}) async {
+    final insights = <Insight>[];
+    final today = CivilDate.fromDateTime(DateTime.now());
+    const epoch = CivilDate(2000, 1, 1);
+
+    final completedTasks = (await _firstValue(
+      taskRepository.watchCompleted(userId, retentionDays: 3650),
+    )).where((t) => t.completedAt != null).toList();
+    if (completedTasks.length >= 14) {
+      final byWeekday = <int, int>{};
+      for (final task in completedTasks) {
+        final weekday = CivilDate.fromDateTime(task.completedAt!).isoWeekday;
+        byWeekday[weekday] = (byWeekday[weekday] ?? 0) + 1;
+      }
+      final ranked = byWeekday.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+      if (ranked.length >= 2 && ranked[0].value >= ranked[1].value * 1.2) {
+        insights.add(Insight('Your best day for finishing tasks is ${_weekdayNames[ranked[0].key - 1]}.'));
+      }
+    }
+
+    final activePlans = await _firstValue(planRepository.watchActive(userId));
+    final habitPlans = await _firstValue(planRepository.watchHabits(userId));
+    final timeOfDayByPlanId = {for (final p in [...activePlans, ...habitPlans]) p.id: p.timeOfDay};
+    final allOccurrences = await _firstValue(planRepository.watchOccurrencesInRange(userId, epoch, today));
+    final resolved = allOccurrences.where(
+      (o) => o.status == OccurrenceStatus.completed || o.status == OccurrenceStatus.missed || o.status == OccurrenceStatus.skipped,
+    );
+    var morningDone = 0;
+    var morningTotal = 0;
+    var eveningDone = 0;
+    var eveningTotal = 0;
+    for (final occurrence in resolved) {
+      final time = occurrence.scheduledTime ?? timeOfDayByPlanId[occurrence.planId];
+      final hour = time == null ? null : int.tryParse(time.split(':').first);
+      if (hour == null) continue;
+      final completed = occurrence.status == OccurrenceStatus.completed;
+      if (hour < 12) {
+        morningTotal++;
+        if (completed) morningDone++;
+      } else if (hour >= 17) {
+        eveningTotal++;
+        if (completed) eveningDone++;
+      }
+    }
+    if (morningTotal >= 7 && eveningTotal >= 7) {
+      final morningRate = morningDone / morningTotal;
+      final eveningRate = eveningDone / eveningTotal;
+      if ((morningRate - eveningRate).abs() >= 0.15) {
+        insights.add(
+          Insight(
+            'You complete ${(morningRate * 100).round()}% of morning occurrences '
+            'and ${(eveningRate * 100).round()}% of evening ones.',
+          ),
+        );
+      }
+    }
+
+    final journalEntries = await _firstValue(journalRepository.watchRecent(userId, limit: 3650));
+    if (journalEntries.length >= 14) {
+      final windowStart = today.addDays(-29);
+      final daysWritten = journalEntries.where((j) => _inRange(j.date, windowStart, today) && j.plainText.isNotEmpty).length;
+      insights.add(Insight("You've written in your journal on $daysWritten of the last 30 days."));
+    }
+
+    return insights;
+  }
 }
+
+const _weekdayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

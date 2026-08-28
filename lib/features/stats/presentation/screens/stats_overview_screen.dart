@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/data/repositories/models/insight.dart';
 import 'package:life_os/data/repositories/models/period_stats.dart';
 import 'package:life_os/design/components/l_card.dart';
 import 'package:life_os/design/components/l_progress_bar.dart';
@@ -38,9 +39,11 @@ const _periodPrefKey = 'stats.period';
 /// §20.2. Charts are hand-built (LProgressBar/LStat), not `fl_chart` — same
 /// no-new-chart-dependency call this session already made for the rating-
 /// distribution bar, the habit heatmap and Finance's donut. Insights
-/// (§20.3) and the "view as table"/accessible-summary affordances aren't
-/// built; see DECISIONS.md. Only 5 of the spec's 9 domain cards are here
-/// (Tasks, Plans & Habits, Goals, Library, Finance) — Projects and Study
+/// (§20.3) are three fixed deterministic checks, not a general engine —
+/// see `StatsRepository.insights`. The "view as table"/accessible-summary
+/// affordances aren't built; see DECISIONS.md. Only 5 of the spec's 9
+/// domain cards are here (Tasks, Plans & Habits, Goals, Library, Finance)
+/// — Projects and Study
 /// are deferred, not silently dropped.
 class StatsOverviewScreen extends ConsumerWidget {
   const StatsOverviewScreen({super.key});
@@ -53,6 +56,7 @@ class StatsOverviewScreen extends ConsumerWidget {
     final period = _Period.values.firstWhere((p) => p.name == periodName, orElse: () => _Period.week);
     final (from, to) = _rangeFor(period, today);
     final asyncStats = ref.watch(periodStatsProvider(from, to));
+    final insights = ref.watch(insightsProvider).value ?? const [];
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
@@ -65,6 +69,7 @@ class StatsOverviewScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(LifeSpace.s16),
         children: [
+          if (insights.isNotEmpty) ...[_InsightsCard(insights: insights), const SizedBox(height: LifeSpace.cardGap)],
           LSegmented<_Period>(
             segments: _periodLabels,
             selected: period,
@@ -151,6 +156,42 @@ class _StatsBody extends StatelessWidget {
           onTap: () => context.push(Routes.finance),
         ),
       ],
+    );
+  }
+}
+
+/// §20.3. Hidden entirely (not an empty-state placeholder) until at least
+/// one insight clears its own sample-size and threshold gates — an empty
+/// "not enough data yet" card would say nothing a first-time user needs to
+/// hear and would just be clutter for everyone else.
+class _InsightsCard extends StatelessWidget {
+  const _InsightsCard({required this.insights});
+
+  final List<Insight> insights;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return LCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const LSectionHeader(title: 'Insights'),
+          const SizedBox(height: LifeSpace.s12),
+          for (final insight in insights)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: LifeSpace.s4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.auto_awesome, size: 16, color: colors.accent.base),
+                  const SizedBox(width: LifeSpace.s8),
+                  Expanded(child: Text(insight.text, style: context.textStyles.body.copyWith(color: colors.neutrals.ink))),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

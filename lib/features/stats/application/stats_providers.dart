@@ -10,6 +10,7 @@ import 'package:life_os/data/repositories/goal_repository.dart';
 import 'package:life_os/data/repositories/journal_repository.dart';
 import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/day_detail.dart';
+import 'package:life_os/data/repositories/models/insight.dart';
 import 'package:life_os/data/repositories/models/period_stats.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
 import 'package:life_os/data/repositories/stats_repository.dart';
@@ -55,4 +56,10 @@ Future<Set<CivilDate>> datesWithCompletedMilestone(Ref ref, CivilDate from, Civi
 Future<DayDetail> dayDetail(Ref ref, CivilDate date) async {
   final userId = await ref.watch(currentUserIdProvider.future);
   return ref.watch(statsRepositoryProvider).dayDetail(userId: userId, date: date);
+}
+
+@riverpod
+Future<List<Insight>> insights(Ref ref) async {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  return ref.watch(statsRepositoryProvider).insights(userId: userId);
 }
