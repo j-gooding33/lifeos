@@ -11,6 +11,7 @@ import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
 import 'package:life_os/design/components/l_progress_ring.dart';
+import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_text_field.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
@@ -18,6 +19,7 @@ import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/tasks/application/goal_projection.dart';
 import 'package:life_os/features/tasks/application/goal_providers.dart';
 import 'package:life_os/features/tasks/presentation/goal_colour.dart';
+import 'package:life_os/features/tasks/presentation/widgets/goal_actions_menu.dart';
 import 'package:life_os/routing/routes.dart';
 
 /// §12.3: a large progress ring, an honest projection (not encouragement —
@@ -46,6 +48,17 @@ class GoalDetailScreen extends ConsumerWidget {
             title: Text(goal.title),
             actions: [
               IconButton(icon: const Icon(Icons.edit_outlined), tooltip: 'Edit', onPressed: () => _editGoal(context, ref, goal)),
+              Builder(
+                builder: (buttonContext) => IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Goal actions',
+                  onPressed: () {
+                    final box = buttonContext.findRenderObject()! as RenderBox;
+                    final position = box.localToGlobal(box.size.center(Offset.zero));
+                    showGoalActionsMenu(context: context, ref: ref, goal: goal, position: position);
+                  },
+                ),
+              ),
               IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Delete', onPressed: () => _deleteGoal(context, ref, goal)),
             ],
           ),
@@ -274,19 +287,8 @@ class _MilestonesSection extends ConsumerWidget {
   }
 
   Future<void> _addMilestone(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
-    final title = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('New milestone'),
-        content: LTextField(controller: controller, label: 'Title', outlined: true, autofocus: true),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(), child: const Text('Cancel')),
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()), child: const Text('Add')),
-        ],
-      ),
-    );
-    if (title == null || title.isEmpty) return;
+    final title = await LPromptDialog.show(context, title: 'New milestone', label: 'Title', confirmLabel: 'Add');
+    if (title == null || !context.mounted) return;
     await ref.read(goalRepositoryProvider).saveMilestone(goalId: goalId, title: title);
   }
 }

@@ -18,6 +18,7 @@ import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/tasks/application/task_providers.dart';
 import 'package:life_os/features/tasks/presentation/project_colour.dart';
 import 'package:life_os/features/tasks/presentation/screens/projects_screen.dart';
+import 'package:life_os/features/tasks/presentation/widgets/project_actions_menu.dart';
 import 'package:life_os/features/tasks/presentation/widgets/task_row.dart';
 
 const _colourOptions = ['tasks', 'plans', 'habits', 'goals', 'study'];
@@ -47,6 +48,17 @@ class ProjectDetailScreen extends ConsumerWidget {
             title: Text(project.title),
             actions: [
               IconButton(icon: const Icon(Icons.edit_outlined), tooltip: 'Edit', onPressed: () => _editProject(context, ref, project)),
+              Builder(
+                builder: (buttonContext) => IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  tooltip: 'Project actions',
+                  onPressed: () {
+                    final box = buttonContext.findRenderObject()! as RenderBox;
+                    final position = box.localToGlobal(box.size.center(Offset.zero));
+                    showProjectActionsMenu(context: context, ref: ref, project: project, position: position);
+                  },
+                ),
+              ),
               IconButton(icon: const Icon(Icons.delete_outline), tooltip: 'Delete', onPressed: () => _deleteProject(context, ref, project)),
             ],
           ),
