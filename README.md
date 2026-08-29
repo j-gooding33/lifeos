@@ -37,8 +37,9 @@ this commit:
 | Finance (§22.2) | Manual expense/income entry (amount-keypad-first quick add), categories, monthly budgets with progress bars, a category-breakdown donut. Reached from Home's "⋯" menu. |
 | Universal Search (§18) | Keyword search (SQLite FTS5) across tasks, plans/habits, projects, goals, notes, journal, films/TV/books and links — grouped by type, ranked, capped at 8 with "Show all." Reached from Home's search icon. |
 | Links (§17.3) | Save a URL instantly, editable title/tags, open in the browser. Open Graph enrichment isn't built. |
+| Documents (§17.3) | Import a file (up to 25MB), stored locally, list/rename/delete, searchable, a total-size quota in Settings → Data. Opening a document in-app and syncing to a storage bucket aren't built. Reached from the Library home hub, alongside Links. |
 | Settings (§22.5) | Profile, Notifications and Privacy (real saved preferences, no delivery/collection behind them yet), Data (storage used, rebuild search index, clear image cache), Integrations (honest TMDB/Open Library status), About (version, licences). Account, Home dashboard, Calendar and Subscription stay the honest "not built yet" placeholder — each needs a real auth session, a card catalogue, a native calendar permission, or IAP. |
-| Statistics & Your Year (§20, §21) | Cross-domain Stats tab (today/week/month/year/all-time, computed on demand — no rollup table) covering Tasks, Plans & Habits, Goals, Library and Finance. Your Year's full-year activity grid (a `CustomPainter`, not 365 widgets) with a milestone notch and tap-through to a read-only Day Detail screen, shared by `/home/day/:date`. Reached from Home's "⋯" menu. |
+| Statistics & Your Year (§20, §21) | Cross-domain Stats tab (today/week/month/year/all-time, computed on demand — no rollup table) covering Tasks, Plans & Habits, Goals, Library and Finance, plus Insights (§20.3: three fixed deterministic checks — best weekday, morning/evening completion rate, journal frequency — each gated on a minimum sample size). Your Year's full-year activity grid (a `CustomPainter`, not 365 widgets) with a milestone notch and tap-through to a read-only Day Detail screen, shared by `/home/day/:date`. Reached from Home's "⋯" menu. |
 
 `LIFE_OS_SPEC.md`'s own M8 (Goals), M9 (Projects) and M10 (Habits) were
 deferred until the custom M8 brief below shipped; all three are now done,
@@ -75,17 +76,17 @@ Done, end to end:
   rating prompt.
 
 Not yet built: the live AI backend (needs a Supabase project and an Edge
-Function — same blocker as sync), Documents (Links itself now ships — see
-the Status table above; Documents needs a file picker and local storage
-this pass didn't build), semantic search (§18.3, layered on top of the FTS5
-keyword search that does now exist), and Insights (§20.3's deterministic
-generated sentences on top of Stats, plus "Compare to last year" and
-"Share your year" PNG export on Your Year). See `DECISIONS.md` for the full
-list of smaller, deliberate cuts within each shipped feature (e.g. "Fill
-from watchlist," the counter-habit stepper, Projects' Files/Activity
-sections, five of Goals' six automatic-progress rows, Journal's
-auto-generated context strip, Finance's recurring expenses, Links' Open
-Graph enrichment, Stats' 30-day-median-relative activity scoring).
+Function — same blocker as sync), semantic search (§18.3, layered on top of
+the FTS5 keyword search that does now exist), opening a Document in-app
+(needs a FileProvider/native-viewer hookup — a second new native
+dependency Documents' own local-storage half didn't need), and "Compare to
+last year"/"Share your year" PNG export on Your Year. See `DECISIONS.md`
+for the full list of smaller, deliberate cuts within each shipped feature
+(e.g. "Fill from watchlist," the counter-habit stepper, Projects'
+Files/Activity sections, five of Goals' six automatic-progress rows,
+Journal's auto-generated context strip, Finance's recurring expenses,
+Links'/Documents' sync-to-storage-bucket half, Stats' 30-day-median-relative
+activity scoring).
 
 ## Running the app
 
