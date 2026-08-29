@@ -221,47 +221,65 @@ Stream<List<AppDashboardCard>> dashboardCards(Ref ref) async* {
 // is an acceptable, documented trade-off (see DECISIONS.md); the
 // inline-checkable ones (focus, upcoming, recent, plansToday, habits) are
 // not.
+// Every stream below shares dashboardCards' own first-build hazard (see
+// its comment): each captures its (keepAlive, sync) repository before the
+// `currentUserId` await, then checks `ref.mounted` after it, rather than
+// calling `ref.watch` on the repository provider again once resumed.
 @riverpod
 Stream<List<AppTask>> homeAllTasksDueToday(Ref ref) async* {
+  final repository = ref.watch(homeTaskRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  yield* ref.watch(homeTaskRepositoryProvider).watchAllDueOn(userId, CivilDate.fromDateTime(DateTime.now()));
+  if (!ref.mounted) return;
+  yield* repository.watchAllDueOn(userId, CivilDate.fromDateTime(DateTime.now()));
 }
 
 @riverpod
 Stream<List<AppTask>> homeTodayTasks(Ref ref) async* {
+  final repository = ref.watch(homeTaskRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  yield* ref.watch(homeTaskRepositoryProvider).watchToday(userId, CivilDate.fromDateTime(DateTime.now()));
+  if (!ref.mounted) return;
+  yield* repository.watchToday(userId, CivilDate.fromDateTime(DateTime.now()));
 }
 
 @riverpod
 Stream<List<AppTask>> homeUpcomingTasks(Ref ref) async* {
+  final repository = ref.watch(homeTaskRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  yield* ref.watch(homeTaskRepositoryProvider).watchUpcoming(userId, CivilDate.fromDateTime(DateTime.now()));
+  if (!ref.mounted) return;
+  yield* repository.watchUpcoming(userId, CivilDate.fromDateTime(DateTime.now()));
 }
 
 @riverpod
 Stream<List<AppTask>> homeRecentTasks(Ref ref) async* {
+  final repository = ref.watch(homeTaskRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  yield* ref.watch(homeTaskRepositoryProvider).watchRecentlyCreated(userId);
+  if (!ref.mounted) return;
+  yield* repository.watchRecentlyCreated(userId);
 }
 
 @riverpod
 Stream<List<AppOccurrence>> homeTodaysOccurrences(Ref ref) async* {
+  final repository = ref.watch(homePlanRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
+  if (!ref.mounted) return;
   final today = CivilDate.fromDateTime(DateTime.now());
-  yield* ref.watch(homePlanRepositoryProvider).watchOccurrencesInRange(userId, today, today);
+  yield* repository.watchOccurrencesInRange(userId, today, today);
 }
 
 @riverpod
 Stream<List<AppPlan>> homeActivePlans(Ref ref) async* {
+  final repository = ref.watch(homePlanRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  yield* ref.watch(homePlanRepositoryProvider).watchActive(userId);
+  if (!ref.mounted) return;
+  yield* repository.watchActive(userId);
 }
 
 @riverpod
 Stream<List<AppPlan>> homeHabitPlans(Ref ref) async* {
+  final repository = ref.watch(homePlanRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  yield* ref.watch(homePlanRepositoryProvider).watchHabits(userId);
+  if (!ref.mounted) return;
+  yield* repository.watchHabits(userId);
 }
 
 @riverpod
@@ -269,9 +287,37 @@ Stream<AppOccurrence?> homeHabitOccurrenceOn(Ref ref, String planId, CivilDate d
   return ref.watch(homePlanRepositoryProvider).watchOccurrenceOn(planId, date);
 }
 
+/// The onboarding-transition hazard `dashboardCards` documents applies
+/// here too — this is Home's other first-build provider — but with well
+/// over a dozen further `ref.watch` calls below, one after nearly every
+/// await, guarding each individually would swamp the function. Checked
+/// once here, right after entry: every subsequent read is a fast local
+/// SQLite query, so the whole chain completes within the same handful of
+/// milliseconds this first gap already survived.
+HomeSnapshot _emptySnapshot() => const HomeSnapshot(
+  focusItems: [],
+  doneToday: 0,
+  totalToday: 0,
+  upcomingByDay: {},
+  upcomingUndated: UpcomingBucket(count: 0, firstTitle: null),
+  recent: [],
+  plansToday: [],
+  plansTodayTitles: {},
+  habits: [],
+  goals: [],
+  projects: [],
+  plansCompletedToday: 0,
+  currentStreakDays: 0,
+  journalWrittenToday: false,
+  spentThisMonthMinor: 0,
+  monthlyBudgetMinor: null,
+  currency: 'GBP',
+);
+
 @riverpod
 Future<HomeSnapshot> homeSnapshot(Ref ref) async {
   final userId = await ref.watch(currentUserIdProvider.future);
+  if (!ref.mounted) return _emptySnapshot();
   final today = CivilDate.fromDateTime(DateTime.now());
 
   final allToday = await ref.watch(homeAllTasksDueTodayProvider.future);
