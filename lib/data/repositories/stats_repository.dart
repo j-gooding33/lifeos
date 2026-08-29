@@ -1,6 +1,5 @@
-import 'dart:async';
-
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/core/utils/first_value.dart';
 import 'package:life_os/data/media/media_types.dart';
 import 'package:life_os/data/repositories/goal_repository.dart';
 import 'package:life_os/data/repositories/journal_repository.dart';
@@ -11,28 +10,6 @@ import 'package:life_os/data/repositories/models/insight.dart';
 import 'package:life_os/data/repositories/models/period_stats.dart';
 import 'package:life_os/data/repositories/plan_repository.dart';
 import 'package:life_os/data/repositories/task_repository.dart';
-
-/// `Stream.first` cancels its subscription synchronously from inside the
-/// `onData` callback that delivers the first event. That's fine for most
-/// streams, but Drift's `QueryStream` (as used by every `watchXxx` method
-/// this repository calls) races with that synchronous cancel under
-/// `NativeDatabase` and never completes the returned future — reproduced
-/// and root-caused against a minimal repro outside this file. Deferring
-/// the cancel to the next microtask avoids the race. See DECISIONS.md.
-Future<T> _firstValue<T>(Stream<T> stream) {
-  final completer = Completer<T>();
-  late StreamSubscription<T> subscription;
-  subscription = stream.listen(
-    (value) {
-      if (!completer.isCompleted) completer.complete(value);
-    },
-    onError: (Object error, StackTrace stackTrace) {
-      if (!completer.isCompleted) completer.completeError(error, stackTrace);
-    },
-  );
-  unawaited(completer.future.whenComplete(() => Future.microtask(subscription.cancel)));
-  return completer.future;
-}
 
 /// §20: "never compute statistics by scanning raw tables at render time" —
 /// this is exactly that, on purpose. Building the spec's actual
@@ -63,28 +40,28 @@ class StatsRepository {
   bool _inRange(CivilDate date, CivilDate from, CivilDate to) => date.isAtOrAfter(from) && date.isAtOrBefore(to);
 
   Future<PeriodStats> statsForPeriod({required String userId, required CivilDate from, required CivilDate to}) async {
-    final tasks = await _firstValue(taskRepository.watchCompleted(userId, retentionDays: 3650));
+    final tasks = await firstValue(taskRepository.watchCompleted(userId, retentionDays: 3650));
     final tasksCompleted = tasks
         .where((t) => t.completedAt != null && _inRange(CivilDate.fromDateTime(t.completedAt!), from, to))
         .length;
 
-    final habitPlanIds = (await _firstValue(planRepository.watchHabits(userId))).map((p) => p.id).toSet();
-    final occurrences = await _firstValue(planRepository.watchOccurrencesInRange(userId, from, to));
+    final habitPlanIds = (await firstValue(planRepository.watchHabits(userId))).map((p) => p.id).toSet();
+    final occurrences = await firstValue(planRepository.watchOccurrencesInRange(userId, from, to));
     final completed = occurrences.where((o) => o.status == OccurrenceStatus.completed).toList();
 
-    final films = await _firstValue(libraryItemRepository.watchAll(userId, MediaType.film));
+    final films = await firstValue(libraryItemRepository.watchAll(userId, MediaType.film));
     final filmsWatched = films.where((f) => f.finishedAt != null && _inRange(CivilDate.fromDateTime(f.finishedAt!), from, to)).length;
 
-    final books = await _firstValue(libraryItemRepository.watchAll(userId, MediaType.book));
+    final books = await firstValue(libraryItemRepository.watchAll(userId, MediaType.book));
     final booksFinished = books.where((b) => b.finishedAt != null && _inRange(CivilDate.fromDateTime(b.finishedAt!), from, to)).length;
 
-    final journalEntries = await _firstValue(journalRepository.watchRecent(userId, limit: 3650));
+    final journalEntries = await firstValue(journalRepository.watchRecent(userId, limit: 3650));
     final journalDaysWritten = journalEntries.where((j) => _inRange(j.date, from, to) && j.plainText.isNotEmpty).length;
 
-    final goals = await _firstValue(goalRepository.watchAll(userId));
+    final goals = await firstValue(goalRepository.watchAll(userId));
     var goalContributions = 0;
     for (final goal in goals) {
-      final contributions = await _firstValue(goalRepository.watchContributions(goal.id));
+      final contributions = await firstValue(goalRepository.watchContributions(goal.id));
       goalContributions += contributions.where((c) => _inRange(c.date, from, to)).length;
     }
 
@@ -115,7 +92,7 @@ class StatsRepository {
     final counts = <CivilDate, int>{};
     void bump(CivilDate date) => counts[date] = (counts[date] ?? 0) + 1;
 
-    final tasks = await _firstValue(taskRepository.watchCompleted(userId, retentionDays: 3650));
+    final tasks = await firstValue(taskRepository.watchCompleted(userId, retentionDays: 3650));
     for (final task in tasks) {
       final completedAt = task.completedAt;
       if (completedAt == null) continue;
@@ -123,7 +100,7 @@ class StatsRepository {
       if (_inRange(date, from, to)) bump(date);
     }
 
-    final occurrences = await _firstValue(planRepository.watchOccurrencesInRange(userId, from, to));
+    final occurrences = await firstValue(planRepository.watchOccurrencesInRange(userId, from, to));
     for (final occurrence in occurrences) {
       if (occurrence.status == OccurrenceStatus.completed) bump(occurrence.scheduledDate);
     }
@@ -142,10 +119,10 @@ class StatsRepository {
   /// The days (within range) with at least one goal milestone completed —
   /// §21.1's "tiny notch in the top-right corner."
   Future<Set<CivilDate>> datesWithCompletedMilestone({required String userId, required CivilDate from, required CivilDate to}) async {
-    final goals = await _firstValue(goalRepository.watchAll(userId));
+    final goals = await firstValue(goalRepository.watchAll(userId));
     final dates = <CivilDate>{};
     for (final goal in goals) {
-      final milestones = await _firstValue(goalRepository.watchMilestones(goal.id));
+      final milestones = await firstValue(goalRepository.watchMilestones(goal.id));
       for (final milestone in milestones) {
         final completedAt = milestone.completedAt;
         if (completedAt == null) continue;
@@ -157,8 +134,8 @@ class StatsRepository {
   }
 
   Future<DayDetail> dayDetail({required String userId, required CivilDate date}) async {
-    final tasksDue = await _firstValue(taskRepository.watchAllDueOn(userId, date));
-    final completedTasks = await _firstValue(taskRepository.watchCompleted(userId, retentionDays: 3650));
+    final tasksDue = await firstValue(taskRepository.watchAllDueOn(userId, date));
+    final completedTasks = await firstValue(taskRepository.watchCompleted(userId, retentionDays: 3650));
     final tasksCompletedToday = completedTasks.where(
       (t) => t.completedAt != null && CivilDate.fromDateTime(t.completedAt!) == date,
     );
@@ -167,22 +144,22 @@ class StatsRepository {
       for (final t in tasksCompletedToday) t.id: DayDetailTask(title: t.title, isCompleted: true),
     };
 
-    final occurrences = await _firstValue(planRepository.watchOccurrencesInRange(userId, date, date));
-    final plans = await _firstValue(planRepository.watchActive(userId));
+    final occurrences = await firstValue(planRepository.watchOccurrencesInRange(userId, date, date));
+    final plans = await firstValue(planRepository.watchActive(userId));
     final planTitleById = {for (final p in plans) p.id: p.title};
 
-    final films = await _firstValue(libraryItemRepository.watchAll(userId, MediaType.film));
+    final films = await firstValue(libraryItemRepository.watchAll(userId, MediaType.film));
     final filmsToday = films.where((f) => f.finishedAt != null && CivilDate.fromDateTime(f.finishedAt!) == date).map((f) => f.title);
 
-    final books = await _firstValue(libraryItemRepository.watchAll(userId, MediaType.book));
+    final books = await firstValue(libraryItemRepository.watchAll(userId, MediaType.book));
     final booksToday = books.where((b) => b.finishedAt != null && CivilDate.fromDateTime(b.finishedAt!) == date).map((b) => b.title);
 
-    final journalEntry = await _firstValue(journalRepository.watchByDate(userId, date));
+    final journalEntry = await firstValue(journalRepository.watchByDate(userId, date));
 
-    final goals = await _firstValue(goalRepository.watchAll(userId));
+    final goals = await firstValue(goalRepository.watchAll(userId));
     var goalsProgressed = 0;
     for (final goal in goals) {
-      final contributions = await _firstValue(goalRepository.watchContributions(goal.id));
+      final contributions = await firstValue(goalRepository.watchContributions(goal.id));
       if (contributions.any((c) => c.date == date)) goalsProgressed++;
     }
 
@@ -211,7 +188,7 @@ class StatsRepository {
     final today = CivilDate.fromDateTime(DateTime.now());
     const epoch = CivilDate(2000, 1, 1);
 
-    final completedTasks = (await _firstValue(
+    final completedTasks = (await firstValue(
       taskRepository.watchCompleted(userId, retentionDays: 3650),
     )).where((t) => t.completedAt != null).toList();
     if (completedTasks.length >= 14) {
@@ -226,10 +203,10 @@ class StatsRepository {
       }
     }
 
-    final activePlans = await _firstValue(planRepository.watchActive(userId));
-    final habitPlans = await _firstValue(planRepository.watchHabits(userId));
+    final activePlans = await firstValue(planRepository.watchActive(userId));
+    final habitPlans = await firstValue(planRepository.watchHabits(userId));
     final timeOfDayByPlanId = {for (final p in [...activePlans, ...habitPlans]) p.id: p.timeOfDay};
-    final allOccurrences = await _firstValue(planRepository.watchOccurrencesInRange(userId, epoch, today));
+    final allOccurrences = await firstValue(planRepository.watchOccurrencesInRange(userId, epoch, today));
     final resolved = allOccurrences.where(
       (o) => o.status == OccurrenceStatus.completed || o.status == OccurrenceStatus.missed || o.status == OccurrenceStatus.skipped,
     );
@@ -263,7 +240,7 @@ class StatsRepository {
       }
     }
 
-    final journalEntries = await _firstValue(journalRepository.watchRecent(userId, limit: 3650));
+    final journalEntries = await firstValue(journalRepository.watchRecent(userId, limit: 3650));
     if (journalEntries.length >= 14) {
       final windowStart = today.addDays(-29);
       final daysWritten = journalEntries.where((j) => _inRange(j.date, windowStart, today) && j.plainText.isNotEmpty).length;
