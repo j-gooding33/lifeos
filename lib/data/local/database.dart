@@ -23,6 +23,7 @@ import 'package:life_os/data/local/tables/collection_items_table.dart';
 import 'package:life_os/data/local/tables/collections_table.dart';
 import 'package:life_os/data/local/tables/daily_rollups_table.dart';
 import 'package:life_os/data/local/tables/dashboard_cards_table.dart';
+import 'package:life_os/data/local/tables/document_links_table.dart';
 import 'package:life_os/data/local/tables/documents_table.dart';
 import 'package:life_os/data/local/tables/events_table.dart';
 import 'package:life_os/data/local/tables/expenses_table.dart';
@@ -99,6 +100,7 @@ part 'database.g.dart';
     SchoolClosures,
     SchoolEvents,
     Documents,
+    DocumentLinks,
   ],
   daos: [
     ProfileDao,
@@ -116,7 +118,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -145,6 +147,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4 && to >= 4) {
         await m.createTable(documents);
         await createV4DocumentSearchTriggers(m);
+      }
+      if (from < 5 && to >= 5) {
+        await m.createTable(documentLinks);
       }
     },
   );

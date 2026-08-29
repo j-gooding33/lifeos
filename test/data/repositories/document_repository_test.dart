@@ -97,4 +97,50 @@ void main() {
 
     expect(await repository.totalSizeBytes('u1'), 350);
   });
+
+  test('linkDocument makes the document appear in watchLinkedTo for that entity, and only that entity', () async {
+    final imported = await repository.import(userId: 'u1', sourcePath: sourceFile.path, originalName: 'a.txt', fileSizeBytes: 1);
+    final document = imported.when(ok: (d) => d, err: (f) => throw StateError(f.message));
+
+    await repository.linkDocument(documentId: document.id, entityType: 'project', entityId: 'p1');
+
+    final linkedToProject = await repository.watchLinkedTo('project', 'p1').first;
+    expect(linkedToProject.single.id, document.id);
+
+    final linkedToOtherProject = await repository.watchLinkedTo('project', 'p2').first;
+    expect(linkedToOtherProject, isEmpty);
+  });
+
+  test('the same document can be linked to more than one entity', () async {
+    final imported = await repository.import(userId: 'u1', sourcePath: sourceFile.path, originalName: 'a.txt', fileSizeBytes: 1);
+    final document = imported.when(ok: (d) => d, err: (f) => throw StateError(f.message));
+
+    await repository.linkDocument(documentId: document.id, entityType: 'project', entityId: 'p1');
+    await repository.linkDocument(documentId: document.id, entityType: 'task', entityId: 't1');
+
+    expect((await repository.watchLinkedTo('project', 'p1').first).single.id, document.id);
+    expect((await repository.watchLinkedTo('task', 't1').first).single.id, document.id);
+  });
+
+  test('unlinkDocument removes just that one link', () async {
+    final imported = await repository.import(userId: 'u1', sourcePath: sourceFile.path, originalName: 'a.txt', fileSizeBytes: 1);
+    final document = imported.when(ok: (d) => d, err: (f) => throw StateError(f.message));
+    await repository.linkDocument(documentId: document.id, entityType: 'project', entityId: 'p1');
+    await repository.linkDocument(documentId: document.id, entityType: 'task', entityId: 't1');
+
+    await repository.unlinkDocument(documentId: document.id, entityType: 'project', entityId: 'p1');
+
+    expect(await repository.watchLinkedTo('project', 'p1').first, isEmpty);
+    expect((await repository.watchLinkedTo('task', 't1').first).single.id, document.id);
+  });
+
+  test('a deleted document drops out of watchLinkedTo even if the link row still exists', () async {
+    final imported = await repository.import(userId: 'u1', sourcePath: sourceFile.path, originalName: 'a.txt', fileSizeBytes: 1);
+    final document = imported.when(ok: (d) => d, err: (f) => throw StateError(f.message));
+    await repository.linkDocument(documentId: document.id, entityType: 'project', entityId: 'p1');
+
+    await repository.delete(document);
+
+    expect(await repository.watchLinkedTo('project', 'p1').first, isEmpty);
+  });
 }

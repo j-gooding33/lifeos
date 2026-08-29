@@ -27132,6 +27132,331 @@ class DocumentsCompanion extends UpdateCompanion<Document> {
   }
 }
 
+class $DocumentLinksTable extends DocumentLinks
+    with TableInfo<$DocumentLinksTable, DocumentLink> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DocumentLinksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _documentIdMeta = const VerificationMeta(
+    'documentId',
+  );
+  @override
+  late final GeneratedColumn<String> documentId = GeneratedColumn<String>(
+    'document_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    documentId,
+    entityType,
+    entityId,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'document_links';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DocumentLink> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('document_id')) {
+      context.handle(
+        _documentIdMeta,
+        documentId.isAcceptableOrUnknown(data['document_id']!, _documentIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_documentIdMeta);
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityTypeMeta);
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entityIdMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {documentId, entityType, entityId};
+  @override
+  DocumentLink map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DocumentLink(
+      documentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_id'],
+      )!,
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
+    );
+  }
+
+  @override
+  $DocumentLinksTable createAlias(String alias) {
+    return $DocumentLinksTable(attachedDatabase, alias);
+  }
+}
+
+class DocumentLink extends DataClass implements Insertable<DocumentLink> {
+  final String documentId;
+  final String entityType;
+  final String entityId;
+  final int? createdAt;
+  const DocumentLink({
+    required this.documentId,
+    required this.entityType,
+    required this.entityId,
+    this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['document_id'] = Variable<String>(documentId);
+    map['entity_type'] = Variable<String>(entityType);
+    map['entity_id'] = Variable<String>(entityId);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
+    return map;
+  }
+
+  DocumentLinksCompanion toCompanion(bool nullToAbsent) {
+    return DocumentLinksCompanion(
+      documentId: Value(documentId),
+      entityType: Value(entityType),
+      entityId: Value(entityId),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+    );
+  }
+
+  factory DocumentLink.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DocumentLink(
+      documentId: serializer.fromJson<String>(json['documentId']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      entityId: serializer.fromJson<String>(json['entityId']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'documentId': serializer.toJson<String>(documentId),
+      'entityType': serializer.toJson<String>(entityType),
+      'entityId': serializer.toJson<String>(entityId),
+      'createdAt': serializer.toJson<int?>(createdAt),
+    };
+  }
+
+  DocumentLink copyWith({
+    String? documentId,
+    String? entityType,
+    String? entityId,
+    Value<int?> createdAt = const Value.absent(),
+  }) => DocumentLink(
+    documentId: documentId ?? this.documentId,
+    entityType: entityType ?? this.entityType,
+    entityId: entityId ?? this.entityId,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+  );
+  DocumentLink copyWithCompanion(DocumentLinksCompanion data) {
+    return DocumentLink(
+      documentId: data.documentId.present
+          ? data.documentId.value
+          : this.documentId,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentLink(')
+          ..write('documentId: $documentId, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(documentId, entityType, entityId, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DocumentLink &&
+          other.documentId == this.documentId &&
+          other.entityType == this.entityType &&
+          other.entityId == this.entityId &&
+          other.createdAt == this.createdAt);
+}
+
+class DocumentLinksCompanion extends UpdateCompanion<DocumentLink> {
+  final Value<String> documentId;
+  final Value<String> entityType;
+  final Value<String> entityId;
+  final Value<int?> createdAt;
+  final Value<int> rowid;
+  const DocumentLinksCompanion({
+    this.documentId = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityId = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DocumentLinksCompanion.insert({
+    required String documentId,
+    required String entityType,
+    required String entityId,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : documentId = Value(documentId),
+       entityType = Value(entityType),
+       entityId = Value(entityId);
+  static Insertable<DocumentLink> custom({
+    Expression<String>? documentId,
+    Expression<String>? entityType,
+    Expression<String>? entityId,
+    Expression<int>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (documentId != null) 'document_id': documentId,
+      if (entityType != null) 'entity_type': entityType,
+      if (entityId != null) 'entity_id': entityId,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DocumentLinksCompanion copyWith({
+    Value<String>? documentId,
+    Value<String>? entityType,
+    Value<String>? entityId,
+    Value<int?>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return DocumentLinksCompanion(
+      documentId: documentId ?? this.documentId,
+      entityType: entityType ?? this.entityType,
+      entityId: entityId ?? this.entityId,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (documentId.present) {
+      map['document_id'] = Variable<String>(documentId.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentLinksCompanion(')
+          ..write('documentId: $documentId, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -27182,6 +27507,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SchoolClosuresTable schoolClosures = $SchoolClosuresTable(this);
   late final $SchoolEventsTable schoolEvents = $SchoolEventsTable(this);
   late final $DocumentsTable documents = $DocumentsTable(this);
+  late final $DocumentLinksTable documentLinks = $DocumentLinksTable(this);
   late final ProfileDao profileDao = ProfileDao(this as AppDatabase);
   late final PreferencesDao preferencesDao = PreferencesDao(
     this as AppDatabase,
@@ -27239,6 +27565,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     schoolClosures,
     schoolEvents,
     documents,
+    documentLinks,
   ];
 }
 
@@ -40116,6 +40443,191 @@ typedef $$DocumentsTableProcessedTableManager =
       Document,
       PrefetchHooks Function()
     >;
+typedef $$DocumentLinksTableCreateCompanionBuilder =
+    DocumentLinksCompanion Function({
+      required String documentId,
+      required String entityType,
+      required String entityId,
+      Value<int?> createdAt,
+      Value<int> rowid,
+    });
+typedef $$DocumentLinksTableUpdateCompanionBuilder =
+    DocumentLinksCompanion Function({
+      Value<String> documentId,
+      Value<String> entityType,
+      Value<String> entityId,
+      Value<int?> createdAt,
+      Value<int> rowid,
+    });
+
+class $$DocumentLinksTableFilterComposer
+    extends Composer<_$AppDatabase, $DocumentLinksTable> {
+  $$DocumentLinksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DocumentLinksTableOrderingComposer
+    extends Composer<_$AppDatabase, $DocumentLinksTable> {
+  $$DocumentLinksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DocumentLinksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DocumentLinksTable> {
+  $$DocumentLinksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get documentId => $composableBuilder(
+    column: $table.documentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$DocumentLinksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DocumentLinksTable,
+          DocumentLink,
+          $$DocumentLinksTableFilterComposer,
+          $$DocumentLinksTableOrderingComposer,
+          $$DocumentLinksTableAnnotationComposer,
+          $$DocumentLinksTableCreateCompanionBuilder,
+          $$DocumentLinksTableUpdateCompanionBuilder,
+          (
+            DocumentLink,
+            BaseReferences<_$AppDatabase, $DocumentLinksTable, DocumentLink>,
+          ),
+          DocumentLink,
+          PrefetchHooks Function()
+        > {
+  $$DocumentLinksTableTableManager(_$AppDatabase db, $DocumentLinksTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DocumentLinksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DocumentLinksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DocumentLinksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> documentId = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String> entityId = const Value.absent(),
+                Value<int?> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentLinksCompanion(
+                documentId: documentId,
+                entityType: entityType,
+                entityId: entityId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String documentId,
+                required String entityType,
+                required String entityId,
+                Value<int?> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentLinksCompanion.insert(
+                documentId: documentId,
+                entityType: entityType,
+                entityId: entityId,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DocumentLinksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DocumentLinksTable,
+      DocumentLink,
+      $$DocumentLinksTableFilterComposer,
+      $$DocumentLinksTableOrderingComposer,
+      $$DocumentLinksTableAnnotationComposer,
+      $$DocumentLinksTableCreateCompanionBuilder,
+      $$DocumentLinksTableUpdateCompanionBuilder,
+      (
+        DocumentLink,
+        BaseReferences<_$AppDatabase, $DocumentLinksTable, DocumentLink>,
+      ),
+      DocumentLink,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -40198,4 +40710,6 @@ class $AppDatabaseManager {
       $$SchoolEventsTableTableManager(_db, _db.schoolEvents);
   $$DocumentsTableTableManager get documents =>
       $$DocumentsTableTableManager(_db, _db.documents);
+  $$DocumentLinksTableTableManager get documentLinks =>
+      $$DocumentLinksTableTableManager(_db, _db.documentLinks);
 }

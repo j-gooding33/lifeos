@@ -24,6 +24,29 @@ class DocumentRepository {
 
   Stream<List<AppDocument>> watchAll(String userId) => _dao.watchAll(userId).map(_toDomainList);
 
+  /// §11.3. Documents linked to another entity — a project's "Files"
+  /// section is the first caller.
+  Stream<List<AppDocument>> watchLinkedTo(String entityType, String entityId) =>
+      _dao.watchLinkedTo(entityType, entityId).map(_toDomainList);
+
+  Future<Result<void, Failure>> linkDocument({required String documentId, required String entityType, required String entityId}) async {
+    try {
+      await _dao.link(documentId: documentId, entityType: entityType, entityId: entityId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('linkDocument failed: $e'));
+    }
+  }
+
+  Future<Result<void, Failure>> unlinkDocument({required String documentId, required String entityType, required String entityId}) async {
+    try {
+      await _dao.unlink(documentId: documentId, entityType: entityType, entityId: entityId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('unlinkDocument failed: $e'));
+    }
+  }
+
   Future<int> totalSizeBytes(String userId) => _dao.totalSizeBytes(userId);
 
   /// [sourcePath] is wherever the platform file picker left the picked

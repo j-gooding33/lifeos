@@ -47,6 +47,13 @@ void main() {
     await db.close();
   });
 
+  test('v5 schema creates cleanly', () async {
+    final connection = await verifier.startAt(5);
+    final db = AppDatabase.forTesting(connection.executor);
+    await verifier.migrateAndValidate(db, 5);
+    await db.close();
+  });
+
   test(
     'v1 to v2 migrates cleanly (M8: TV episodes, top lists, School)',
     () async {
@@ -93,6 +100,34 @@ void main() {
       ''');
       final db = AppDatabase.forTesting(schema.newConnection().executor);
       await verifier.migrateAndValidate(db, 4);
+      await db.close();
+    },
+  );
+
+  test(
+    'v4 to v5 migrates cleanly (DocumentLinks table)',
+    () async {
+      // A plain typed table with no raw-SQL preconditions (unlike v3/v4) —
+      // no fixture setup needed beyond the standard v4 starting point.
+      final connection = await verifier.startAt(4);
+      final db = AppDatabase.forTesting(connection.executor);
+      await verifier.migrateAndValidate(db, 5);
+      await db.close();
+    },
+  );
+
+  test(
+    'v3 to v5 migrates cleanly in one jump (documents + document_links together)',
+    () async {
+      final schema = await verifier.schemaAt(3);
+      schema.rawDatabase.execute('''
+        CREATE VIRTUAL TABLE search_index USING fts5(
+          entity_type UNINDEXED, entity_id UNINDEXED, title, body, tags,
+          tokenize='unicode61 remove_diacritics 2'
+        );
+      ''');
+      final db = AppDatabase.forTesting(schema.newConnection().executor);
+      await verifier.migrateAndValidate(db, 5);
       await db.close();
     },
   );
