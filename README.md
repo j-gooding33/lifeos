@@ -37,7 +37,7 @@ this commit:
 | Finance (§22.2) | Manual expense/income entry (amount-keypad-first quick add), categories, monthly budgets with progress bars, a category-breakdown donut. Reached from Home's "⋯" menu. |
 | Universal Search (§18) | Keyword search (SQLite FTS5) across tasks, plans/habits, projects, goals, notes, journal, films/TV/books and links — grouped by type, ranked, capped at 8 with "Show all." Reached from Home's search icon. |
 | Links (§17.3) | Save a URL instantly, editable title/tags, open in the browser. Open Graph enrichment isn't built. |
-| Documents (§17.3) | Import a file (up to 25MB), stored locally, list/rename/delete, searchable, a total-size quota in Settings → Data. Opening a document in-app and syncing to a storage bucket aren't built. Reached from the Library home hub, alongside Links. |
+| Documents (§17.3) | Import a file (up to 25MB), stored locally, list/rename/delete, searchable, a total-size quota in Settings → Data, tap to open in whatever app the OS resolves for it. Syncing to a storage bucket isn't built. Reached from the Library home hub, alongside Links. |
 | Home dashboard (§5.3, §5.4) | 9 of the catalogue's 15 card types (`focus` handled specially, always first): Plans today, Habits, Upcoming, Goals, Projects, Recent, Daily stats, Journal prompt, Spending. Reorder, show/hide and size, all real and persisted, from Settings → Home dashboard. Tapped-on cards (Focus, Plans today, Habits) update live everywhere; glanced-at ones (Goals, Projects, Journal, Finance, streak) refresh on Home's next load. `reading`, `filmNext`, `study`, `activity`, `aiSuggestions`, and the customise screen's live preview aren't built. |
 | Settings (§22.5) | Profile, Appearance, Home dashboard, Notifications and Privacy (real saved preferences, no delivery/collection behind them yet), Data (storage used, rebuild search index, clear image cache), Integrations (honest TMDB/Open Library status), About (version, licences). Account, Calendar and Subscription stay the honest "not built yet" placeholder — each needs a real auth session, a native calendar permission, or IAP. |
 | Statistics & Your Year (§20, §21) | Cross-domain Stats tab (today/week/month/year/all-time, computed on demand — no rollup table) covering Tasks, Plans & Habits, Goals, Library and Finance, plus Insights (§20.3: three fixed deterministic checks — best weekday, morning/evening completion rate, journal frequency — each gated on a minimum sample size). Your Year's full-year activity grid (a `CustomPainter`, not 365 widgets) with a milestone notch, a "Compare to last year" overlay line, "Share your year" PNG export to the OS share sheet, and tap-through to a read-only Day Detail screen, shared by `/home/day/:date`. Reached from Home's "⋯" menu. |
@@ -77,10 +77,9 @@ Done, end to end:
   rating prompt.
 
 Not yet built: the live AI backend (needs a Supabase project and an Edge
-Function — same blocker as sync), semantic search (§18.3, layered on top of
-the FTS5 keyword search that does now exist), and opening a Document
-in-app (needs a FileProvider/native-viewer hookup — a different, riskier
-native dependency than `share_plus` turned out to be). See `DECISIONS.md`
+Function — same blocker as sync) and semantic search (§18.3, layered on
+top of the FTS5 keyword search that does now exist) — both blocked on a
+real backend, not on anything this session chose to defer. See `DECISIONS.md`
 for the full list of smaller, deliberate cuts within each shipped feature
 (e.g. "Fill from watchlist," the counter-habit stepper, Projects'
 Files/Activity sections, five of Goals' six automatic-progress rows,
