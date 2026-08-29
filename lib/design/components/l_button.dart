@@ -65,7 +65,13 @@ class LButton extends StatelessWidget {
                   Icon(icon, size: 18, color: foreground),
                   const SizedBox(width: LifeSpace.s8),
                 ],
-                Text(label, style: context.textStyles.bodyStrong.copyWith(color: foreground)),
+                Flexible(
+                  child: Text(
+                    label,
+                    style: context.textStyles.bodyStrong.copyWith(color: foreground),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),

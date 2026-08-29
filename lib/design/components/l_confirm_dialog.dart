@@ -21,9 +21,10 @@ class LConfirmDialog {
       builder: (context) {
         return Dialog(
           backgroundColor: colors.neutrals.surface,
+          insetPadding: const EdgeInsets.symmetric(horizontal: LifeSpace.s20, vertical: LifeSpace.s24),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LifeRadius.card)),
           child: Padding(
-            padding: const EdgeInsets.all(LifeSpace.s24),
+            padding: const EdgeInsets.all(LifeSpace.s20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -38,7 +39,7 @@ class LConfirmDialog {
                   style: context.textStyles.body.copyWith(color: colors.neutrals.ink2),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: LifeSpace.s24),
+                const SizedBox(height: LifeSpace.s20),
                 Row(
                   children: [
                     Expanded(
@@ -48,7 +49,7 @@ class LConfirmDialog {
                         onPressed: () => Navigator.of(context).pop(false),
                       ),
                     ),
-                    const SizedBox(width: LifeSpace.s12),
+                    const SizedBox(width: LifeSpace.s8),
                     Expanded(
                       child: LButton(
                         label: confirmLabel,
