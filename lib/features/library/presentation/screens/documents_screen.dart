@@ -12,12 +12,15 @@ import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/features/library/application/document_providers.dart';
+import 'package:open_filex/open_filex.dart';
 
 /// §17.3. Files are copied into this app's own local storage at import
-/// time and capped at 25MB each. Opening a document in-place (needs a
-/// FileProvider/`open_filex`-style native viewer hookup) and "uploaded to
-/// the user's storage bucket on sync" (no sync backend yet) aren't built —
-/// see DECISIONS.md.
+/// time and capped at 25MB each. Tapping a row opens it in whatever app
+/// the OS resolves for that file type (`open_filex`) — that's a "best
+/// effort" open, not a preview: a type with no installed viewer app
+/// reports back "no app to open this," honestly, rather than pretending.
+/// "Uploaded to the user's storage bucket on sync" (no sync backend yet)
+/// isn't built — see DECISIONS.md.
 class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
 
@@ -109,7 +112,21 @@ class _DocumentRow extends ConsumerWidget {
           ),
         ],
       ),
+      onTap: () => _open(context, ref),
     );
+  }
+
+  Future<void> _open(BuildContext context, WidgetRef ref) async {
+    final file = await ref.read(documentRepositoryProvider).fileFor(document);
+    final result = await OpenFilex.open(file.path);
+    if (!context.mounted || result.type == ResultType.done) return;
+    final message = switch (result.type) {
+      ResultType.noAppToOpen => 'No app on this device can open that file type.',
+      ResultType.fileNotFound => "That file couldn't be found.",
+      ResultType.permissionDenied => 'Permission denied opening that file.',
+      _ => "Couldn't open that file.",
+    };
+    LToast.show(context, message);
   }
 
   Future<void> _rename(BuildContext context, WidgetRef ref) async {
