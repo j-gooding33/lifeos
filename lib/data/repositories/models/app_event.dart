@@ -1,8 +1,8 @@
 import 'package:life_os/core/scheduling/civil_date.dart';
 
-/// §14. A calendar item, local or (read-only, deferred to a future session
-/// — see DECISIONS.md) imported from a device calendar via `source =
-/// 'device'`. `startDate`/`endDate` mirror `startAt`/`endAt` for every
+/// §14. A calendar item, local or read-only imported from a device
+/// calendar via `source = 'device'` (§14.4 — see DECISIONS.md).
+/// `startDate`/`endDate` mirror `startAt`/`endAt` for every
 /// event, all-day or not, so every calendar view can range-query on the
 /// civil date alone rather than branching on `allDay` (§14.5: one range
 /// query per period). Recurring events (the table's `recurrenceRule`
@@ -21,6 +21,7 @@ class AppEvent {
     this.colour,
     this.source = 'local',
     this.externalId,
+    this.externalCalendarId,
     DateTime? createdAt,
   }) : startDate = CivilDate.fromDateTime(startAt),
        endDate = endAt == null ? null : CivilDate.fromDateTime(endAt),
@@ -39,6 +40,7 @@ class AppEvent {
   final String? colour;
   final String source;
   final String? externalId;
+  final String? externalCalendarId;
   final DateTime createdAt;
 
   bool get isFromDevice => source == 'device';
@@ -65,6 +67,7 @@ class AppEvent {
       colour: colour ?? this.colour,
       source: source,
       externalId: externalId,
+      externalCalendarId: externalCalendarId,
       createdAt: createdAt,
     );
   }

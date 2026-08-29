@@ -7,8 +7,10 @@ import 'package:life_os/data/local/database.dart' as db;
 import 'package:life_os/data/repositories/models/app_event.dart';
 import 'package:uuid/uuid.dart';
 
-/// §14. Local events only — device-calendar read-only import is deferred
-/// (see DECISIONS.md), so every row here has `source == 'local'`.
+/// §14. `createEvent`/`updateEvent`/`deleteEvent` are for the user's own
+/// (`source == 'local'`) events; `replaceDeviceEvents`/`clearDeviceEvents`
+/// are DeviceCalendarService's own write path for the read-only imported
+/// mirror (`source == 'device'`, §14.4) — see DECISIONS.md.
 class EventRepository {
   EventRepository(this._dao);
 
@@ -75,6 +77,35 @@ class EventRepository {
     }
   }
 
+  /// §14.4. Cheap enough at personal-app scale to always replace a
+  /// calendar's whole imported set rather than diff against what's
+  /// already there — same call as passing an empty [events] list to clear
+  /// a calendar that's been turned off.
+  Future<Result<void, Failure>> replaceDeviceEvents(
+    String userId,
+    String externalCalendarId,
+    List<AppEvent> events,
+  ) async {
+    try {
+      await _dao.deleteDeviceEventsForCalendar(userId, externalCalendarId);
+      for (final event in events) {
+        await _save(event);
+      }
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('replaceDeviceEvents failed: $e'));
+    }
+  }
+
+  Future<Result<void, Failure>> clearDeviceEvents(String userId) async {
+    try {
+      await _dao.deleteAllDeviceEvents(userId);
+      return const Ok(null);
+    } on Object catch (e) {
+      return Err(DatabaseFailure('clearDeviceEvents failed: $e'));
+    }
+  }
+
   Future<void> _save(AppEvent event) {
     final now = DateTime.now().millisecondsSinceEpoch;
     return _dao.upsert(
@@ -92,6 +123,7 @@ class EventRepository {
         colour: Value(event.colour),
         source: Value(event.source),
         externalId: Value(event.externalId),
+        externalCalendarId: Value(event.externalCalendarId),
         createdAt: Value(event.createdAt.millisecondsSinceEpoch),
         updatedAt: Value(now),
       ),
@@ -118,6 +150,7 @@ class EventRepository {
       colour: row.colour,
       source: row.source,
       externalId: row.externalId,
+      externalCalendarId: row.externalCalendarId,
       createdAt: row.createdAt == null
           ? DateTime.now()
           : DateTime.fromMillisecondsSinceEpoch(row.createdAt!),

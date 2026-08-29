@@ -35,4 +35,16 @@ class EventDao extends DatabaseAccessor<AppDatabase> with _$EventDaoMixin {
       (update(events)..where((e) => e.id.equals(id))).write(
         EventsCompanion(deletedAt: Value(now)),
       );
+
+  /// §14.4. Device-imported rows are a read-only mirror, not user data —
+  /// hard-deleted outright rather than soft-deleted, since there's nothing
+  /// to recover: re-enabling the calendar just re-imports them.
+  Future<void> deleteDeviceEventsForCalendar(String userId, String externalCalendarId) =>
+      (delete(events)..where(
+            (e) => e.userId.equals(userId) & e.source.equals('device') & e.externalCalendarId.equals(externalCalendarId),
+          ))
+          .go();
+
+  Future<void> deleteAllDeviceEvents(String userId) =>
+      (delete(events)..where((e) => e.userId.equals(userId) & e.source.equals('device'))).go();
 }
