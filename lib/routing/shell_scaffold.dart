@@ -28,6 +28,7 @@ class ShellScaffold extends StatefulWidget {
 
 class _ShellScaffoldState extends State<ShellScaffold> {
   bool _barVisible = true;
+  GoRouter? _router;
 
   // Split either side of the centre Add item rather than indexed into one
   // flat list — Add gets its own equal-width slot in the row (see
@@ -54,6 +55,34 @@ class _ShellScaffoldState extends State<ShellScaffold> {
       setState(() => _barVisible = true);
     }
     return false;
+  }
+
+  // A scroll-hide on one screen must not stay hidden after navigating
+  // somewhere else — found live-testing: scroll down a form, submit it,
+  // land on a short screen with nothing to scroll, and the bar was gone
+  // with no way to bring it back short of finding something to scroll up
+  // on. `routerDelegate` (a `Listenable`) fires on every push/pop/goBranch,
+  // so this resets visibility on any navigation at all, not just the
+  // specific cases this bug happened to be found through.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final router = GoRouter.of(context);
+    if (!identical(router, _router)) {
+      _router?.routerDelegate.removeListener(_showBar);
+      _router = router;
+      router.routerDelegate.addListener(_showBar);
+    }
+  }
+
+  void _showBar() {
+    if (!_barVisible) setState(() => _barVisible = true);
+  }
+
+  @override
+  void dispose() {
+    _router?.routerDelegate.removeListener(_showBar);
+    super.dispose();
   }
 
   @override

@@ -4,6 +4,12 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §3.1 — The bottom bar could get permanently stuck hidden (2026-08-29)
+
+**Bug:** found live-testing, unrelated to what was being tested at the time — scroll down any screen far enough to hide the bar (§3.1's own scroll-to-hide), then navigate away by any means *other than* scrolling back up first (submit a form, tap back, switch tabs), and the bar stayed hidden. `ShellScaffold` is the persistent outer shell wrapping every tab's `Navigator`, so its `_barVisible` flag survives untouched across pushes, pops and tab switches — nothing ever told it "you're somewhere new now, and there's no guarantee the user can even scroll here to bring it back." A short screen with nothing to scroll left the entire bottom navigation bar permanently inaccessible.
+**Fix:** `_ShellScaffoldState` now listens to `GoRouter.of(context).routerDelegate` (a `Listenable` that fires on every push/pop/`goBranch`) and resets `_barVisible = true` on each one — not just the specific "submit a form" sequence this was found through. Scrolling down still hides it; any navigation at all brings it back, the same way as a fresh screen open always would.
+**Verified by reproducing the exact original sequence, not just re-reading the fix:** filled in a new-goal form, scrolled it down (hiding the bar), submitted, and confirmed the bar was visible on the resulting screen — then separately confirmed a plain tab switch does the same.
+
 ## §17.3 — Opening a Document in-app (2026-08-29)
 
 **Decision:** added `open_filex` — tapping a document row calls `OpenFilex.open(file.path)`, which hands the file to whatever app the OS resolves for its type via an `ACTION_VIEW` intent. `ResultType.noAppToOpen`/`fileNotFound`/`permissionDenied` each get their own honest toast rather than a generic "something went wrong."
