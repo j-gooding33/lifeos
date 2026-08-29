@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/core/config/flavor.dart';
+import 'package:life_os/core/home_widget/home_widget_providers.dart';
 import 'package:life_os/core/notifications/notification_providers.dart';
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/design/theme/scaled_layout.dart';
@@ -27,7 +28,7 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> with WidgetsBindingObserv
   // Lazy also means a first-run user who hasn't onboarded yet never
   // constructs it at all until hasOnboarded flips true below.
   late final GoRouter _router = buildRouter();
-  var _notificationsKickedOff = false;
+  var _resumeTasksKickedOff = false;
 
   @override
   void initState() {
@@ -46,10 +47,16 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> with WidgetsBindingObserv
   // those four with an obvious, general hook available here; the others
   // would need every write path across every feature to know about
   // notifications, which is a lot of surface for what's still a v1 of
-  // this feature — see DECISIONS.md.
+  // this feature — see DECISIONS.md. The §22.4 home widget's data bridge
+  // shares the same hook, for the same reason.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _rescheduleNotifications();
+    if (state == AppLifecycleState.resumed) _onResume();
+  }
+
+  Future<void> _onResume() async {
+    final userId = await ref.read(currentUserIdProvider.future);
+    await Future.wait([_rescheduleNotifications(userId), ref.read(homeWidgetServiceProvider).refresh(userId)]);
   }
 
   // `setNotificationTapHandler` is cheap and safe regardless of whether
@@ -59,9 +66,8 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> with WidgetsBindingObserv
   // permission prompt — see NotificationScheduler for why that ordering
   // matters (found live-testing: the prompt was firing on first app open,
   // before the user had ever touched Settings → Notifications).
-  Future<void> _rescheduleNotifications() async {
+  Future<void> _rescheduleNotifications(String userId) async {
     final scheduler = ref.read(notificationSchedulerProvider)..notificationTapHandler = _handleNotificationTap;
-    final userId = await ref.read(currentUserIdProvider.future);
     await scheduler.rescheduleAll(userId);
   }
 
@@ -111,9 +117,9 @@ class _LifeOsAppState extends ConsumerState<LifeOsApp> with WidgetsBindingObserv
     // not come for a while on a fresh install. Guarded to fire once per
     // app launch, not on every rebuild this widget happens to go through
     // (a theme change, for instance).
-    if (!_notificationsKickedOff) {
-      _notificationsKickedOff = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _rescheduleNotifications());
+    if (!_resumeTasksKickedOff) {
+      _resumeTasksKickedOff = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _onResume());
     }
 
     return MaterialApp.router(
