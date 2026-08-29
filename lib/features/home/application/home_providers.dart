@@ -197,9 +197,18 @@ StatsRepository homeStatsRepository(Ref ref) {
 
 @riverpod
 Stream<List<AppDashboardCard>> dashboardCards(Ref ref) async* {
+  // Onboarding finishing is exactly this provider's first-ever build, and
+  // it lands right as the widget tree swaps from the onboarding
+  // `MaterialApp` to the real router — the watcher below can be disposed
+  // mid-await when that happens. Capturing the (keepAlive, sync)
+  // repository once up front and checking `ref.mounted` after each
+  // subsequent await avoids calling `ref.watch` on a dead `Ref`.
+  final repository = ref.watch(dashboardCardRepositoryProvider);
   final userId = await ref.watch(currentUserIdProvider.future);
-  await ref.watch(dashboardCardRepositoryProvider).ensureDefaults(userId);
-  yield* ref.watch(dashboardCardRepositoryProvider).watchAll(userId);
+  if (!ref.mounted) return;
+  await repository.ensureDefaults(userId);
+  if (!ref.mounted) return;
+  yield* repository.watchAll(userId);
 }
 
 // The stream wrappers below exist so §5.5's "recompute on ... any write" is
