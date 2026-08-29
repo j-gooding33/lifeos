@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:life_os/core/preferences/preference_toggle.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
 import 'package:life_os/data/repositories/models/insight.dart';
 import 'package:life_os/data/repositories/models/period_stats.dart';
@@ -11,7 +12,6 @@ import 'package:life_os/design/components/l_segmented.dart';
 import 'package:life_os/design/components/l_stat.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
-import 'package:life_os/features/settings/application/preference_toggle.dart';
 import 'package:life_os/features/stats/application/stats_providers.dart';
 import 'package:life_os/routing/routes.dart';
 

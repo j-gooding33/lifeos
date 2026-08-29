@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:life_os/core/notifications/notification_providers.dart';
+import 'package:life_os/core/preferences/preference_toggle.dart';
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/design/components/l_card.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
-import 'package:life_os/features/settings/application/preference_toggle.dart';
 
 const _categories = {
   'notif.taskReminders': 'Task reminders',

@@ -401,7 +401,7 @@ final class HomeAllTasksDueTodayProvider
 }
 
 String _$homeAllTasksDueTodayHash() =>
-    r'205d09188ec0b1aca9d1185dcc8c592f5cd1a76e';
+    r'3eba390429f589b161400070dcb8c952e74acd7c';
 
 @ProviderFor(homeTodayTasks)
 const homeTodayTasksProvider = HomeTodayTasksProvider._();
@@ -440,7 +440,7 @@ final class HomeTodayTasksProvider
   }
 }
 
-String _$homeTodayTasksHash() => r'786e68ec2192bc6b1cd9b0e786b013e14f0cc375';
+String _$homeTodayTasksHash() => r'acdffb138470f78a081b9c09811c77857da486fd';
 
 @ProviderFor(homeUpcomingTasks)
 const homeUpcomingTasksProvider = HomeUpcomingTasksProvider._();
@@ -479,7 +479,7 @@ final class HomeUpcomingTasksProvider
   }
 }
 
-String _$homeUpcomingTasksHash() => r'a53ea9d9c131cd58cf3d5c29816e078da935f433';
+String _$homeUpcomingTasksHash() => r'a2813cd80c8d7201ea67c94dffc01d6a8cb8351f';
 
 @ProviderFor(homeRecentTasks)
 const homeRecentTasksProvider = HomeRecentTasksProvider._();
@@ -518,7 +518,7 @@ final class HomeRecentTasksProvider
   }
 }
 
-String _$homeRecentTasksHash() => r'18fc601a5fded97af9b05a20bda7dea4ecf5e5fc';
+String _$homeRecentTasksHash() => r'dfaa8f167f15f66cfab67f1d65dcca53e96801cd';
 
 @ProviderFor(homeTodaysOccurrences)
 const homeTodaysOccurrencesProvider = HomeTodaysOccurrencesProvider._();
@@ -560,7 +560,7 @@ final class HomeTodaysOccurrencesProvider
 }
 
 String _$homeTodaysOccurrencesHash() =>
-    r'e1d7d2d557cb5d500799474a0fd0eba220935248';
+    r'dadd650c8d65dc90c2144f3f249ab25e13a05538';
 
 @ProviderFor(homeActivePlans)
 const homeActivePlansProvider = HomeActivePlansProvider._();
@@ -599,7 +599,7 @@ final class HomeActivePlansProvider
   }
 }
 
-String _$homeActivePlansHash() => r'7694c23e0a43562f78ed1ffafdbd71a9d6cb1db1';
+String _$homeActivePlansHash() => r'84a1581667a0140bb4d954f21b789a679653d70a';
 
 @ProviderFor(homeHabitPlans)
 const homeHabitPlansProvider = HomeHabitPlansProvider._();
@@ -638,7 +638,7 @@ final class HomeHabitPlansProvider
   }
 }
 
-String _$homeHabitPlansHash() => r'6e6bcb3640715ab9012956878d43eaa31d479d8d';
+String _$homeHabitPlansHash() => r'b6ccae5cf048a339ee1658ccca7320732df502ec';
 
 @ProviderFor(homeHabitOccurrenceOn)
 const homeHabitOccurrenceOnProvider = HomeHabitOccurrenceOnFamily._();
@@ -754,4 +754,4 @@ final class HomeSnapshotProvider
   }
 }
 
-String _$homeSnapshotHash() => r'd57a6580509b7483db03beb474c19bd2186da865';
+String _$homeSnapshotHash() => r'e1ddb7fef25a56aa5798d77779e029014b4dec57';
