@@ -87,7 +87,15 @@ class _RhythmEditorState extends State<RhythmEditor> {
     _customMonth = widget.anchor.month;
     _customYearDay = widget.anchor.day;
     if (widget.initialRule != null) _seedFrom(widget.initialRule!);
-    _notify();
+    // `onRuleChanged` is `HabitCreateScreen`'s own inline `setState` —
+    // calling it synchronously here, during this widget's first build,
+    // would be a parent setState while the parent is still building
+    // ("setState() or markNeedsBuild() called during build"). The
+    // preview and any caller relying on the initial rule need this call,
+    // but it can wait one frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _notify();
+    });
   }
 
   void _seedFrom(RecurrenceRule rule) {
