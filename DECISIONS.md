@@ -4,12 +4,20 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §21.1 — Your Year's "Share your year" PNG export (2026-08-29)
+
+**Decision:** added `share_plus` — the grid's `RepaintBoundary` (see `YearGrid.exportKey`) is captured via `toImage(pixelRatio: 3)`, written to a PNG in the temp directory (`path_provider`, already a dependency), and handed to `SharePlus.instance.share(ShareParams(files: [...], text: 'My $_year in Life OS'))`. Verified for real: the OS share sheet's own thumbnail preview showed the actual captured grid, not a placeholder.
+**Why `share_plus` over the caution `file_picker` earlier this session might suggest:** that caution was specific to `file_picker` 11.0.3's Kotlin Gradle Plugin conflict, not a blanket "avoid new native dependencies" rule — `share_plus` is one of the most widely-used, actively-maintained Flutter plugins, and a real build (`flutter run` against the emulator, not just `flutter analyze`) was tried before writing any more code, exactly to catch a repeat of that problem early rather than discover it after investing in the feature. It built clean on the first try.
+**No `FileProvider` manifest entry needed:** `share_plus`'s own Android implementation ships and merges its own `FileProvider` declaration; nothing was added to `AndroidManifest.xml` for this to work.
+**Exporting the full grid needed a widget change, not just a screen-level one:** `YearGrid` sits inside a horizontally-scrolling `SingleChildScrollView`, which clips its child to the viewport — a `RepaintBoundary` wrapped around the *outside* of `YearGrid` would only ever capture whatever week happened to be scrolled into view. `exportKey` instead sits on a `RepaintBoundary` *inside* the scroll view, wrapping the full-width `CustomPaint` before it's clipped, so `toImage()` captures the entire year regardless of scroll position.
+**The image has an opaque background now, not transparent:** `YearGrid` didn't need one before (it always sat on the screen's own background), but an exported PNG opened outside the app has no such background to show through — a `ColoredBox` using the same `neutrals.bg` token was added around the `CustomPaint` specifically for this.
+**Caption is share text, not baked into the image:** keeps the PNG itself just the grid — recipients who only care about the picture aren't stuck with a permanent caption in it.
+
 ## §21.1 — Your Year's "Compare to last year" (2026-08-29)
 
 **Decision:** `YearGrid` gained an optional `lastYearScores` map; when set, `_YearGridPainter` sums each column's 7 days into a weekly total, normalises against that year's own tallest week, and strokes a thin connected line across the grid at those heights — "a thin line of last year's weekly totals," per spec. `YourYearScreen` fetches it lazily (only queries `dailyActivityScoresProvider` for last year when the toggle is actually on) via a plain `LListTile` + `Switch` below the legend.
 **Aligned by column index, not calendar date:** column *i* plots last year's week *i* (from last year's own `startOfWeek()`), not "the same 7 calendar dates shifted by a year" — years rarely have the same weekday-alignment or week count (52 vs 53), so date-for-date alignment would silently misalign by a day or more some years and not others. Week-index alignment is what actually reads as "the same point in the grid" to someone glancing at both lines.
 **Verified with synthetic data, not just live-tested:** the real dev database has no prior-year data at all (this session's test installs only ever contain 2026 dates), so toggling it on-device proves only "doesn't crash," not "draws correctly." Rendered `YearGrid` with fabricated multi-month `lastYearScores` via a scratch golden capture (not committed) and confirmed the line actually traces across the full width before considering this done.
-**Not built:** "Share your year" PNG export — capturing the grid as an image needs no new dependency (`RenderRepaintBoundary.toImage`), but actually sharing it to another app does (`share_plus`), and this pass didn't add one.
 
 ## §5.3, §5.4 — Home dashboard customisation (2026-08-29)
 
