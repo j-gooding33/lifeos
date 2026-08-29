@@ -4,6 +4,34 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §5.3, §5.4 — Home dashboard customisation (2026-08-29)
+
+Closes a gap this session's own Settings pass flagged: "only 3 hardcoded Home cards exist — `DashboardCards` the table is ready, but there's no card catalogue to add from." Now there is.
+
+### 9 of the catalogue's 15 card types, `focus` handled separately
+**Decision:** `plansToday`, `habits`, `upcoming`, `goals`, `projects`, `recent`, `dailyStats`, `journalPrompt`, `spending` are real, backed by a `DashboardCard` row each. `focus` isn't a row at all — §5.3 says it's "always first, cannot be hidden or moved," so `HomeScreen` renders it unconditionally rather than modelling a card type that can never actually be toggled.
+**Deferred:** `reading`, `filmNext`, `study`, `activity` and `aiSuggestions`. The first three need data this pass didn't wire up for Home specifically (though the underlying data exists elsewhere); `aiSuggestions` is permanently blocked the same way everything AI-shaped is — no backend. The customise screen's "live preview at the top" (§5.4) isn't built either — a second live-rendering of the same cards inside their own settings screen was a meaningfully bigger surface than the reorder/visibility/size mechanic itself.
+**Default visible set matches §5.3 exactly:** `plansToday`, `habits`, `upcoming`, `goals` — not `recent`, which the *previous*, pre-catalogue Home hardcoded as always-on. Existing users will see Recent disappear until they turn it back on in Settings → Home dashboard; this is the spec's own default, not a regression.
+
+### Every catalog type gets a row immediately, most of them hidden
+**Decision:** `DashboardCardRepository.ensureDefaults` materialises all 9 rows the first time a user's dashboard loads — the 4 default-visible ones `visible: true`, the rest `visible: false` — rather than only creating rows for cards currently shown and inventing an "add a card" flow to create more later.
+**Why:** the customise screen (§5.4) needs every type to be there to toggle on, and a toggle-only model (no separate add/remove) is simpler than tracking "which types have never been added yet" as a second piece of state alongside visibility.
+
+### A real clobbering bug, caught by a test before it shipped
+**Bug:** `setVisible`/`setSize` originally took a full `AppDashboardCard` snapshot and re-upserted the *entire row* from it (`card.copyWith(visible: ...)` then a full save). Calling both in a row on the same stale snapshot — exactly what the customise screen's size-cycle-then-toggle interaction can do — let the second call's stale `visible`/`size` field silently overwrite the first call's change, since `_save` writes every column regardless of what actually changed.
+**Fix:** both now do a targeted `UPDATE ... SET visible = ?` / `SET size = ?` via a new `DashboardCardDao.patch`, touching only the column being changed. `reorder` still does a full-row save since it's given a fresh, just-fetched list each time, not a held-onto stale reference.
+**Caught by:** a repository test that calls `setVisible` then `setSize` on the same in-memory card object without re-fetching in between — the exact shape of the real bug, not a contrived edge case.
+
+### Home's task data went through a reactivity regression mid-build, fixed before shipping
+**Bug:** the rewrite initially fetched Tasks/Plans/Occurrences/Habits via one-shot `firstValue()` reads (the same pattern `StatsRepository` uses), exactly like Goals/Projects/Journal/Finance still do. Live-testing caught it immediately: tapping a habit ring on Home did nothing visible — the underlying write succeeded, but `homeSnapshotProvider` had already resolved once and had no live dependency on anything that would tell it to recompute. This was a regression, not just a missed feature — the *previous* Home (Tasks-only) was properly reactive via `ref.watch(someStreamProvider.future)`, and the rewrite had accidentally dropped that for every data source, tasks included.
+**Fix:** `homeAllTasksDueToday`, `homeTodayTasks`, `homeUpcomingTasks`, `homeRecentTasks`, `homeTodaysOccurrences`, `homeActivePlans`, `homeHabitPlans` and `homeHabitOccurrenceOn` are thin `@riverpod Stream<T>` wrappers around repository calls, each watched via `.future` inside `homeSnapshot` — restoring a live Riverpod dependency on the underlying Drift stream, exactly like the pre-existing Tasks code already did, so completing anything anywhere rebuilds Home automatically (§5.5's "recompute on ... any write").
+**Deliberately NOT given the same treatment:** Goals, Projects, per-project task counts, the journal-written check, the activity-score streak, and Finance's month-to-date figures — these stay one-shot, refreshing whenever Home next rebuilds rather than the instant something changes. All five are "glance and move on" cards nobody sits watching update in real time, unlike a habit ring or a task checkbox someone just tapped. This exact split — reactive for what's tapped inline, one-shot for what's just displayed — is the precedent to follow for any future card, not "always reactive" or "always one-shot."
+**How to apply:** any new Home card wired to something the user can toggle *from Home itself* needs the stream-wrapper treatment. A card that only displays a number computed elsewhere doesn't.
+
+### `home_providers.dart` no longer imports `task_providers.dart`
+**Decision:** repositories (Task/Plan/Goal/Project/Finance/Stats) are constructed straight from DAOs, the same as `stats_providers.dart` already does — replacing the pre-existing (M5-era) import of Tasks' own provider file.
+**Why:** that import predated this session's now-consistent "features don't import features" practice (CLAUDE.md rule 4) and was never revisited. Since Home now needs five more domains' data anyway, this was the moment to fix the one that already existed rather than compound it with four more of the same mistake.
+
 ## §17.3 — Documents, plus two bottom-bar/dialog fixes (2026-08-29)
 
 ### The bottom bar's centre "+" is a plain tab, not a floating FAB
