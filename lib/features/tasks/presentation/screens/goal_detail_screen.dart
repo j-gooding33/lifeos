@@ -139,19 +139,31 @@ class _GoalDetailBody extends ConsumerWidget {
     final colors = context.colors;
     final colour = resolveGoalColour(context, goal.colour);
     final today = CivilDate.fromDateTime(DateTime.now());
-    final projection = computeGoalProjection(goal, today: today);
+
+    // §12.4's own comment: "a milestone goal's progress is 'milestones
+    // completed / total.'" Rather than teaching computeGoalProjection a
+    // second progress metric, project a stand-in AppGoal whose
+    // current/targetValue *are* that ratio — every rate/deadline
+    // calculation in there is equally valid counting milestones as it is
+    // counting any other unit.
+    final effectiveGoal = goal.type == GoalType.milestone ? _withMilestoneProgress(ref, goal) : goal;
+    final projection = computeGoalProjection(effectiveGoal, today: today);
 
     return ListView(
       padding: const EdgeInsets.all(LifeSpace.s20),
       children: [
         Center(
           child: LProgressRing(
-            value: goal.progress ?? (goal.isReached ? 1 : 0),
+            value: effectiveGoal.progress ?? (effectiveGoal.isReached ? 1 : 0),
             size: 120,
             strokeWidth: 10,
             semanticLabel: 'Progress',
             child: Text(
-              goal.targetValue == null ? _formatNum(goal.currentValue) : '${_formatNum(goal.currentValue)} / ${_formatNum(goal.targetValue!)}',
+              effectiveGoal.targetValue == null
+                  ? _formatNum(effectiveGoal.currentValue)
+                  : goal.type == GoalType.milestone
+                  ? '${_formatNum(effectiveGoal.currentValue)} / ${_formatNum(effectiveGoal.targetValue!)} milestones'
+                  : '${_formatNum(effectiveGoal.currentValue)} / ${_formatNum(effectiveGoal.targetValue!)}',
               style: context.textStyles.title3.copyWith(color: colour.base),
               textAlign: TextAlign.center,
             ),
@@ -169,8 +181,14 @@ class _GoalDetailBody extends ConsumerWidget {
           const SizedBox(height: LifeSpace.s12),
           Text(goal.description!, style: context.textStyles.body.copyWith(color: colors.neutrals.ink2)),
         ],
-        const SizedBox(height: LifeSpace.cardGap),
-        LButton(label: 'Log progress', variant: LButtonVariant.tonal, onPressed: () => _logProgress(context, ref)),
+        // Milestone goals track progress by checking off a milestone
+        // below, not by logging a numeric amount against currentValue —
+        // showing this action would write a number the ring above never
+        // reads.
+        if (goal.type != GoalType.milestone) ...[
+          const SizedBox(height: LifeSpace.cardGap),
+          LButton(label: 'Log progress', variant: LButtonVariant.tonal, onPressed: () => _logProgress(context, ref)),
+        ],
         const SizedBox(height: LifeSpace.cardGap),
         const LSectionHeader(title: 'Linked plans'),
         const SizedBox(height: LifeSpace.s8),
@@ -234,6 +252,16 @@ class _GoalDetailBody extends ConsumerWidget {
   }
 
   String _formatNum(double value) => value == value.roundToDouble() ? value.toInt().toString() : value.toStringAsFixed(1);
+
+  /// Milestones haven't loaded yet, or there are none — falls back to the
+  /// goal's own (always-null-target) values, which renders as a plain
+  /// running total with no progress ring, same as before this existed.
+  AppGoal _withMilestoneProgress(WidgetRef ref, AppGoal goal) {
+    final milestones = ref.watch(goalMilestonesProvider(goal.id)).value;
+    if (milestones == null || milestones.isEmpty) return goal;
+    final completed = milestones.where((m) => m.isCompleted).length;
+    return goal.copyWith(currentValue: completed.toDouble(), targetValue: milestones.length.toDouble());
+  }
 }
 
 class _PlanRow extends StatelessWidget {
