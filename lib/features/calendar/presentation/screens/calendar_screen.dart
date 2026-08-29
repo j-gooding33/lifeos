@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:life_os/core/calendar/device_calendar_providers.dart';
+import 'package:life_os/core/preferences/preference_toggle.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/design/components/l_card.dart';
 import 'package:life_os/design/components/l_day_rail.dart';
 import 'package:life_os/design/components/l_empty_state.dart';
 import 'package:life_os/design/components/l_segmented.dart';
@@ -14,6 +17,9 @@ import 'package:life_os/features/plans/presentation/plan_colour.dart';
 import 'package:life_os/features/plans/presentation/widgets/occurrence_sheet.dart';
 import 'package:life_os/features/tasks/application/task_providers.dart';
 import 'package:life_os/routing/routes.dart';
+
+const _deviceCalendarMasterKey = 'calendar.device.master';
+const _deviceCalendarBannerDismissedKey = 'calendar.device.bannerDismissed';
 
 enum _CalendarView { day, month }
 
@@ -135,6 +141,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
       body: Column(
         children: [
+          const _DeviceCalendarBanner(),
           Padding(
             padding: const EdgeInsets.all(LifeSpace.s16),
             child: LSegmented<_CalendarView>(
@@ -160,6 +167,53 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// §14.4's exact copy-deck row (§30: "Calendar permission denied"). Shown
+/// whenever device calendar isn't fully on (master off, or permission
+/// missing/revoked) and the user hasn't dismissed it — dismissal is
+/// persisted, not just per-session, since re-nagging every time this
+/// screen opens would defeat the point of "dismissible."
+class _DeviceCalendarBanner extends ConsumerWidget {
+  const _DeviceCalendarBanner();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dismissed = ref.watch(boolPreferenceProvider(_deviceCalendarBannerDismissedKey)).value ?? false;
+    if (dismissed) return const SizedBox.shrink();
+
+    final masterEnabled = ref.watch(boolPreferenceProvider(_deviceCalendarMasterKey)).value ?? false;
+    final permissionGranted = ref.watch(deviceCalendarPermissionGrantedProvider).value ?? false;
+    if (masterEnabled && permissionGranted) return const SizedBox.shrink();
+
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(LifeSpace.s16, LifeSpace.s16, LifeSpace.s16, 0),
+      child: LCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.calendar_month_outlined, size: 18, color: colors.neutrals.ink2),
+            const SizedBox(width: LifeSpace.s8),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => context.push(Routes.settingsCalendar),
+                child: Text(
+                  "Calendar access isn't enabled. Life OS still works — turn it on in Settings whenever you like.",
+                  style: context.textStyles.callout.copyWith(color: colors.neutrals.ink2),
+                ),
+              ),
+            ),
+            const SizedBox(width: LifeSpace.s8),
+            InkWell(
+              onTap: () => setBoolPreference(ref, _deviceCalendarBannerDismissedKey, value: true),
+              child: Icon(Icons.close, size: 18, color: colors.neutrals.ink3),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -223,7 +277,12 @@ class _CalendarData extends ConsumerWidget {
           title: event.title,
           date: event.startDate,
           timeOfDay: event.allDay ? null : _timeOfDayFrom(event.startAt),
-          color: event.colour == null
+          // §14.4: imported events render in grey regardless of any
+          // colour tag, so they read as visually distinct from — and not
+          // editable the same way as — the user's own events.
+          color: event.isFromDevice
+              ? colors.neutrals.ink3
+              : event.colour == null
               ? colors.domain('events').base
               : resolvePlanColour(context, event.colour).base,
           onTap: () =>

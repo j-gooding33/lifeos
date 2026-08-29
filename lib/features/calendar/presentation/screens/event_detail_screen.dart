@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/data/repositories/models/app_event.dart';
 import 'package:life_os/design/components/l_button.dart';
+import 'package:life_os/design/components/l_card.dart';
 import 'package:life_os/design/components/l_confirm_dialog.dart';
 import 'package:life_os/design/components/l_date_picker.dart';
 import 'package:life_os/design/components/l_error_state.dart';
@@ -140,6 +141,7 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           _allDay = event.allDay;
           _loaded = true;
         }
+        if (event.isFromDevice) return _DeviceEventView(event: event);
         return _buildForm(context, event: event);
       },
     );
@@ -237,6 +239,72 @@ class _EventDetailScreenState extends ConsumerState<EventDetailScreen> {
           LTextField(controller: _notesController, placeholder: 'Notes'),
           const SizedBox(height: LifeSpace.s24),
           LButton(label: _isNew ? 'Create' : 'Save', onPressed: _save),
+        ],
+      ),
+    );
+  }
+}
+
+/// §14.4: imported events are "rendered in grey, and are not editable in
+/// Life OS" — no title field, no delete button, since either would imply
+/// a change that the next device-calendar sync would just silently undo.
+class _DeviceEventView extends StatelessWidget {
+  const _DeviceEventView({required this.event});
+
+  final AppEvent event;
+
+  String _time(DateTime dt) => '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final labelStyle = context.textStyles.caption.copyWith(color: colors.neutrals.ink2);
+    final valueStyle = context.textStyles.body.copyWith(color: colors.neutrals.ink);
+    return Scaffold(
+      backgroundColor: colors.neutrals.bg,
+      appBar: AppBar(title: const Text('Event')),
+      body: ListView(
+        padding: const EdgeInsets.all(LifeSpace.s20),
+        children: [
+          LCard(
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 18, color: colors.neutrals.ink2),
+                const SizedBox(width: LifeSpace.s8),
+                Expanded(
+                  child: Text(
+                    'Imported from your device calendar. Edit it there — changes made here would be overwritten on the next sync.',
+                    style: context.textStyles.callout.copyWith(color: colors.neutrals.ink2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: LifeSpace.s16),
+          Text(event.title, style: context.textStyles.title3.copyWith(color: colors.neutrals.ink)),
+          const SizedBox(height: LifeSpace.s20),
+          Text('When', style: labelStyle),
+          const SizedBox(height: LifeSpace.s4),
+          Text(
+            event.allDay
+                ? 'All day, ${event.startDate.toIso()}'
+                : event.endAt == null
+                ? '${event.startDate.toIso()} at ${_time(event.startAt)}'
+                : '${event.startDate.toIso()} ${_time(event.startAt)} – ${_time(event.endAt!)}',
+            style: valueStyle,
+          ),
+          if (event.location != null) ...[
+            const SizedBox(height: LifeSpace.s16),
+            Text('Location', style: labelStyle),
+            const SizedBox(height: LifeSpace.s4),
+            Text(event.location!, style: valueStyle),
+          ],
+          if (event.notes != null) ...[
+            const SizedBox(height: LifeSpace.s16),
+            Text('Notes', style: labelStyle),
+            const SizedBox(height: LifeSpace.s4),
+            Text(event.notes!, style: valueStyle),
+          ],
         ],
       ),
     );

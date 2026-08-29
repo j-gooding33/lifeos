@@ -57,6 +57,7 @@ import 'package:life_os/features/search/presentation/screens/universal_search_sc
 import 'package:life_os/features/settings/presentation/screens/about_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/ai_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/appearance_screen.dart';
+import 'package:life_os/features/settings/presentation/screens/calendar_settings_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/data_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/integrations_screen.dart';
 import 'package:life_os/features/settings/presentation/screens/notification_settings_screen.dart';
@@ -440,7 +441,10 @@ GoRouter buildRouter() {
         path: Routes.settingsData,
         builder: (context, state) => const DataScreen(),
       ),
-      _placeholderRoute(Routes.settingsCalendar, 'Calendar settings'),
+      GoRoute(
+        path: Routes.settingsCalendar,
+        builder: (context, state) => const CalendarSettingsScreen(),
+      ),
       GoRoute(
         path: Routes.settingsIntegrations,
         builder: (context, state) => const IntegrationsScreen(),

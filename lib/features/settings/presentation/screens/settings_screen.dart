@@ -41,11 +41,10 @@ const _aboutRows = [
 
 /// The Settings hub (§22.5) — every section from the route table gets a
 /// real, navigable entry here. Built: Profile, Appearance, Home dashboard,
-/// Notifications (preferences only, nothing scheduled yet), AI, Privacy,
-/// Data, Integrations, About. Account, Calendar and Subscription resolve
-/// to the honest "not built yet" state (CLAUDE.md rule 1) — each needs
-/// either a real auth session, a native calendar permission, or IAP, none
-/// of which exist yet; see DECISIONS.md.
+/// Notifications, Calendar (device import, §14.4), AI, Privacy, Data,
+/// Integrations, About. Account and Subscription resolve to the honest
+/// "not built yet" state (CLAUDE.md rule 1) — each needs a real auth
+/// session or IAP, neither of which exist yet; see DECISIONS.md.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
