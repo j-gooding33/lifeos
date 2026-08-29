@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_os/core/notifications/notification_providers.dart';
+import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/design/components/l_card.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_section_header.dart';
@@ -21,14 +23,30 @@ const _categories = {
   'notif.weeklyReview': 'Weekly review',
 };
 
+// These five categories have no generator in NotificationScheduler yet —
+// morning/evening briefings and the weekly review need content this app
+// doesn't compose yet, free-time nudges need a free-time-detection
+// algorithm that doesn't exist, and task deadlines aren't a distinct
+// mechanism from task reminders yet. Saved like every other toggle here,
+// just not acted on — see DECISIONS.md.
+const _unimplementedCategories = {
+  'notif.taskDeadlines',
+  'notif.morningBriefing',
+  'notif.eveningBriefing',
+  'notif.freeTimeNudges',
+  'notif.weeklyReview',
+};
+
 const _masterKey = 'notif.master';
 const _quietStartKey = 'notif.quietStart';
 const _quietEndKey = 'notif.quietEnd';
 
-/// §22.5, §22.3. Preferences UI only — no `flutter_local_notifications`
-/// wiring, so nothing actually fires yet (same "shell now, backend later"
-/// shape as Settings → AI). Every switch here saves a real preference so
-/// nothing needs re-asking once a `NotificationScheduler` exists.
+/// §22.5, §22.3. Task/plan/habit/event/project/goal reminders are real,
+/// scheduled locally (`NotificationScheduler`) — every change here
+/// reschedules immediately rather than waiting for the next app resume,
+/// so a toggle takes effect right away. Morning/evening briefings, the
+/// weekly review and free-time nudges are still preferences-only; see
+/// `_unimplementedCategories` and DECISIONS.md.
 class NotificationSettingsScreen extends ConsumerWidget {
   const NotificationSettingsScreen({super.key});
 
@@ -45,8 +63,8 @@ class NotificationSettingsScreen extends ConsumerWidget {
         children: [
           LCard(
             child: Text(
-              "Notifications aren't scheduled yet — this app doesn't have a delivery mechanism wired up. "
-              'These preferences are saved now and take effect as soon as it does.',
+              'Task, plan, habit, event, project and goal reminders are scheduled on this device. '
+              "Briefings, the weekly review and free-time nudges are saved but don't fire yet.",
               style: context.textStyles.callout.copyWith(color: colors.neutrals.ink2),
             ),
           ),
@@ -54,7 +72,13 @@ class NotificationSettingsScreen extends ConsumerWidget {
           LListTile(
             title: 'Notifications',
             subtitle: 'Master switch for everything below.',
-            trailing: Switch(value: master, onChanged: (v) => setBoolPreference(ref, _masterKey, value: v)),
+            trailing: Switch(
+              value: master,
+              onChanged: (v) async {
+                await setBoolPreference(ref, _masterKey, value: v);
+                await _reschedule(ref);
+              },
+            ),
           ),
           const SizedBox(height: LifeSpace.s16),
           const LSectionHeader(title: 'Categories'),
@@ -70,6 +94,12 @@ class NotificationSettingsScreen extends ConsumerWidget {
   }
 }
 
+Future<void> _reschedule(WidgetRef ref) async {
+  final scheduler = ref.read(notificationSchedulerProvider);
+  final userId = await ref.read(currentUserIdProvider.future);
+  await scheduler.rescheduleAll(userId);
+}
+
 class _CategoryToggle extends ConsumerWidget {
   const _CategoryToggle({required this.prefKey, required this.label, required this.enabled});
 
@@ -80,9 +110,19 @@ class _CategoryToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final value = ref.watch(boolPreferenceProvider(prefKey)).value ?? false;
+    final implemented = !_unimplementedCategories.contains(prefKey);
     return LListTile(
       title: label,
-      trailing: Switch(value: enabled && value, onChanged: enabled ? (v) => setBoolPreference(ref, prefKey, value: v) : null),
+      subtitle: implemented ? null : 'Saved, not scheduled yet',
+      trailing: Switch(
+        value: enabled && value,
+        onChanged: enabled
+            ? (v) async {
+                await setBoolPreference(ref, prefKey, value: v);
+                if (implemented) await _reschedule(ref);
+              }
+            : null,
+      ),
     );
   }
 }
@@ -94,9 +134,27 @@ class _QuietHoursRow extends ConsumerWidget {
     final end = ref.watch(stringPreferenceProvider(_quietEndKey)).value;
     return Row(
       children: [
-        Expanded(child: _TimeField(label: 'Starts', value: start, onPick: (v) => setStringPreference(ref, _quietStartKey, v))),
+        Expanded(
+          child: _TimeField(
+            label: 'Starts',
+            value: start,
+            onPick: (v) async {
+              await setStringPreference(ref, _quietStartKey, v);
+              await _reschedule(ref);
+            },
+          ),
+        ),
         const SizedBox(width: LifeSpace.s12),
-        Expanded(child: _TimeField(label: 'Ends', value: end, onPick: (v) => setStringPreference(ref, _quietEndKey, v))),
+        Expanded(
+          child: _TimeField(
+            label: 'Ends',
+            value: end,
+            onPick: (v) async {
+              await setStringPreference(ref, _quietEndKey, v);
+              await _reschedule(ref);
+            },
+          ),
+        ),
       ],
     );
   }
