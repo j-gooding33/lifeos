@@ -50,6 +50,7 @@ class Routes {
   static const libraryCollections = '/library/collections';
   static const libraryCollectionDetail = '/library/collections/:id';
   static const libraryLinks = '/library/links';
+  static const libraryDocuments = '/library/documents';
 
   // M8 additions — not in §3.2's original table (that milestone predates
   // this brief). Same `/library/<type>/...` convention as the routes

@@ -10,9 +10,7 @@ import 'package:life_os/features/library/application/library_providers.dart';
 import 'package:life_os/routing/routes.dart';
 
 /// M8.15: the Library tab's landing page — a unified overview (a live
-/// count per media type) plus a hub linking to each section. Films/TV/
-/// Books/Collections/Notes are real; Links still routes to its existing
-/// placeholder until §17.3 lands.
+/// count per media type) plus a hub linking to each section.
 class LibraryHomeScreen extends ConsumerWidget {
   const LibraryHomeScreen({super.key});
 
@@ -76,6 +74,11 @@ class LibraryHomeScreen extends ConsumerWidget {
             leading: const Icon(Icons.link),
             title: 'Links',
             onTap: () => context.push(Routes.libraryLinks),
+          ),
+          LListTile(
+            leading: const Icon(Icons.insert_drive_file_outlined),
+            title: 'Documents',
+            onTap: () => context.push(Routes.libraryDocuments),
           ),
         ],
       ),

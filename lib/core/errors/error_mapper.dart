@@ -17,5 +17,6 @@ String mapFailureToMessage(Failure failure) {
       "Couldn't reach the internet. Check your connection and try again.",
     TopListFullFailure(:final cap) =>
       'This list already has $cap items — remove one first, or replace it.',
+    DocumentTooLargeFailure(:final message) => message,
   };
 }

@@ -50,12 +50,13 @@ class SearchDao {
 
   /// §18.2's "Rebuild command available in Settings → Data for corruption
   /// recovery" — clears and re-populates the whole index from source
-  /// tables. Uses the same statements the v3 migration's one-time backfill
-  /// does (`searchIndexBackfillStatements`), so the two can't drift apart.
+  /// tables. Uses the same statements the v3/v4 migrations' one-time
+  /// backfills do, so none of the three can drift apart.
   Future<void> rebuild() async {
     await _db.customStatement('DELETE FROM search_index;');
     for (final sql in searchIndexBackfillStatements) {
       await _db.customStatement(sql);
     }
+    await _db.customStatement(documentSearchIndexBackfillStatement);
   }
 }

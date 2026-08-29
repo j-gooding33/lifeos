@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_os/core/utils/byte_format.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
@@ -17,6 +18,7 @@ class DataScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final asyncSize = ref.watch(databaseSizeBytesProvider);
+    final asyncDocsSize = ref.watch(documentStorageBytesProvider);
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
@@ -28,6 +30,14 @@ class DataScreen extends ConsumerWidget {
             title: 'Storage used',
             subtitle: asyncSize.when(
               data: formatBytes,
+              loading: () => 'Calculating…',
+              error: (error, stack) => "Couldn't calculate",
+            ),
+          ),
+          LListTile(
+            title: 'Documents storage',
+            subtitle: asyncDocsSize.when(
+              data: (bytes) => '${formatBytes(bytes)} of 25MB per file',
               loading: () => 'Calculating…',
               error: (error, stack) => "Couldn't calculate",
             ),

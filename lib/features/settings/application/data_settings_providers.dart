@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:life_os/core/providers/app_providers.dart';
+import 'package:life_os/data/local/daos/document_dao.dart';
 import 'package:life_os/data/local/daos/search_dao.dart';
+import 'package:life_os/data/repositories/document_repository.dart';
 import 'package:life_os/data/repositories/search_repository.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -27,8 +29,16 @@ Future<int> databaseSizeBytes(Ref ref) async {
   return file.length();
 }
 
-String formatBytes(int bytes) {
-  if (bytes < 1024) return '$bytes B';
-  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+/// Same "constructed straight from the DAO" reasoning as
+/// `dataSettingsSearchRepository` above — Documents' own quota line in
+/// §22.5's Data screen, per §17.3's "total quota shown in Settings → Data."
+@Riverpod(keepAlive: true)
+DocumentRepository dataSettingsDocumentRepository(Ref ref) {
+  return DocumentRepository(DocumentDao(ref.watch(appDatabaseProvider)));
+}
+
+@riverpod
+Future<int> documentStorageBytes(Ref ref) async {
+  final userId = await ref.watch(currentUserIdProvider.future);
+  return ref.watch(dataSettingsDocumentRepositoryProvider).totalSizeBytes(userId);
 }

@@ -26,6 +26,7 @@ const _typeLabels = {
   'tv': 'TV Shows',
   'book': 'Books',
   'link': 'Links',
+  'document': 'Documents',
 };
 
 const _typeIcons = {
@@ -40,6 +41,7 @@ const _typeIcons = {
   'tv': Icons.live_tv_outlined,
   'book': Icons.menu_book_outlined,
   'link': Icons.link,
+  'document': Icons.insert_drive_file_outlined,
 };
 
 /// §18: full-screen modal, results grouped by type with a count per group,
@@ -125,6 +127,9 @@ class _UniversalSearchScreenState extends ConsumerState<UniversalSearchScreen> {
       case 'link':
         // No per-link detail route; the list is where it lives.
         context.push(Routes.libraryLinks);
+      case 'document':
+        // No per-document detail route; the list is where it lives.
+        context.push(Routes.libraryDocuments);
     }
   }
 

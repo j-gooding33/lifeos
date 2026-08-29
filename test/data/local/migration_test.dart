@@ -6,11 +6,10 @@ import 'package:life_os/data/local/database.dart';
 import 'generated_migrations/schema.dart';
 
 /// §23.4: "Every migration ships with a test that opens a fixture database
-/// at version N-1 and asserts the upgrade." There's only one version so
-/// far, so this is the baseline case — it proves `onCreate` (all 30
-/// tables, every partial index, the FTS5 virtual table) actually runs
-/// clean, and gives the next migration something to extend rather than
-/// invent from scratch. Regenerate `drift_schemas/` and
+/// at version N-1 and asserts the upgrade." v1's own creation is the
+/// baseline case, proving `onCreate` runs clean; each later version adds
+/// its own "vN schema creates cleanly" plus a "vN-1 to vN migrates
+/// cleanly" upgrade test. Regenerate `drift_schemas/` and
 /// `generated_migrations/` with `dart run drift_dev schema dump` /
 /// `schema generate` whenever `schemaVersion` bumps.
 void main() {
@@ -41,6 +40,13 @@ void main() {
     await db.close();
   });
 
+  test('v4 schema creates cleanly', () async {
+    final connection = await verifier.startAt(4);
+    final db = AppDatabase.forTesting(connection.executor);
+    await verifier.migrateAndValidate(db, 4);
+    await db.close();
+  });
+
   test(
     'v1 to v2 migrates cleanly (M8: TV episodes, top lists, School)',
     () async {
@@ -68,6 +74,46 @@ void main() {
       ''');
       final db = AppDatabase.forTesting(schema.newConnection().executor);
       await verifier.migrateAndValidate(db, 3);
+      await db.close();
+    },
+  );
+
+  test(
+    'v3 to v4 migrates cleanly (Documents table, search_index triggers)',
+    () async {
+      // Same real-world precondition as the v2->v3 case above: a v3-era
+      // database already has `search_index` (raw SQL, invisible to `schema
+      // dump`), and v4's own triggers on `documents` reference it too.
+      final schema = await verifier.schemaAt(3);
+      schema.rawDatabase.execute('''
+        CREATE VIRTUAL TABLE search_index USING fts5(
+          entity_type UNINDEXED, entity_id UNINDEXED, title, body, tags,
+          tokenize='unicode61 remove_diacritics 2'
+        );
+      ''');
+      final db = AppDatabase.forTesting(schema.newConnection().executor);
+      await verifier.migrateAndValidate(db, 4);
+      await db.close();
+    },
+  );
+
+  test(
+    'v2 to v4 migrates cleanly in one jump (the from < 3 && to >= 3 guard, plus v4)',
+    () async {
+      // The exact scenario DECISIONS.md's "real bug" note warns about: a
+      // multi-version jump must not let an intermediate version's guard
+      // misfire. Also proves the v3 block's search_index backfill runs
+      // before v4's CREATE TABLE documents, not after (see
+      // documentSearchIndexBackfillStatement's own doc comment).
+      final schema = await verifier.schemaAt(2);
+      schema.rawDatabase.execute('''
+        CREATE VIRTUAL TABLE search_index USING fts5(
+          entity_type UNINDEXED, entity_id UNINDEXED, title, body, tags,
+          tokenize='unicode61 remove_diacritics 2'
+        );
+      ''');
+      final db = AppDatabase.forTesting(schema.newConnection().executor);
+      await verifier.migrateAndValidate(db, 4);
       await db.close();
     },
   );

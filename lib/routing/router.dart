@@ -19,6 +19,7 @@ import 'package:life_os/features/library/presentation/screens/book_top3_screen.d
 import 'package:life_os/features/library/presentation/screens/books_screen.dart';
 import 'package:life_os/features/library/presentation/screens/collection_detail_screen.dart';
 import 'package:life_os/features/library/presentation/screens/collections_screen.dart';
+import 'package:life_os/features/library/presentation/screens/documents_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_detail_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_ratings_screen.dart';
 import 'package:life_os/features/library/presentation/screens/film_search_screen.dart';
@@ -332,6 +333,10 @@ GoRouter buildRouter() {
               GoRoute(
                 path: Routes.libraryLinks,
                 builder: (context, state) => const LinksScreen(),
+              ),
+              GoRoute(
+                path: Routes.libraryDocuments,
+                builder: (context, state) => const DocumentsScreen(),
               ),
             ],
           ),

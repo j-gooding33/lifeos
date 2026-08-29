@@ -61,3 +61,13 @@ class TopListFullFailure extends Failure {
 
   final int cap;
 }
+
+/// §17.3's "size cap 25MB per file" — checked before the file is copied
+/// into local storage, not after.
+class DocumentTooLargeFailure extends Failure {
+  DocumentTooLargeFailure(this.fileSizeBytes, this.capBytes)
+    : super('This file is ${(fileSizeBytes / (1024 * 1024)).toStringAsFixed(1)}MB — documents are capped at ${capBytes ~/ (1024 * 1024)}MB.');
+
+  final int fileSizeBytes;
+  final int capBytes;
+}

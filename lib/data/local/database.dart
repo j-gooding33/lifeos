@@ -12,6 +12,7 @@ import 'package:life_os/data/local/daos/tv_episode_dao.dart';
 import 'package:life_os/data/local/migrations/v1_indexes.dart';
 import 'package:life_os/data/local/migrations/v2_indexes.dart';
 import 'package:life_os/data/local/migrations/v3_search_triggers.dart';
+import 'package:life_os/data/local/migrations/v4_documents.dart';
 import 'package:life_os/data/local/tables/activity_log_table.dart';
 import 'package:life_os/data/local/tables/ai_conversations_table.dart';
 import 'package:life_os/data/local/tables/ai_messages_table.dart';
@@ -22,6 +23,7 @@ import 'package:life_os/data/local/tables/collection_items_table.dart';
 import 'package:life_os/data/local/tables/collections_table.dart';
 import 'package:life_os/data/local/tables/daily_rollups_table.dart';
 import 'package:life_os/data/local/tables/dashboard_cards_table.dart';
+import 'package:life_os/data/local/tables/documents_table.dart';
 import 'package:life_os/data/local/tables/events_table.dart';
 import 'package:life_os/data/local/tables/expenses_table.dart';
 import 'package:life_os/data/local/tables/goal_contributions_table.dart';
@@ -96,6 +98,7 @@ part 'database.g.dart';
     SchoolTerms,
     SchoolClosures,
     SchoolEvents,
+    Documents,
   ],
   daos: [
     ProfileDao,
@@ -113,7 +116,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -122,6 +125,7 @@ class AppDatabase extends _$AppDatabase {
       await createV1IndexesAndFts(m);
       await createV2Indexes(m);
       await createV3SearchTriggers(m);
+      await createV4DocumentSearchTriggers(m);
     },
     onUpgrade: (m, from, to) async {
       if (from < 2) {
@@ -137,6 +141,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 3 && to >= 3) {
         await m.createTable(links);
         await createV3SearchTriggers(m);
+      }
+      if (from < 4 && to >= 4) {
+        await m.createTable(documents);
+        await createV4DocumentSearchTriggers(m);
       }
     },
   );

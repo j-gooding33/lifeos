@@ -26465,6 +26465,673 @@ class SchoolEventsCompanion extends UpdateCompanion<SchoolEvent> {
   }
 }
 
+class $DocumentsTable extends Documents
+    with TableInfo<$DocumentsTable, Document> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DocumentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _storedNameMeta = const VerificationMeta(
+    'storedName',
+  );
+  @override
+  late final GeneratedColumn<String> storedName = GeneratedColumn<String>(
+    'stored_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _originalNameMeta = const VerificationMeta(
+    'originalName',
+  );
+  @override
+  late final GeneratedColumn<String> originalName = GeneratedColumn<String>(
+    'original_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileSizeBytesMeta = const VerificationMeta(
+    'fileSizeBytes',
+  );
+  @override
+  late final GeneratedColumn<int> fileSizeBytes = GeneratedColumn<int>(
+    'file_size_bytes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _mimeTypeMeta = const VerificationMeta(
+    'mimeType',
+  );
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+    'mime_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<int> deletedAt = GeneratedColumn<int>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyMeta = const VerificationMeta('dirty');
+  @override
+  late final GeneratedColumn<bool> dirty = GeneratedColumn<bool>(
+    'dirty',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("dirty" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    userId,
+    title,
+    storedName,
+    originalName,
+    fileSizeBytes,
+    mimeType,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    dirty,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'documents';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Document> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('stored_name')) {
+      context.handle(
+        _storedNameMeta,
+        storedName.isAcceptableOrUnknown(data['stored_name']!, _storedNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_storedNameMeta);
+    }
+    if (data.containsKey('original_name')) {
+      context.handle(
+        _originalNameMeta,
+        originalName.isAcceptableOrUnknown(
+          data['original_name']!,
+          _originalNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_originalNameMeta);
+    }
+    if (data.containsKey('file_size_bytes')) {
+      context.handle(
+        _fileSizeBytesMeta,
+        fileSizeBytes.isAcceptableOrUnknown(
+          data['file_size_bytes']!,
+          _fileSizeBytesMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_fileSizeBytesMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(
+        _mimeTypeMeta,
+        mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    if (data.containsKey('dirty')) {
+      context.handle(
+        _dirtyMeta,
+        dirty.isAcceptableOrUnknown(data['dirty']!, _dirtyMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Document map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Document(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      storedName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stored_name'],
+      )!,
+      originalName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}original_name'],
+      )!,
+      fileSizeBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}file_size_bytes'],
+      )!,
+      mimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime_type'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      ),
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}deleted_at'],
+      ),
+      dirty: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}dirty'],
+      )!,
+    );
+  }
+
+  @override
+  $DocumentsTable createAlias(String alias) {
+    return $DocumentsTable(attachedDatabase, alias);
+  }
+}
+
+class Document extends DataClass implements Insertable<Document> {
+  final String id;
+  final String userId;
+  final String title;
+  final String storedName;
+  final String originalName;
+  final int fileSizeBytes;
+  final String? mimeType;
+  final int? createdAt;
+  final int? updatedAt;
+  final int? deletedAt;
+  final bool dirty;
+  const Document({
+    required this.id,
+    required this.userId,
+    required this.title,
+    required this.storedName,
+    required this.originalName,
+    required this.fileSizeBytes,
+    this.mimeType,
+    this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
+    required this.dirty,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['user_id'] = Variable<String>(userId);
+    map['title'] = Variable<String>(title);
+    map['stored_name'] = Variable<String>(storedName);
+    map['original_name'] = Variable<String>(originalName);
+    map['file_size_bytes'] = Variable<int>(fileSizeBytes);
+    if (!nullToAbsent || mimeType != null) {
+      map['mime_type'] = Variable<String>(mimeType);
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<int>(createdAt);
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<int>(updatedAt);
+    }
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<int>(deletedAt);
+    }
+    map['dirty'] = Variable<bool>(dirty);
+    return map;
+  }
+
+  DocumentsCompanion toCompanion(bool nullToAbsent) {
+    return DocumentsCompanion(
+      id: Value(id),
+      userId: Value(userId),
+      title: Value(title),
+      storedName: Value(storedName),
+      originalName: Value(originalName),
+      fileSizeBytes: Value(fileSizeBytes),
+      mimeType: mimeType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mimeType),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+      dirty: Value(dirty),
+    );
+  }
+
+  factory Document.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Document(
+      id: serializer.fromJson<String>(json['id']),
+      userId: serializer.fromJson<String>(json['userId']),
+      title: serializer.fromJson<String>(json['title']),
+      storedName: serializer.fromJson<String>(json['storedName']),
+      originalName: serializer.fromJson<String>(json['originalName']),
+      fileSizeBytes: serializer.fromJson<int>(json['fileSizeBytes']),
+      mimeType: serializer.fromJson<String?>(json['mimeType']),
+      createdAt: serializer.fromJson<int?>(json['createdAt']),
+      updatedAt: serializer.fromJson<int?>(json['updatedAt']),
+      deletedAt: serializer.fromJson<int?>(json['deletedAt']),
+      dirty: serializer.fromJson<bool>(json['dirty']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'userId': serializer.toJson<String>(userId),
+      'title': serializer.toJson<String>(title),
+      'storedName': serializer.toJson<String>(storedName),
+      'originalName': serializer.toJson<String>(originalName),
+      'fileSizeBytes': serializer.toJson<int>(fileSizeBytes),
+      'mimeType': serializer.toJson<String?>(mimeType),
+      'createdAt': serializer.toJson<int?>(createdAt),
+      'updatedAt': serializer.toJson<int?>(updatedAt),
+      'deletedAt': serializer.toJson<int?>(deletedAt),
+      'dirty': serializer.toJson<bool>(dirty),
+    };
+  }
+
+  Document copyWith({
+    String? id,
+    String? userId,
+    String? title,
+    String? storedName,
+    String? originalName,
+    int? fileSizeBytes,
+    Value<String?> mimeType = const Value.absent(),
+    Value<int?> createdAt = const Value.absent(),
+    Value<int?> updatedAt = const Value.absent(),
+    Value<int?> deletedAt = const Value.absent(),
+    bool? dirty,
+  }) => Document(
+    id: id ?? this.id,
+    userId: userId ?? this.userId,
+    title: title ?? this.title,
+    storedName: storedName ?? this.storedName,
+    originalName: originalName ?? this.originalName,
+    fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
+    mimeType: mimeType.present ? mimeType.value : this.mimeType,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    dirty: dirty ?? this.dirty,
+  );
+  Document copyWithCompanion(DocumentsCompanion data) {
+    return Document(
+      id: data.id.present ? data.id.value : this.id,
+      userId: data.userId.present ? data.userId.value : this.userId,
+      title: data.title.present ? data.title.value : this.title,
+      storedName: data.storedName.present
+          ? data.storedName.value
+          : this.storedName,
+      originalName: data.originalName.present
+          ? data.originalName.value
+          : this.originalName,
+      fileSizeBytes: data.fileSizeBytes.present
+          ? data.fileSizeBytes.value
+          : this.fileSizeBytes,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      dirty: data.dirty.present ? data.dirty.value : this.dirty,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Document(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('title: $title, ')
+          ..write('storedName: $storedName, ')
+          ..write('originalName: $originalName, ')
+          ..write('fileSizeBytes: $fileSizeBytes, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    userId,
+    title,
+    storedName,
+    originalName,
+    fileSizeBytes,
+    mimeType,
+    createdAt,
+    updatedAt,
+    deletedAt,
+    dirty,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Document &&
+          other.id == this.id &&
+          other.userId == this.userId &&
+          other.title == this.title &&
+          other.storedName == this.storedName &&
+          other.originalName == this.originalName &&
+          other.fileSizeBytes == this.fileSizeBytes &&
+          other.mimeType == this.mimeType &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt &&
+          other.dirty == this.dirty);
+}
+
+class DocumentsCompanion extends UpdateCompanion<Document> {
+  final Value<String> id;
+  final Value<String> userId;
+  final Value<String> title;
+  final Value<String> storedName;
+  final Value<String> originalName;
+  final Value<int> fileSizeBytes;
+  final Value<String?> mimeType;
+  final Value<int?> createdAt;
+  final Value<int?> updatedAt;
+  final Value<int?> deletedAt;
+  final Value<bool> dirty;
+  final Value<int> rowid;
+  const DocumentsCompanion({
+    this.id = const Value.absent(),
+    this.userId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.storedName = const Value.absent(),
+    this.originalName = const Value.absent(),
+    this.fileSizeBytes = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DocumentsCompanion.insert({
+    required String id,
+    required String userId,
+    required String title,
+    required String storedName,
+    required String originalName,
+    required int fileSizeBytes,
+    this.mimeType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.dirty = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       userId = Value(userId),
+       title = Value(title),
+       storedName = Value(storedName),
+       originalName = Value(originalName),
+       fileSizeBytes = Value(fileSizeBytes);
+  static Insertable<Document> custom({
+    Expression<String>? id,
+    Expression<String>? userId,
+    Expression<String>? title,
+    Expression<String>? storedName,
+    Expression<String>? originalName,
+    Expression<int>? fileSizeBytes,
+    Expression<String>? mimeType,
+    Expression<int>? createdAt,
+    Expression<int>? updatedAt,
+    Expression<int>? deletedAt,
+    Expression<bool>? dirty,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (userId != null) 'user_id': userId,
+      if (title != null) 'title': title,
+      if (storedName != null) 'stored_name': storedName,
+      if (originalName != null) 'original_name': originalName,
+      if (fileSizeBytes != null) 'file_size_bytes': fileSizeBytes,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (dirty != null) 'dirty': dirty,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DocumentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? userId,
+    Value<String>? title,
+    Value<String>? storedName,
+    Value<String>? originalName,
+    Value<int>? fileSizeBytes,
+    Value<String?>? mimeType,
+    Value<int?>? createdAt,
+    Value<int?>? updatedAt,
+    Value<int?>? deletedAt,
+    Value<bool>? dirty,
+    Value<int>? rowid,
+  }) {
+    return DocumentsCompanion(
+      id: id ?? this.id,
+      userId: userId ?? this.userId,
+      title: title ?? this.title,
+      storedName: storedName ?? this.storedName,
+      originalName: originalName ?? this.originalName,
+      fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
+      mimeType: mimeType ?? this.mimeType,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      dirty: dirty ?? this.dirty,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (storedName.present) {
+      map['stored_name'] = Variable<String>(storedName.value);
+    }
+    if (originalName.present) {
+      map['original_name'] = Variable<String>(originalName.value);
+    }
+    if (fileSizeBytes.present) {
+      map['file_size_bytes'] = Variable<int>(fileSizeBytes.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<int>(deletedAt.value);
+    }
+    if (dirty.present) {
+      map['dirty'] = Variable<bool>(dirty.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DocumentsCompanion(')
+          ..write('id: $id, ')
+          ..write('userId: $userId, ')
+          ..write('title: $title, ')
+          ..write('storedName: $storedName, ')
+          ..write('originalName: $originalName, ')
+          ..write('fileSizeBytes: $fileSizeBytes, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('dirty: $dirty, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -26514,6 +27181,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SchoolTermsTable schoolTerms = $SchoolTermsTable(this);
   late final $SchoolClosuresTable schoolClosures = $SchoolClosuresTable(this);
   late final $SchoolEventsTable schoolEvents = $SchoolEventsTable(this);
+  late final $DocumentsTable documents = $DocumentsTable(this);
   late final ProfileDao profileDao = ProfileDao(this as AppDatabase);
   late final PreferencesDao preferencesDao = PreferencesDao(
     this as AppDatabase,
@@ -26570,6 +27238,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     schoolTerms,
     schoolClosures,
     schoolEvents,
+    documents,
   ];
 }
 
@@ -39133,6 +39802,320 @@ typedef $$SchoolEventsTableProcessedTableManager =
       SchoolEvent,
       PrefetchHooks Function()
     >;
+typedef $$DocumentsTableCreateCompanionBuilder =
+    DocumentsCompanion Function({
+      required String id,
+      required String userId,
+      required String title,
+      required String storedName,
+      required String originalName,
+      required int fileSizeBytes,
+      Value<String?> mimeType,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+typedef $$DocumentsTableUpdateCompanionBuilder =
+    DocumentsCompanion Function({
+      Value<String> id,
+      Value<String> userId,
+      Value<String> title,
+      Value<String> storedName,
+      Value<String> originalName,
+      Value<int> fileSizeBytes,
+      Value<String?> mimeType,
+      Value<int?> createdAt,
+      Value<int?> updatedAt,
+      Value<int?> deletedAt,
+      Value<bool> dirty,
+      Value<int> rowid,
+    });
+
+class $$DocumentsTableFilterComposer
+    extends Composer<_$AppDatabase, $DocumentsTable> {
+  $$DocumentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get storedName => $composableBuilder(
+    column: $table.storedName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fileSizeBytes => $composableBuilder(
+    column: $table.fileSizeBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DocumentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $DocumentsTable> {
+  $$DocumentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get storedName => $composableBuilder(
+    column: $table.storedName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fileSizeBytes => $composableBuilder(
+    column: $table.fileSizeBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+    column: $table.mimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get dirty => $composableBuilder(
+    column: $table.dirty,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DocumentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DocumentsTable> {
+  $$DocumentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get storedName => $composableBuilder(
+    column: $table.storedName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get originalName => $composableBuilder(
+    column: $table.originalName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get fileSizeBytes => $composableBuilder(
+    column: $table.fileSizeBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get dirty =>
+      $composableBuilder(column: $table.dirty, builder: (column) => column);
+}
+
+class $$DocumentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DocumentsTable,
+          Document,
+          $$DocumentsTableFilterComposer,
+          $$DocumentsTableOrderingComposer,
+          $$DocumentsTableAnnotationComposer,
+          $$DocumentsTableCreateCompanionBuilder,
+          $$DocumentsTableUpdateCompanionBuilder,
+          (Document, BaseReferences<_$AppDatabase, $DocumentsTable, Document>),
+          Document,
+          PrefetchHooks Function()
+        > {
+  $$DocumentsTableTableManager(_$AppDatabase db, $DocumentsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DocumentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$DocumentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$DocumentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> storedName = const Value.absent(),
+                Value<String> originalName = const Value.absent(),
+                Value<int> fileSizeBytes = const Value.absent(),
+                Value<String?> mimeType = const Value.absent(),
+                Value<int?> createdAt = const Value.absent(),
+                Value<int?> updatedAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentsCompanion(
+                id: id,
+                userId: userId,
+                title: title,
+                storedName: storedName,
+                originalName: originalName,
+                fileSizeBytes: fileSizeBytes,
+                mimeType: mimeType,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String userId,
+                required String title,
+                required String storedName,
+                required String originalName,
+                required int fileSizeBytes,
+                Value<String?> mimeType = const Value.absent(),
+                Value<int?> createdAt = const Value.absent(),
+                Value<int?> updatedAt = const Value.absent(),
+                Value<int?> deletedAt = const Value.absent(),
+                Value<bool> dirty = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DocumentsCompanion.insert(
+                id: id,
+                userId: userId,
+                title: title,
+                storedName: storedName,
+                originalName: originalName,
+                fileSizeBytes: fileSizeBytes,
+                mimeType: mimeType,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                dirty: dirty,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DocumentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DocumentsTable,
+      Document,
+      $$DocumentsTableFilterComposer,
+      $$DocumentsTableOrderingComposer,
+      $$DocumentsTableAnnotationComposer,
+      $$DocumentsTableCreateCompanionBuilder,
+      $$DocumentsTableUpdateCompanionBuilder,
+      (Document, BaseReferences<_$AppDatabase, $DocumentsTable, Document>),
+      Document,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -39213,4 +40196,6 @@ class $AppDatabaseManager {
       $$SchoolClosuresTableTableManager(_db, _db.schoolClosures);
   $$SchoolEventsTableTableManager get schoolEvents =>
       $$SchoolEventsTableTableManager(_db, _db.schoolEvents);
+  $$DocumentsTableTableManager get documents =>
+      $$DocumentsTableTableManager(_db, _db.documents);
 }

@@ -107,3 +107,97 @@ final class DatabaseSizeBytesProvider
 }
 
 String _$databaseSizeBytesHash() => r'bda0c450403375ef3455034695f46121e42367f7';
+
+/// Same "constructed straight from the DAO" reasoning as
+/// `dataSettingsSearchRepository` above — Documents' own quota line in
+/// §22.5's Data screen, per §17.3's "total quota shown in Settings → Data."
+
+@ProviderFor(dataSettingsDocumentRepository)
+const dataSettingsDocumentRepositoryProvider =
+    DataSettingsDocumentRepositoryProvider._();
+
+/// Same "constructed straight from the DAO" reasoning as
+/// `dataSettingsSearchRepository` above — Documents' own quota line in
+/// §22.5's Data screen, per §17.3's "total quota shown in Settings → Data."
+
+final class DataSettingsDocumentRepositoryProvider
+    extends
+        $FunctionalProvider<
+          DocumentRepository,
+          DocumentRepository,
+          DocumentRepository
+        >
+    with $Provider<DocumentRepository> {
+  /// Same "constructed straight from the DAO" reasoning as
+  /// `dataSettingsSearchRepository` above — Documents' own quota line in
+  /// §22.5's Data screen, per §17.3's "total quota shown in Settings → Data."
+  const DataSettingsDocumentRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'dataSettingsDocumentRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$dataSettingsDocumentRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<DocumentRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DocumentRepository create(Ref ref) {
+    return dataSettingsDocumentRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DocumentRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DocumentRepository>(value),
+    );
+  }
+}
+
+String _$dataSettingsDocumentRepositoryHash() =>
+    r'c25b321d2d471d10751408a82115551f7f861e3f';
+
+@ProviderFor(documentStorageBytes)
+const documentStorageBytesProvider = DocumentStorageBytesProvider._();
+
+final class DocumentStorageBytesProvider
+    extends $FunctionalProvider<AsyncValue<int>, int, FutureOr<int>>
+    with $FutureModifier<int>, $FutureProvider<int> {
+  const DocumentStorageBytesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'documentStorageBytesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$documentStorageBytesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<int> create(Ref ref) {
+    return documentStorageBytes(ref);
+  }
+}
+
+String _$documentStorageBytesHash() =>
+    r'27aa2730ba91ad6c479fda2e1b02d088f243d6d6';

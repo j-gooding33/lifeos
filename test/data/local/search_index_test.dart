@@ -112,6 +112,17 @@ void main() {
     expect(byId['lk2']!['body'], 'https://example.com/other');
   });
 
+  test('a document is indexed on its title, with no body (there is no text to index, just the file)', () async {
+    await db.into(db.documents).insert(
+      DocumentsCompanion.insert(id: 'd1', userId: 'u1', title: 'Passport scan', storedName: 'abc.pdf', originalName: 'passport.pdf', fileSizeBytes: 1024),
+    );
+
+    final rows = await searchRows();
+    expect(rows.single['entity_type'], 'document');
+    expect(rows.single['title'], 'Passport scan');
+    expect(rows.single['body'], '');
+  });
+
   test('FTS5 MATCH actually finds an indexed row by a body substring token', () async {
     await db.into(db.tasks).insert(TasksCompanion.insert(id: 't1', userId: 'u1', title: 'Something else', notes: const Value('Remember the quarterly report')));
 
