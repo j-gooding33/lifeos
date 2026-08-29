@@ -361,7 +361,7 @@ final class DashboardCardsProvider
   }
 }
 
-String _$dashboardCardsHash() => r'bd23f423e5d3942067e52b6709d289a87e91ce87';
+String _$dashboardCardsHash() => r'3c45c21e8677c696ead6c88088b3302fe2b8ed6f';
 
 @ProviderFor(homeAllTasksDueToday)
 const homeAllTasksDueTodayProvider = HomeAllTasksDueTodayProvider._();

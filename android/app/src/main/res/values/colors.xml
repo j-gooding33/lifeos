@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §22.4: widget colours follow the SYSTEM light/dark setting via this
+     file and values-night/colors.xml, not the in-app theme-scheme picker
+     (Ledger/After Hours/Fieldnotes/Signal) — a RemoteViews widget has no
+     live channel to that Flutter-side preference. The accent is After
+     Hours' own coral (colors.dart's afterHours entry), reused as the one
+     fixed brand colour regardless of scheme. See DECISIONS.md. -->
+<resources>
+    <color name="widget_background">#FFFCFCFD</color>
+    <color name="widget_title_text">#FF62636F</color>
+    <color name="widget_task_text">#FF12131A</color>
+    <color name="widget_accent">#FFFF8A5B</color>
+</resources>

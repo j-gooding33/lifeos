@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- §22.4: "Today's tasks" widget, sizes S/M per spec's widget table.
+     updatePeriodMillis is set to the Android-enforced minimum (30 minutes)
+     as a coarse background safety net; the real refresh path is
+     event-driven (HomeWidgetService, called on every app resume and
+     relevant write) — see DECISIONS.md. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="110dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="2"
+    android:targetCellHeight="2"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/today_tasks_widget"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:description="@string/widget_today_title">
+</appwidget-provider>
