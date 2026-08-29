@@ -1,20 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:life_os/data/repositories/models/app_dashboard_card.dart';
 import 'package:life_os/design/components/l_error_state.dart';
 import 'package:life_os/design/components/l_loading_shimmer.dart';
 import 'package:life_os/design/components/l_menu.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/home/application/home_providers.dart';
+import 'package:life_os/features/home/presentation/widgets/daily_stats_card.dart';
 import 'package:life_os/features/home/presentation/widgets/focus_card.dart';
+import 'package:life_os/features/home/presentation/widgets/goals_card.dart';
+import 'package:life_os/features/home/presentation/widgets/habits_card.dart';
+import 'package:life_os/features/home/presentation/widgets/journal_prompt_card.dart';
+import 'package:life_os/features/home/presentation/widgets/plans_today_card.dart';
+import 'package:life_os/features/home/presentation/widgets/projects_card.dart';
 import 'package:life_os/features/home/presentation/widgets/recent_card.dart';
+import 'package:life_os/features/home/presentation/widgets/spending_card.dart';
 import 'package:life_os/features/home/presentation/widgets/upcoming_card.dart';
 import 'package:life_os/routing/routes.dart';
 
-/// §5. The one screen every user sees every day. Only `focus`, `upcoming`
-/// and `recent` exist yet (M5) — the rest of the §5.3 card catalogue
-/// arrives with the features that feed it (Plans, Habits, Goals, ...).
+/// §5. The one screen every user sees every day. `focus` is always first,
+/// "cannot be hidden or moved" (§5.3) — rendered unconditionally rather
+/// than as a `DashboardCard` row. Everything else comes from Settings →
+/// Home dashboard's reorder/visibility (§5.4). `reading`, `filmNext`,
+/// `study`, `activity` and `aiSuggestions` aren't built this pass — see
+/// DECISIONS.md.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -25,10 +36,25 @@ class HomeScreen extends ConsumerWidget {
     return 'Evening';
   }
 
+  Widget? _buildCard(DashboardCardType type, HomeSnapshot snapshot) {
+    return switch (type) {
+      DashboardCardType.plansToday => PlansTodayCard(snapshot: snapshot),
+      DashboardCardType.habits => HabitsCard(snapshot: snapshot),
+      DashboardCardType.upcoming => UpcomingCard(snapshot: snapshot),
+      DashboardCardType.goals => GoalsCard(snapshot: snapshot),
+      DashboardCardType.projects => ProjectsCard(snapshot: snapshot),
+      DashboardCardType.recent => RecentCard(snapshot: snapshot),
+      DashboardCardType.dailyStats => DailyStatsCard(snapshot: snapshot),
+      DashboardCardType.journalPrompt => JournalPromptCard(snapshot: snapshot),
+      DashboardCardType.spending => SpendingCard(snapshot: snapshot),
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final asyncSnapshot = ref.watch(homeSnapshotProvider);
+    final asyncCards = ref.watch(dashboardCardsProvider);
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
@@ -82,16 +108,21 @@ class HomeScreen extends ConsumerWidget {
           message: "Couldn't load your day.",
           onRetry: () => ref.invalidate(homeSnapshotProvider),
         ),
-        data: (snapshot) => ListView(
-          padding: const EdgeInsets.all(LifeSpace.s20),
-          children: [
-            FocusCard(snapshot: snapshot),
-            const SizedBox(height: LifeSpace.cardGap),
-            UpcomingCard(snapshot: snapshot),
-            const SizedBox(height: LifeSpace.cardGap),
-            RecentCard(snapshot: snapshot),
-          ],
-        ),
+        data: (snapshot) {
+          final cards = asyncCards.value ?? const [];
+          final visibleCards = cards.where((c) => c.visible).toList();
+          return ListView(
+            padding: const EdgeInsets.all(LifeSpace.s20),
+            children: [
+              FocusCard(snapshot: snapshot),
+              for (final card in visibleCards)
+                if (_buildCard(card.type, snapshot) case final widget?) ...[
+                  const SizedBox(height: LifeSpace.cardGap),
+                  widget,
+                ],
+            ],
+          );
+        },
       ),
     );
   }

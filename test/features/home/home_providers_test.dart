@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:life_os/core/scheduling/civil_date.dart';
 import 'package:life_os/data/repositories/models/app_task.dart';
 import 'package:life_os/features/home/application/home_providers.dart';
 
@@ -42,6 +43,17 @@ void main() {
       upcomingByDay: {'2026-09-01': empty},
       upcomingUndated: empty,
       recent: [],
+      plansToday: [],
+      plansTodayTitles: {},
+      habits: [],
+      goals: [],
+      projects: [],
+      plansCompletedToday: 0,
+      currentStreakDays: 0,
+      journalWrittenToday: false,
+      spentThisMonthMinor: 0,
+      monthlyBudgetMinor: null,
+      currency: 'GBP',
     );
     const oneFull = HomeSnapshot(
       focusItems: [],
@@ -50,9 +62,39 @@ void main() {
       upcomingByDay: {'2026-09-01': full},
       upcomingUndated: empty,
       recent: [],
+      plansToday: [],
+      plansTodayTitles: {},
+      habits: [],
+      goals: [],
+      projects: [],
+      plansCompletedToday: 0,
+      currentStreakDays: 0,
+      journalWrittenToday: false,
+      spentThisMonthMinor: 0,
+      monthlyBudgetMinor: null,
+      currency: 'GBP',
     );
 
     expect(allEmpty.hasNothingUpcoming, isTrue);
     expect(oneFull.hasNothingUpcoming, isFalse);
+  });
+
+  group('currentStreak', () {
+    const today = CivilDate(2026, 9, 5);
+
+    test('counts consecutive active days ending today', () {
+      final scores = {today: 2, today.addDays(-1): 1, today.addDays(-2): 3};
+      expect(currentStreak(scores, today), 3);
+    });
+
+    test('stops at the first gap, even with active days further back', () {
+      final scores = {today: 1, today.addDays(-2): 1};
+      expect(currentStreak(scores, today), 1);
+    });
+
+    test('is zero when today itself has no activity', () {
+      final scores = {today.addDays(-1): 4};
+      expect(currentStreak(scores, today), 0);
+    });
   });
 }

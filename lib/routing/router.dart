@@ -9,6 +9,7 @@ import 'package:life_os/features/calendar/presentation/screens/event_detail_scre
 import 'package:life_os/features/finance/presentation/screens/expense_edit_screen.dart';
 import 'package:life_os/features/finance/presentation/screens/finance_budgets_screen.dart';
 import 'package:life_os/features/finance/presentation/screens/finance_overview_screen.dart';
+import 'package:life_os/features/home/presentation/screens/home_customize_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
 import 'package:life_os/features/journal/presentation/screens/journal_entry_screen.dart';
 import 'package:life_os/features/journal/presentation/screens/journal_list_screen.dart';
@@ -112,7 +113,10 @@ GoRouter buildRouter() {
                 builder: (context, state) => DayDetailScreen(date: CivilDate.parse(state.pathParameters['date']!)),
               ),
               _placeholderRoute(Routes.homeBriefing, 'Briefing'),
-              _placeholderRoute(Routes.homeCustomise, 'Customise dashboard'),
+              GoRoute(
+                path: Routes.homeCustomise,
+                builder: (context, state) => const HomeCustomizeScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -416,7 +420,10 @@ GoRouter buildRouter() {
         path: Routes.settingsAppearance,
         builder: (context, state) => const AppearanceScreen(),
       ),
-      _placeholderRoute(Routes.settingsHome, 'Home settings'),
+      GoRoute(
+        path: Routes.settingsHome,
+        builder: (context, state) => const HomeCustomizeScreen(),
+      ),
       GoRoute(
         path: Routes.settingsNotifications,
         builder: (context, state) => const NotificationSettingsScreen(),
