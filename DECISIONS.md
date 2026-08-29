@@ -4,6 +4,13 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §21.1 — Your Year's "Compare to last year" (2026-08-29)
+
+**Decision:** `YearGrid` gained an optional `lastYearScores` map; when set, `_YearGridPainter` sums each column's 7 days into a weekly total, normalises against that year's own tallest week, and strokes a thin connected line across the grid at those heights — "a thin line of last year's weekly totals," per spec. `YourYearScreen` fetches it lazily (only queries `dailyActivityScoresProvider` for last year when the toggle is actually on) via a plain `LListTile` + `Switch` below the legend.
+**Aligned by column index, not calendar date:** column *i* plots last year's week *i* (from last year's own `startOfWeek()`), not "the same 7 calendar dates shifted by a year" — years rarely have the same weekday-alignment or week count (52 vs 53), so date-for-date alignment would silently misalign by a day or more some years and not others. Week-index alignment is what actually reads as "the same point in the grid" to someone glancing at both lines.
+**Verified with synthetic data, not just live-tested:** the real dev database has no prior-year data at all (this session's test installs only ever contain 2026 dates), so toggling it on-device proves only "doesn't crash," not "draws correctly." Rendered `YearGrid` with fabricated multi-month `lastYearScores` via a scratch golden capture (not committed) and confirmed the line actually traces across the full width before considering this done.
+**Not built:** "Share your year" PNG export — capturing the grid as an image needs no new dependency (`RenderRepaintBoundary.toImage`), but actually sharing it to another app does (`share_plus`), and this pass didn't add one.
+
 ## §5.3, §5.4 — Home dashboard customisation (2026-08-29)
 
 Closes a gap this session's own Settings pass flagged: "only 3 hardcoded Home cards exist — `DashboardCards` the table is ready, but there's no card catalogue to add from." Now there is.
@@ -78,7 +85,7 @@ The two largest remaining spec sections. Both compute their numbers on demand fr
 
 ### Stats Overview ships 5 of the spec's 9 domain cards
 **Decision:** `StatsOverviewScreen` has real cards for Tasks, Plans & Habits, Goals, Library, and Finance (a link-through). Projects and Study aren't built as their own stat cards yet — deferred, not silently dropped.
-**Deferred:** Insights (§20.3's deterministic sentences, e.g. "You completed 40% more tasks this week"), "Compare to last year" and "Share your year" PNG export on Your Year, and an accessible "view as table" alternative to the grid.
+**Deferred:** "Share your year" PNG export on Your Year, and an accessible "view as table" alternative to the grid. (Insights and "Compare to last year" were deferred here too, originally — both since built; see the newer entries above.)
 
 ### `DayDetailScreen` serves both `/home/day/:date` and Your Year's tapped cell
 **Decision:** one screen, `DayDetailScreen(date: CivilDate)`, backs both `Routes.homeDay` and the destination of tapping a cell in `YearGrid`.

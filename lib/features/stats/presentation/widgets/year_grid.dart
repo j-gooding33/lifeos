@@ -16,6 +16,7 @@ class YearGrid extends StatefulWidget {
     required this.activityScores,
     required this.milestoneDates,
     required this.onSelectDay,
+    this.lastYearScores,
     super.key,
   });
 
@@ -23,6 +24,12 @@ class YearGrid extends StatefulWidget {
   final Map<CivilDate, int> activityScores;
   final Set<CivilDate> milestoneDates;
   final ValueChanged<CivilDate> onSelectDay;
+
+  /// §21.1's "Compare to last year" overlay — non-null only while that
+  /// toggle is on. Aligned by column index (week N of last year against
+  /// week N of this year), not by calendar date, since the two years
+  /// rarely share the same number of weeks.
+  final Map<CivilDate, int>? lastYearScores;
 
   @override
   State<YearGrid> createState() => _YearGridState();
@@ -32,6 +39,7 @@ class _YearGridState extends State<YearGrid> {
   late final _weekStart = CivilDate(widget.year, 1, 1).startOfWeek();
   late final _lastDay = CivilDate(widget.year, 12, 31);
   late final _columns = (CivilDate.daysBetween(_weekStart, _lastDay) ~/ 7) + 1;
+  late final _lastYearWeekStart = CivilDate(widget.year - 1, 1, 1).startOfWeek();
   final _scrollController = ScrollController();
 
   @override
@@ -82,6 +90,9 @@ class _YearGridState extends State<YearGrid> {
             accentColour: colors.accent.base,
             trackColour: colors.neutrals.surfaceSunken,
             ringColour: colors.neutrals.ink,
+            lastYearScores: widget.lastYearScores,
+            lastYearWeekStart: _lastYearWeekStart,
+            compareLineColour: colors.neutrals.ink,
           ),
         ),
       ),
@@ -100,6 +111,9 @@ class _YearGridPainter extends CustomPainter {
     required this.accentColour,
     required this.trackColour,
     required this.ringColour,
+    required this.lastYearScores,
+    required this.lastYearWeekStart,
+    required this.compareLineColour,
   });
 
   final CivilDate weekStart;
@@ -111,6 +125,9 @@ class _YearGridPainter extends CustomPainter {
   final Color accentColour;
   final Color trackColour;
   final Color ringColour;
+  final Map<CivilDate, int>? lastYearScores;
+  final CivilDate lastYearWeekStart;
+  final Color compareLineColour;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -155,9 +172,48 @@ class _YearGridPainter extends CustomPainter {
         }
       }
     }
+
+    final lastYear = lastYearScores;
+    if (lastYear != null) _paintCompareLine(canvas, lastYear);
+  }
+
+  /// §21.1's "a thin line of last year's weekly totals" — one point per
+  /// column, aligned by week-of-year index (not calendar date, since last
+  /// year rarely has the same number of weeks as this one), normalised to
+  /// this year's own tallest week so the line always fits inside the grid.
+  void _paintCompareLine(Canvas canvas, Map<CivilDate, int> lastYear) {
+    final weeklyTotals = [
+      for (var col = 0; col < columns; col++)
+        [for (var row = 0; row < 7; row++) lastYear[lastYearWeekStart.addDays(col * 7 + row)] ?? 0].fold(0, (a, b) => a + b),
+    ];
+    final maxTotal = weeklyTotals.fold(0, (a, b) => a > b ? a : b);
+    if (maxTotal == 0) return;
+
+    const gridHeight = 7 * (_cellSize + _gap) - _gap;
+    final path = Path();
+    for (var col = 0; col < columns; col++) {
+      final x = col * (_cellSize + _gap) + _cellSize / 2;
+      final y = gridHeight - (weeklyTotals[col] / maxTotal) * gridHeight;
+      if (col == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..strokeJoin = StrokeJoin.round
+        ..color = compareLineColour.withValues(alpha: 0.6),
+    );
   }
 
   @override
   bool shouldRepaint(_YearGridPainter oldDelegate) =>
-      oldDelegate.activityScores != activityScores || oldDelegate.milestoneDates != milestoneDates || oldDelegate.today != today;
+      oldDelegate.activityScores != activityScores ||
+      oldDelegate.milestoneDates != milestoneDates ||
+      oldDelegate.today != today ||
+      oldDelegate.lastYearScores != lastYearScores;
 }

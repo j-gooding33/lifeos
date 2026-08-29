@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_stat.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
@@ -10,9 +11,8 @@ import 'package:life_os/features/stats/presentation/widgets/year_grid.dart';
 import 'package:life_os/routing/routes.dart';
 
 /// §21: "the signature screen." The grid render satisfies §21.3's "not 365
-/// widgets" via `YearGrid`'s `CustomPainter`. "Compare to last year" and
-/// "Share your year" (PNG export) aren't built — additive polish on top of
-/// the grid itself; see DECISIONS.md.
+/// widgets" via `YearGrid`'s `CustomPainter`. "Share your year" (PNG
+/// export) isn't built — see DECISIONS.md.
 class YourYearScreen extends ConsumerStatefulWidget {
   const YourYearScreen({super.key});
 
@@ -22,6 +22,7 @@ class YourYearScreen extends ConsumerStatefulWidget {
 
 class _YourYearScreenState extends ConsumerState<YourYearScreen> {
   late var _year = DateTime.now().year;
+  var _compareToLastYear = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +32,9 @@ class _YourYearScreenState extends ConsumerState<YourYearScreen> {
     final asyncScores = ref.watch(dailyActivityScoresProvider(yearStart, yearEnd));
     final asyncMilestoneDates = ref.watch(datesWithCompletedMilestoneProvider(yearStart, yearEnd));
     final asyncPeriod = ref.watch(periodStatsProvider(yearStart, yearEnd));
+    final asyncLastYearScores = _compareToLastYear
+        ? ref.watch(dailyActivityScoresProvider(CivilDate(_year - 1, 1, 1), CivilDate(_year - 1, 12, 31)))
+        : null;
 
     return Scaffold(
       backgroundColor: colors.neutrals.bg,
@@ -76,9 +80,19 @@ class _YourYearScreenState extends ConsumerState<YourYearScreen> {
                 activityScores: scores,
                 milestoneDates: asyncMilestoneDates.value ?? const {},
                 onSelectDay: (date) => context.push(Routes.homeDay.replaceFirst(':date', date.toIso())),
+                lastYearScores: asyncLastYearScores?.value,
               ),
               const SizedBox(height: LifeSpace.s16),
               const _Legend(),
+              const SizedBox(height: LifeSpace.s8),
+              LListTile(
+                title: 'Compare to last year',
+                subtitle: "Overlays a thin line of ${_year - 1}'s weekly totals.",
+                trailing: Switch(
+                  value: _compareToLastYear,
+                  onChanged: (value) => setState(() => _compareToLastYear = value),
+                ),
+              ),
             ],
           );
         },
