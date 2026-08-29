@@ -29,7 +29,7 @@ this commit:
 | M7 | Plans on the recurrence engine, plan calendar, unified calendar |
 | M8 | Media library (Films/TV/Books), rankings, personal lists, School timetable, AI permission shell, plan-based scheduling. Custom brief — see below. |
 | Habits (§13) | Habits are Plans (`kind = 'habit'`) — creation, list with a 7-day dot strip, detail with streak/best-streak/year heatmap. |
-| Projects (§11) | Full CRUD, task grouping (To do/Done, inline add), derived progress, deadline chips. |
+| Projects (§11) | Full CRUD, task grouping (To do/Done, inline add), derived progress, deadline chips, a Files section (link an existing document or import a new one; unlinking never deletes the file). A filtered Activity history isn't built. |
 | Goals (§12) | Full CRUD, all six goal types, honest projection arithmetic, milestones, and automatic progress from completed Plan occurrences. |
 | Notes (§17.1) | A custom block editor (paragraph/heading/checklist/bullet/quote/divider/code), pinning, plain-text projection. |
 | Note linking (§17.2) | A "Linked notes" section — link an existing note or create one inline — on Task, Plan, Project, Goal, Film and Book detail screens. |

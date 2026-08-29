@@ -4,6 +4,13 @@ Choices `LIFE_OS_SPEC.md` left open, and choices made during setup that a future
 
 ---
 
+## §11.3 — Project Files, un-deferred now that Documents exists (schema v5) (2026-08-29)
+
+**Decision:** Projects' own "Files and a filtered Activity history are deferred" entry (below) blocked Files specifically on "the Links/Documents feature, itself unbuilt (§17.3)" — Documents shipped later the same session, which quietly unblocked this without anyone circling back. New `LFilesSection` (`design/components/`, alongside `LNotesSection`) is the generic, entity-agnostic "linked files" widget every detail screen can use, wired into `ProjectDetailScreen` as the first caller. New `document_links` table (schema v5) is the exact same polymorphic-link shape `note_links` already uses for notes — `(documentId, entityType, entityId)` — rather than adding `entityType`/`entityId` columns directly onto `Documents` itself, which would tie a document to exactly one entity instead of allowing (e.g.) the same file linked to a Project and separately findable in the flat Documents library.
+**Unlinking is not deleting:** the section's own "unlink" action removes the `document_links` row only — the file and its `Documents` row are untouched and still show up in the plain Documents library, same distinction `LNotesSection` already draws for notes.
+**Migration is a plain table add, no raw-SQL preconditions:** unlike v3 (search_index triggers) and v4 (documents + its own search triggers), `document_links` needs no FTS wiring — it's not itself a searchable entity, just a join table — so `onUpgrade`'s `from < 5` block is a single `m.createTable(documentLinks)` and the migration tests needed no fixture setup beyond starting at v4.
+**Verified for real on the emulator, the full loop:** opened a Project's Files section, tapped "+", imported a real file through the OS file picker, confirmed it appeared in the list immediately (title, size, correct icon). Tapped it and got a genuine OS app-chooser (Chrome / HTML Viewer) for the file's real content. Unlinked it, confirmed the Files section emptied — then checked the main Documents library separately and confirmed the file was still there, proving unlink didn't delete.
+
 ## §7.3, §13.1 — Creating any Plan or Habit crashed outright (2026-08-29)
 
 **Bug, found by an accidental mis-tap while live-testing something unrelated:** `RhythmEditor.initState` called `_notify()` — which calls `widget.onRuleChanged(_rule)` — synchronously and unconditionally. Both of its call sites (`HabitCreateScreen`, `PlanCreateScreen`) pass an inline `onRuleChanged: (rule) => setState(() => _rule = rule)`. Since `RhythmEditor` first mounts *during* its parent's own build (as part of inflating the parent's widget tree), that inline callback fired a `setState` on the parent while the parent itself was still being built — Flutter's own "setState() or markNeedsBuild() called during build" invariant, which surfaced as `'_dependents.isEmpty': is not true` and cascading follow-on assertions once the tree was already corrupted. This is 100% reproducible, not a timing flake: reached the exact same crash from a clean process launch every time, on both screens.
@@ -387,6 +394,7 @@ Habits' spec-sequence sibling — `ProjectRepository`/`AppProject` existed since
 ### Files and a filtered Activity history (§11.3) are deferred
 **Decision:** this pass ships Tasks (grouped, inline add) and Notes (free-text `description`) — not "Files" (needs the Links/Documents feature, itself unbuilt — §17.3) or an `activity_log`-filtered Activity section (a real feature needing its own query/rendering layer, not a quick addition).
 **Why:** same category as "Fill from watchlist" and goal contributions earlier this session — the core primitive (a real Project a Task can belong to, with derived progress) is what makes Projects a real feature; these two sections are additive and depend on other unbuilt features (Files) or non-trivial new UI (a filtered activity feed) that don't block Projects from being genuinely useful today.
+**Files is built now (2026-08-29), once Documents existed to unblock it — see the newer entry above. The Activity section remains deferred.**
 
 ## §13 — Habits (2026-08-28)
 
