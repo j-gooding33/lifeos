@@ -17,6 +17,7 @@ class YearGrid extends StatefulWidget {
     required this.milestoneDates,
     required this.onSelectDay,
     this.lastYearScores,
+    this.exportKey,
     super.key,
   });
 
@@ -30,6 +31,13 @@ class YearGrid extends StatefulWidget {
   /// week N of this year), not by calendar date, since the two years
   /// rarely share the same number of weeks.
   final Map<CivilDate, int>? lastYearScores;
+
+  /// "Share your year" (§21.1) needs to capture the *whole* grid, not just
+  /// whatever's currently scrolled into view — this key sits on a
+  /// `RepaintBoundary` wrapping the full-width `CustomPaint`, inside the
+  /// `SingleChildScrollView`'s clip, precisely so a caller's
+  /// `RenderRepaintBoundary.toImage()` isn't limited to the viewport.
+  final GlobalKey? exportKey;
 
   @override
   State<YearGrid> createState() => _YearGridState();
@@ -78,21 +86,27 @@ class _YearGridState extends State<YearGrid> {
       scrollDirection: Axis.horizontal,
       child: GestureDetector(
         onTapUp: (details) => _handleTap(details.localPosition),
-        child: CustomPaint(
-          size: Size(width, height),
-          painter: _YearGridPainter(
-            weekStart: _weekStart,
-            year: widget.year,
-            columns: _columns,
-            activityScores: widget.activityScores,
-            milestoneDates: widget.milestoneDates,
-            today: CivilDate.fromDateTime(DateTime.now()),
-            accentColour: colors.accent.base,
-            trackColour: colors.neutrals.surfaceSunken,
-            ringColour: colors.neutrals.ink,
-            lastYearScores: widget.lastYearScores,
-            lastYearWeekStart: _lastYearWeekStart,
-            compareLineColour: colors.neutrals.ink,
+        child: RepaintBoundary(
+          key: widget.exportKey,
+          child: ColoredBox(
+            color: colors.neutrals.bg,
+            child: CustomPaint(
+              size: Size(width, height),
+              painter: _YearGridPainter(
+                weekStart: _weekStart,
+                year: widget.year,
+                columns: _columns,
+                activityScores: widget.activityScores,
+                milestoneDates: widget.milestoneDates,
+                today: CivilDate.fromDateTime(DateTime.now()),
+                accentColour: colors.accent.base,
+                trackColour: colors.neutrals.surfaceSunken,
+                ringColour: colors.neutrals.ink,
+                lastYearScores: widget.lastYearScores,
+                lastYearWeekStart: _lastYearWeekStart,
+                compareLineColour: colors.neutrals.ink,
+              ),
+            ),
           ),
         ),
       ),

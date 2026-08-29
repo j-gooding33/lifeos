@@ -1,18 +1,25 @@
+import 'dart:io';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
 import 'package:life_os/design/components/l_list_tile.dart';
 import 'package:life_os/design/components/l_stat.dart';
+import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/stats/application/stats_providers.dart';
 import 'package:life_os/features/stats/presentation/widgets/year_grid.dart';
 import 'package:life_os/routing/routes.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// §21: "the signature screen." The grid render satisfies §21.3's "not 365
-/// widgets" via `YearGrid`'s `CustomPainter`. "Share your year" (PNG
-/// export) isn't built — see DECISIONS.md.
+/// widgets" via `YearGrid`'s `CustomPainter`.
 class YourYearScreen extends ConsumerStatefulWidget {
   const YourYearScreen({super.key});
 
@@ -23,6 +30,7 @@ class YourYearScreen extends ConsumerStatefulWidget {
 class _YourYearScreenState extends ConsumerState<YourYearScreen> {
   late var _year = DateTime.now().year;
   var _compareToLastYear = false;
+  final _exportKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +58,9 @@ class _YourYearScreenState extends ConsumerState<YourYearScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(icon: const Icon(Icons.ios_share), tooltip: 'Share your year', onPressed: _share),
+        ],
       ),
       body: asyncScores.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -81,6 +92,7 @@ class _YourYearScreenState extends ConsumerState<YourYearScreen> {
                 milestoneDates: asyncMilestoneDates.value ?? const {},
                 onSelectDay: (date) => context.push(Routes.homeDay.replaceFirst(':date', date.toIso())),
                 lastYearScores: asyncLastYearScores?.value,
+                exportKey: _exportKey,
               ),
               const SizedBox(height: LifeSpace.s16),
               const _Legend(),
@@ -98,6 +110,28 @@ class _YourYearScreenState extends ConsumerState<YourYearScreen> {
         },
       ),
     );
+  }
+
+  /// §21.1's "Share your year" — captures the grid `RepaintBoundary`
+  /// (regardless of scroll position, see `YearGrid.exportKey`'s own doc
+  /// comment) as a PNG and hands it to the OS share sheet. No caption
+  /// baked into the image itself; that goes as the share text instead, so
+  /// the image stays just the grid.
+  Future<void> _share() async {
+    final boundary = _exportKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return;
+    try {
+      final image = await boundary.toImage(pixelRatio: 3);
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (bytes == null) return;
+      final file = File(p.join((await getTemporaryDirectory()).path, 'your_year_$_year.png'));
+      await file.writeAsBytes(bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes));
+      await SharePlus.instance.share(
+        ShareParams(files: [XFile(file.path)], text: 'My $_year in Life OS'),
+      );
+    } on Object {
+      if (mounted) LToast.show(context, "Couldn't create the image to share");
+    }
   }
 
   int _longestStreak(Set<CivilDate> activeDates) {
