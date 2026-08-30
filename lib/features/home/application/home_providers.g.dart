@@ -231,6 +231,62 @@ final class HomeFinanceRepositoryProvider
 String _$homeFinanceRepositoryHash() =>
     r'f7a452ee8e60bc025fae8c8700fd62c5c2e99efb';
 
+/// Own instance rather than `library/`'s `libraryItemRepositoryProvider`,
+/// same rule-4 reason as `planMediaRepositoryProvider` (§16.5).
+
+@ProviderFor(homeLibraryItemRepository)
+const homeLibraryItemRepositoryProvider = HomeLibraryItemRepositoryProvider._();
+
+/// Own instance rather than `library/`'s `libraryItemRepositoryProvider`,
+/// same rule-4 reason as `planMediaRepositoryProvider` (§16.5).
+
+final class HomeLibraryItemRepositoryProvider
+    extends
+        $FunctionalProvider<
+          LibraryItemRepository,
+          LibraryItemRepository,
+          LibraryItemRepository
+        >
+    with $Provider<LibraryItemRepository> {
+  /// Own instance rather than `library/`'s `libraryItemRepositoryProvider`,
+  /// same rule-4 reason as `planMediaRepositoryProvider` (§16.5).
+  const HomeLibraryItemRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'homeLibraryItemRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$homeLibraryItemRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<LibraryItemRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  LibraryItemRepository create(Ref ref) {
+    return homeLibraryItemRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LibraryItemRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LibraryItemRepository>(value),
+    );
+  }
+}
+
+String _$homeLibraryItemRepositoryHash() =>
+    r'a8c887aaedd08a204a495dc68015010d3e2112dd';
+
 @ProviderFor(dashboardCardRepository)
 const dashboardCardRepositoryProvider = DashboardCardRepositoryProvider._();
 
@@ -754,4 +810,4 @@ final class HomeSnapshotProvider
   }
 }
 
-String _$homeSnapshotHash() => r'e1ddb7fef25a56aa5798d77779e029014b4dec57';
+String _$homeSnapshotHash() => r'9f82b7a4ae2d9336e5aa6110bb0c57cdf3138a8f';

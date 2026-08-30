@@ -19,6 +19,7 @@ const _cardTypeLabels = {
   DashboardCardType.dailyStats: 'Daily stats',
   DashboardCardType.journalPrompt: 'Journal prompt',
   DashboardCardType.spending: 'Spending',
+  DashboardCardType.filmNext: 'Next film',
 };
 
 const _sizeLabels = {DashboardCardSize.small: 'S', DashboardCardSize.medium: 'M', DashboardCardSize.large: 'L'};

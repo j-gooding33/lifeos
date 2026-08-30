@@ -9,6 +9,7 @@ import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/home/application/home_providers.dart';
 import 'package:life_os/features/home/presentation/widgets/daily_stats_card.dart';
+import 'package:life_os/features/home/presentation/widgets/film_next_card.dart';
 import 'package:life_os/features/home/presentation/widgets/focus_card.dart';
 import 'package:life_os/features/home/presentation/widgets/goals_card.dart';
 import 'package:life_os/features/home/presentation/widgets/habits_card.dart';
@@ -23,8 +24,8 @@ import 'package:life_os/routing/routes.dart';
 /// §5. The one screen every user sees every day. `focus` is always first,
 /// "cannot be hidden or moved" (§5.3) — rendered unconditionally rather
 /// than as a `DashboardCard` row. Everything else comes from Settings →
-/// Home dashboard's reorder/visibility (§5.4). `reading`, `filmNext`,
-/// `study`, `activity` and `aiSuggestions` aren't built this pass — see
+/// Home dashboard's reorder/visibility (§5.4). `reading`, `study`,
+/// `activity` and `aiSuggestions` aren't built this pass — see
 /// DECISIONS.md.
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -47,6 +48,7 @@ class HomeScreen extends ConsumerWidget {
       DashboardCardType.dailyStats => DailyStatsCard(snapshot: snapshot),
       DashboardCardType.journalPrompt => JournalPromptCard(snapshot: snapshot),
       DashboardCardType.spending => SpendingCard(snapshot: snapshot),
+      DashboardCardType.filmNext => FilmNextCard(snapshot: snapshot),
     };
   }
 

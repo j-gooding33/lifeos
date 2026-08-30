@@ -1,10 +1,29 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/models/app_task.dart';
 import 'package:life_os/features/home/application/home_providers.dart';
 
 AppTask _task(String title, {String? dueDate}) {
   return AppTask(id: title, userId: 'u1', title: title, dueDate: dueDate);
+}
+
+AppOccurrence _occurrence(
+  String id, {
+  required String planId,
+  required int day,
+  OccurrenceStatus status = OccurrenceStatus.pending,
+  String? linkedEntityType,
+  String? linkedEntityId,
+}) {
+  return AppOccurrence(
+    id: id,
+    planId: planId,
+    scheduledDate: CivilDate(2026, 9, day),
+    status: status,
+    linkedEntityType: linkedEntityType,
+    linkedEntityId: linkedEntityId,
+  );
 }
 
 void main() {
@@ -54,6 +73,7 @@ void main() {
       spentThisMonthMinor: 0,
       monthlyBudgetMinor: null,
       currency: 'GBP',
+      filmNext: null,
     );
     const oneFull = HomeSnapshot(
       focusItems: [],
@@ -73,10 +93,61 @@ void main() {
       spentThisMonthMinor: 0,
       monthlyBudgetMinor: null,
       currency: 'GBP',
+      filmNext: null,
     );
 
     expect(allEmpty.hasNothingUpcoming, isTrue);
     expect(oneFull.hasNothingUpcoming, isFalse);
+  });
+
+  group('nextLinkedFilmOccurrence', () {
+    test('picks the soonest linked occurrence among the given plan ids', () {
+      final occurrences = [
+        _occurrence('a', planId: 'film-plan', day: 8, linkedEntityType: 'libraryItem', linkedEntityId: 'item1'),
+        _occurrence('b', planId: 'film-plan', day: 2, linkedEntityType: 'libraryItem', linkedEntityId: 'item2'),
+        _occurrence('c', planId: 'film-plan', day: 5, linkedEntityType: 'libraryItem', linkedEntityId: 'item3'),
+      ];
+      final result = nextLinkedFilmOccurrence(occurrences, {'film-plan'});
+      expect(result?.id, 'b');
+    });
+
+    test('ignores occurrences with nothing linked yet', () {
+      final occurrences = [_occurrence('a', planId: 'film-plan', day: 2)];
+      expect(nextLinkedFilmOccurrence(occurrences, {'film-plan'}), isNull);
+    });
+
+    test('ignores occurrences from plans not in the given set', () {
+      final occurrences = [
+        _occurrence('a', planId: 'other-plan', day: 2, linkedEntityType: 'libraryItem', linkedEntityId: 'item1'),
+      ];
+      expect(nextLinkedFilmOccurrence(occurrences, {'film-plan'}), isNull);
+    });
+
+    test('ignores completed or cancelled occurrences even if linked', () {
+      final occurrences = [
+        _occurrence(
+          'a',
+          planId: 'film-plan',
+          day: 2,
+          status: OccurrenceStatus.completed,
+          linkedEntityType: 'libraryItem',
+          linkedEntityId: 'item1',
+        ),
+        _occurrence(
+          'b',
+          planId: 'film-plan',
+          day: 4,
+          status: OccurrenceStatus.cancelled,
+          linkedEntityType: 'libraryItem',
+          linkedEntityId: 'item2',
+        ),
+      ];
+      expect(nextLinkedFilmOccurrence(occurrences, {'film-plan'}), isNull);
+    });
+
+    test('empty input returns null, not a crash', () {
+      expect(nextLinkedFilmOccurrence(const [], {'film-plan'}), isNull);
+    });
   });
 
   group('currentStreak', () {

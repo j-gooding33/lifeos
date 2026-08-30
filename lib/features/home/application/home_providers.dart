@@ -10,6 +10,7 @@ import 'package:life_os/data/local/daos/library_item_dao.dart';
 import 'package:life_os/data/local/daos/plan_dao.dart';
 import 'package:life_os/data/local/daos/project_dao.dart';
 import 'package:life_os/data/local/daos/task_dao.dart';
+import 'package:life_os/data/media/media_types.dart';
 import 'package:life_os/data/repositories/dashboard_card_repository.dart';
 import 'package:life_os/data/repositories/finance_repository.dart';
 import 'package:life_os/data/repositories/goal_repository.dart';
@@ -18,6 +19,7 @@ import 'package:life_os/data/repositories/library_item_repository.dart';
 import 'package:life_os/data/repositories/models/app_dashboard_card.dart';
 import 'package:life_os/data/repositories/models/app_expense.dart';
 import 'package:life_os/data/repositories/models/app_goal.dart';
+import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/data/repositories/models/app_project.dart';
 import 'package:life_os/data/repositories/models/app_task.dart';
@@ -59,6 +61,17 @@ class ProjectProgressItem {
   final double? progress;
 }
 
+/// The soonest upcoming, already-chosen film for the `filmNext` card
+/// (§5.3) — [libraryItem] is only resolved once a candidate occurrence is
+/// found, so this bundles all three rather than making the card re-fetch.
+class FilmNextItem {
+  const FilmNextItem({required this.occurrence, required this.plan, required this.libraryItem});
+
+  final AppOccurrence occurrence;
+  final AppPlan plan;
+  final AppLibraryItem libraryItem;
+}
+
 /// §5.5: "a single HomeSnapshot provider that runs one composed query."
 /// Repositories are constructed straight from DAOs rather than by
 /// importing Tasks/Plans/Goals/Projects/Journal/Finance's own provider
@@ -82,6 +95,7 @@ class HomeSnapshot {
     required this.spentThisMonthMinor,
     required this.monthlyBudgetMinor,
     required this.currency,
+    required this.filmNext,
   });
 
   /// Capped at 6 (§5.3's `focus` card).
@@ -119,6 +133,10 @@ class HomeSnapshot {
   final int? monthlyBudgetMinor;
   final String currency;
 
+  /// `null` when there's no film plan, or none of its upcoming occurrences
+  /// has a film chosen yet (§5.3's `filmNext` card).
+  final FilmNextItem? filmNext;
+
   bool get allDoneToday => totalToday > 0 && doneToday == totalToday;
   bool get hasNothingToday => totalToday == 0;
 
@@ -147,6 +165,26 @@ class HomeSnapshot {
     },
     undated: UpcomingBucket(count: undated.length, firstTitle: undated.isEmpty ? null : undated.first.title),
   );
+}
+
+/// Pure — the soonest pending occurrence, among [filmPlanIds], that
+/// already has a film chosen. `null` when nothing qualifies, so the
+/// `filmNext` card can hide itself honestly rather than showing a stale
+/// or invented pick. Split out from [homeSnapshot] so the picking rule
+/// itself is unit-testable without a database.
+AppOccurrence? nextLinkedFilmOccurrence(List<AppOccurrence> occurrences, Set<String> filmPlanIds) {
+  final candidates =
+      occurrences
+          .where(
+            (o) =>
+                filmPlanIds.contains(o.planId) &&
+                o.status == OccurrenceStatus.pending &&
+                o.linkedEntityType == 'libraryItem' &&
+                o.linkedEntityId != null,
+          )
+          .toList()
+        ..sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
+  return candidates.firstOrNull;
 }
 
 /// Consecutive days ending today with at least one completion, from the
@@ -178,6 +216,12 @@ ProjectRepository homeProjectRepository(Ref ref) => ProjectRepository(ProjectDao
 
 @Riverpod(keepAlive: true)
 FinanceRepository homeFinanceRepository(Ref ref) => FinanceRepository(FinanceDao(ref.watch(appDatabaseProvider)));
+
+/// Own instance rather than `library/`'s `libraryItemRepositoryProvider`,
+/// same rule-4 reason as `planMediaRepositoryProvider` (§16.5).
+@Riverpod(keepAlive: true)
+LibraryItemRepository homeLibraryItemRepository(Ref ref) =>
+    LibraryItemRepository(LibraryItemDao(ref.watch(appDatabaseProvider)));
 
 @Riverpod(keepAlive: true)
 DashboardCardRepository dashboardCardRepository(Ref ref) =>
@@ -312,6 +356,7 @@ HomeSnapshot _emptySnapshot() => const HomeSnapshot(
   spentThisMonthMinor: 0,
   monthlyBudgetMinor: null,
   currency: 'GBP',
+  filmNext: null,
 );
 
 @riverpod
@@ -380,6 +425,23 @@ Future<HomeSnapshot> homeSnapshot(Ref ref) async {
   final budgets = await firstValue(financeRepository.watchBudgets(userId));
   final overallBudget = budgets.where((b) => b.categoryId == null).firstOrNull;
 
+  // filmNext: another glance-and-tap-through card, same one-shot-read
+  // category as Goals/Projects above.
+  final filmPlanIds = activePlans.where((p) => p.mediaType == MediaType.film.name).map((p) => p.id).toSet();
+  FilmNextItem? filmNext;
+  if (filmPlanIds.isNotEmpty) {
+    final planRepository = ref.watch(homePlanRepositoryProvider);
+    final upcomingOccurrences = await firstValue(planRepository.watchOccurrencesInRange(userId, today, today.addDays(180)));
+    final nextOccurrence = nextLinkedFilmOccurrence(upcomingOccurrences, filmPlanIds);
+    if (nextOccurrence != null) {
+      final plan = activePlans.firstWhere((p) => p.id == nextOccurrence.planId);
+      final libraryItem = await firstValue(ref.watch(homeLibraryItemRepositoryProvider).watchById(nextOccurrence.linkedEntityId!));
+      if (libraryItem != null) {
+        filmNext = FilmNextItem(occurrence: nextOccurrence, plan: plan, libraryItem: libraryItem);
+      }
+    }
+  }
+
   return HomeSnapshot(
     // Cap at 6 (§5.3) — Home never renders an unbounded list (§5.6).
     focusItems: focusItems.take(6).toList(),
@@ -399,5 +461,6 @@ Future<HomeSnapshot> homeSnapshot(Ref ref) async {
     spentThisMonthMinor: spentThisMonthMinor,
     monthlyBudgetMinor: overallBudget?.amountMinor,
     currency: currency,
+    filmNext: filmNext,
   );
 }
