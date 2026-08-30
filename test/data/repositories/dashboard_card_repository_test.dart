@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:life_os/data/local/daos/dashboard_card_dao.dart';
@@ -34,6 +35,29 @@ void main() {
 
     final after = await repository.watchAll('u1').first;
     expect(after.first.visible, isNot(first.first.visible));
+  });
+
+  test('ensureDefaults backfills a newly-added catalog type without touching existing rows', () async {
+    await repository.ensureDefaults('u1');
+    final before = await repository.watchAll('u1').first;
+    final spending = before.firstWhere((c) => c.type == DashboardCardType.spending);
+    await repository.setVisible(spending, visible: !spending.visible);
+    // Simulate this user's rows predating `filmNext` joining the catalog.
+    await (database.delete(database.dashboardCards)
+          ..where((c) => c.userId.equals('u1') & c.type.equals(DashboardCardType.filmNext.name)))
+        .go();
+
+    await repository.ensureDefaults('u1');
+
+    final after = await repository.watchAll('u1').first;
+    expect(after.length, DashboardCardType.values.length);
+    final backfilled = after.firstWhere((c) => c.type == DashboardCardType.filmNext);
+    expect(backfilled.visible, defaultVisibleDashboardCardTypes.contains(DashboardCardType.filmNext));
+    final survivingPositions = before.where((c) => c.type != DashboardCardType.filmNext).map((c) => c.position);
+    expect(backfilled.position, greaterThan(survivingPositions.reduce((a, b) => a > b ? a : b)));
+    final spendingAfter = after.firstWhere((c) => c.type == DashboardCardType.spending);
+    expect(spendingAfter.id, spending.id);
+    expect(spendingAfter.visible, isNot(spending.visible));
   });
 
   test('reorder persists new positions in the order given', () async {

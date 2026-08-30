@@ -14,13 +14,32 @@ class DashboardCardRepository {
 
   Stream<List<AppDashboardCard>> watchAll(String userId) => _dao.watchAll(userId).map(_toDomainList);
 
-  /// Materialises one row per catalog type the first time a user's
-  /// dashboard is read, so the customise screen always has every type to
-  /// toggle on — not just the ones already visible.
+  /// Materialises one row per catalog type not already present for this
+  /// user — the first time their dashboard is read (every type is
+  /// "missing"), and again whenever the catalog itself grows (e.g.
+  /// `filmNext` added after this user's rows already existed), so the
+  /// customise screen always has every type to toggle on without ever
+  /// touching an existing row's position/visibility/size.
   Future<void> ensureDefaults(String userId) async {
     final existing = await _dao.getAll(userId);
-    if (existing.isNotEmpty) return;
-    await resetToDefault(userId);
+    // `existing` is the raw Drift row (`.type` is the stored string), not
+    // the domain model — comparing it directly against a `DashboardCardType`
+    // below would silently never match (a String is never `==` to an enum),
+    // so every type would look "missing" every time. Parse it first.
+    final existingTypes = existing.map((c) => DashboardCardType.values.byName(c.type)).toSet();
+    final missingTypes = dashboardCardTypeOrder.where((t) => !existingTypes.contains(t));
+    var nextPosition = existing.isEmpty ? 0 : existing.map((c) => c.position).reduce((a, b) => a > b ? a : b) + 1;
+    for (final type in missingTypes) {
+      await _save(
+        AppDashboardCard(
+          id: const Uuid().v4(),
+          userId: userId,
+          type: type,
+          position: nextPosition++,
+          visible: defaultVisibleDashboardCardTypes.contains(type),
+        ),
+      );
+    }
   }
 
   Future<void> resetToDefault(String userId) async {
