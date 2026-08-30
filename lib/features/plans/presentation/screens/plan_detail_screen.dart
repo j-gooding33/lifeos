@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:life_os/core/providers/app_providers.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/core/utils/first_value.dart';
+import 'package:life_os/data/media/media_types.dart';
+import 'package:life_os/data/repositories/models/app_library_item.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/design/components/l_card.dart';
 import 'package:life_os/design/components/l_check_circle.dart';
@@ -10,8 +14,10 @@ import 'package:life_os/design/components/l_loading_shimmer.dart';
 import 'package:life_os/design/components/l_notes_section.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_stat.dart';
+import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
+import 'package:life_os/features/plans/application/fill_from_watchlist.dart';
 import 'package:life_os/features/plans/application/plan_icons.dart';
 import 'package:life_os/features/plans/application/plan_providers.dart';
 import 'package:life_os/features/plans/presentation/occurrence_status_style.dart';
@@ -21,6 +27,19 @@ import 'package:life_os/features/plans/presentation/widgets/occurrence_sheet.dar
 import 'package:life_os/features/plans/presentation/widgets/plan_actions_menu.dart';
 
 const _weekdayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const _fillOrderLabels = {
+  WatchlistFillOrder.added: 'Added order',
+  WatchlistFillOrder.alphabetical: 'Alphabetical',
+  WatchlistFillOrder.shortestFirst: 'Shortest first',
+  WatchlistFillOrder.shuffle: 'Shuffle',
+};
+
+MediaType? _parseMediaType(String? raw) {
+  for (final type in MediaType.values) {
+    if (type.name == raw) return type;
+  }
+  return null;
+}
 const _monthNames = [
   'Jan',
   'Feb',
@@ -207,11 +226,22 @@ class _UpcomingSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final asyncOccurrences = ref.watch(upcomingOccurrencesProvider(plan.id));
+    final mediaType = _parseMediaType(plan.mediaType);
     return LCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const LSectionHeader(title: 'Upcoming'),
+          LSectionHeader(
+            title: 'Upcoming',
+            trailing: mediaType == null
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.auto_awesome_outlined, size: 20),
+                    tooltip: 'Fill from watchlist',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _fillFromWatchlist(context, ref, plan, mediaType),
+                  ),
+          ),
           const SizedBox(height: LifeSpace.s8),
           asyncOccurrences.when(
             loading: () => const LLoadingShimmer(height: 40),
@@ -289,6 +319,52 @@ class _UpcomingSection extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// §16.5: "assigns the next N unwatched items to the next N empty
+/// occurrences." Looks 180 days ahead for empty (pending, unlinked)
+/// occurrences — generous enough that a normal-frequency plan always has
+/// more candidates than watchlist items, without querying unbounded.
+Future<void> _fillFromWatchlist(BuildContext context, WidgetRef ref, AppPlan plan, MediaType mediaType) async {
+  final order = await showDialog<WatchlistFillOrder>(
+    context: context,
+    builder: (dialogContext) => SimpleDialog(
+      title: const Text('Fill from watchlist'),
+      children: [
+        for (final option in WatchlistFillOrder.values)
+          SimpleDialogOption(
+            onPressed: () => Navigator.of(dialogContext).pop(option),
+            child: Text(_fillOrderLabels[option]!),
+          ),
+      ],
+    ),
+  );
+  if (order == null || !context.mounted) return;
+
+  final today = CivilDate.fromDateTime(DateTime.now());
+  final repository = ref.read(planRepositoryProvider);
+  // Read directly from the repositories rather than through the (autoDispose)
+  // providers: a one-off `ref.read(provider.future)` here has no active
+  // watcher keeping the provider alive across the async gap, so it can be
+  // disposed mid-flight ("disposed during loading state") before it resolves.
+  final occurrences = await firstValue(repository.watchPlanOccurrencesInRange(plan.id, today, today.addDays(180)));
+  final emptyOccurrences = occurrences.where((o) => o.status == OccurrenceStatus.pending && o.linkedEntityId == null).toList();
+  final userId = await ref.read(currentUserIdProvider.future);
+  final allLibraryItems = await firstValue(ref.read(planMediaRepositoryProvider).watchAll(userId, mediaType));
+  final unwatchedItems = allLibraryItems.where((i) => i.status != LibraryItemStatus.done).toList();
+
+  final pairs = planWatchlistFill(emptyOccurrences: emptyOccurrences, unwatchedItems: unwatchedItems, order: order);
+  for (final (occurrence, item) in pairs) {
+    await repository.linkOccurrenceToLibraryItem(occurrence.id, item.id);
+  }
+
+  if (!context.mounted) return;
+  LToast.show(
+    context,
+    pairs.isEmpty
+        ? 'Nothing to fill — check your watchlist and upcoming occurrences.'
+        : 'Filled ${pairs.length} occurrence${pairs.length == 1 ? '' : 's'}.',
+  );
 }
 
 /// §16.5's "🎬 Interstellar" / "＋ choose a film" row content — an at-a-glance
