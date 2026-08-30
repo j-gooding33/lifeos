@@ -20,6 +20,7 @@ const _cardTypeLabels = {
   DashboardCardType.journalPrompt: 'Journal prompt',
   DashboardCardType.spending: 'Spending',
   DashboardCardType.filmNext: 'Next film',
+  DashboardCardType.activity: 'Activity',
 };
 
 const _sizeLabels = {DashboardCardSize.small: 'S', DashboardCardSize.medium: 'M', DashboardCardSize.large: 'L'};

@@ -96,6 +96,7 @@ class HomeSnapshot {
     required this.monthlyBudgetMinor,
     required this.currency,
     required this.filmNext,
+    required this.activityLast14Days,
   });
 
   /// Capped at 6 (§5.3's `focus` card).
@@ -136,6 +137,10 @@ class HomeSnapshot {
   /// `null` when there's no film plan, or none of its upcoming occurrences
   /// has a film chosen yet (§5.3's `filmNext` card).
   final FilmNextItem? filmNext;
+
+  /// Always exactly 14 entries, oldest first, today last (§5.3's
+  /// `activity` card).
+  final List<int> activityLast14Days;
 
   bool get allDoneToday => totalToday > 0 && doneToday == totalToday;
   bool get hasNothingToday => totalToday == 0;
@@ -185,6 +190,14 @@ AppOccurrence? nextLinkedFilmOccurrence(List<AppOccurrence> occurrences, Set<Str
           .toList()
         ..sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
   return candidates.firstOrNull;
+}
+
+/// Pure — the last [days] days' completion counts, oldest first, for the
+/// `activity` card's sparkline (§5.3). A day with no entry in [scores]
+/// (nothing completed) is zero, not omitted — the sparkline always has
+/// exactly [days] bars.
+List<int> activitySparkline(Map<CivilDate, int> scores, CivilDate today, {int days = 14}) {
+  return [for (var i = days - 1; i >= 0; i--) scores[today.addDays(-i)] ?? 0];
 }
 
 /// Consecutive days ending today with at least one completion, from the
@@ -357,6 +370,7 @@ HomeSnapshot _emptySnapshot() => const HomeSnapshot(
   monthlyBudgetMinor: null,
   currency: 'GBP',
   filmNext: null,
+  activityLast14Days: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 );
 
 @riverpod
@@ -412,6 +426,7 @@ Future<HomeSnapshot> homeSnapshot(Ref ref) async {
       .watch(homeStatsRepositoryProvider)
       .dailyActivityScores(userId: userId, from: today.addDays(-60), to: today);
   final streak = currentStreak(scores, today);
+  final activitySparklineData = activitySparkline(scores, today);
 
   final profile = await firstValue(ref.watch(profileRepositoryProvider).watchProfile(userId));
   final currency = profile?.currency ?? 'GBP';
@@ -462,5 +477,6 @@ Future<HomeSnapshot> homeSnapshot(Ref ref) async {
     monthlyBudgetMinor: overallBudget?.amountMinor,
     currency: currency,
     filmNext: filmNext,
+    activityLast14Days: activitySparklineData,
   );
 }

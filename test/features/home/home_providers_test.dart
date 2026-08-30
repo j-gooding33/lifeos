@@ -74,6 +74,7 @@ void main() {
       monthlyBudgetMinor: null,
       currency: 'GBP',
       filmNext: null,
+      activityLast14Days: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     );
     const oneFull = HomeSnapshot(
       focusItems: [],
@@ -94,6 +95,7 @@ void main() {
       monthlyBudgetMinor: null,
       currency: 'GBP',
       filmNext: null,
+      activityLast14Days: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     );
 
     expect(allEmpty.hasNothingUpcoming, isTrue);
@@ -147,6 +149,29 @@ void main() {
 
     test('empty input returns null, not a crash', () {
       expect(nextLinkedFilmOccurrence(const [], {'film-plan'}), isNull);
+    });
+  });
+
+  group('activitySparkline', () {
+    const today = CivilDate(2026, 9, 14);
+
+    test('returns exactly 14 entries, oldest first, today last', () {
+      final scores = {today: 3, today.addDays(-13): 1};
+      final result = activitySparkline(scores, today);
+      expect(result.length, 14);
+      expect(result.first, 1);
+      expect(result.last, 3);
+    });
+
+    test('a day with no recorded activity is zero, not omitted', () {
+      final result = activitySparkline(const {}, today);
+      expect(result, List.filled(14, 0));
+    });
+
+    test('respects a custom window size', () {
+      final scores = {today: 5, today.addDays(-1): 2};
+      final result = activitySparkline(scores, today, days: 2);
+      expect(result, [2, 5]);
     });
   });
 

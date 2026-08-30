@@ -1,8 +1,7 @@
 /// §5.3's card catalogue. `focus` isn't here — it's "always first, cannot
 /// be hidden or moved," so it's rendered unconditionally by `HomeScreen`
-/// rather than being a row a user can toggle. `reading`, `study`,
-/// `activity` and `aiSuggestions` aren't built this pass — see
-/// DECISIONS.md.
+/// rather than being a row a user can toggle. `reading`, `study` and
+/// `aiSuggestions` aren't built this pass — see DECISIONS.md.
 enum DashboardCardType {
   plansToday,
   habits,
@@ -14,6 +13,7 @@ enum DashboardCardType {
   journalPrompt,
   spending,
   filmNext,
+  activity,
 }
 
 enum DashboardCardSize { small, medium, large }
