@@ -9,6 +9,8 @@ import 'package:life_os/features/calendar/presentation/screens/event_detail_scre
 import 'package:life_os/features/finance/presentation/screens/expense_edit_screen.dart';
 import 'package:life_os/features/finance/presentation/screens/finance_budgets_screen.dart';
 import 'package:life_os/features/finance/presentation/screens/finance_overview_screen.dart';
+import 'package:life_os/features/home/application/briefing.dart';
+import 'package:life_os/features/home/presentation/screens/briefing_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_customize_screen.dart';
 import 'package:life_os/features/home/presentation/screens/home_screen.dart';
 import 'package:life_os/features/journal/presentation/screens/journal_entry_screen.dart';
@@ -113,7 +115,12 @@ GoRouter buildRouter() {
                 path: Routes.homeDay,
                 builder: (context, state) => DayDetailScreen(date: CivilDate.parse(state.pathParameters['date']!)),
               ),
-              _placeholderRoute(Routes.homeBriefing, 'Briefing'),
+              GoRoute(
+                path: Routes.homeBriefing,
+                builder: (context, state) => BriefingScreen(
+                  period: state.pathParameters['period'] == 'evening' ? BriefingPeriod.evening : BriefingPeriod.morning,
+                ),
+              ),
               GoRoute(
                 path: Routes.homeCustomise,
                 builder: (context, state) => const HomeCustomizeScreen(),

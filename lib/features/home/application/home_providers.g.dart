@@ -810,4 +810,4 @@ final class HomeSnapshotProvider
   }
 }
 
-String _$homeSnapshotHash() => r'9f82b7a4ae2d9336e5aa6110bb0c57cdf3138a8f';
+String _$homeSnapshotHash() => r'd0e17bb65159f14f55d131427dd2848242415ff1';

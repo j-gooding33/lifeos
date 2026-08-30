@@ -80,6 +80,16 @@ class HomeScreen extends ConsumerWidget {
                   context: context,
                   position: position,
                   items: [
+                    LMenuItem(
+                      label: 'Morning briefing',
+                      icon: Icons.wb_sunny_outlined,
+                      onTap: () => context.push(Routes.homeBriefing.replaceFirst(':period', 'morning')),
+                    ),
+                    LMenuItem(
+                      label: 'Evening briefing',
+                      icon: Icons.nights_stay_outlined,
+                      onTap: () => context.push(Routes.homeBriefing.replaceFirst(':period', 'evening')),
+                    ),
                     LMenuItem(label: 'Stats', icon: Icons.bar_chart_outlined, onTap: () => context.push(Routes.stats)),
                     LMenuItem(label: 'Journal', icon: Icons.book_outlined, onTap: () => context.push(Routes.journal)),
                     LMenuItem(label: 'Finance', icon: Icons.account_balance_wallet_outlined, onTap: () => context.push(Routes.finance)),
