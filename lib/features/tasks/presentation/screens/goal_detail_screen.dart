@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:life_os/core/scheduling/civil_date.dart';
+import 'package:life_os/core/utils/first_value.dart';
 import 'package:life_os/data/repositories/models/app_goal.dart';
 import 'package:life_os/data/repositories/models/app_plan.dart';
 import 'package:life_os/design/components/l_button.dart';
@@ -15,6 +16,7 @@ import 'package:life_os/design/components/l_progress_ring.dart';
 import 'package:life_os/design/components/l_prompt_dialog.dart';
 import 'package:life_os/design/components/l_section_header.dart';
 import 'package:life_os/design/components/l_text_field.dart';
+import 'package:life_os/design/components/l_toast.dart';
 import 'package:life_os/design/theme/theme_extensions.dart';
 import 'package:life_os/design/tokens/spacing.dart';
 import 'package:life_os/features/tasks/application/goal_projection.dart';
@@ -69,54 +71,6 @@ class GoalDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _editGoal(BuildContext context, WidgetRef ref, AppGoal goal) async {
-    final titleController = TextEditingController(text: goal.title);
-    final targetController = TextEditingController(text: goal.targetValue == null ? '' : goal.targetValue!.toString());
-    var endDate = goal.endDate == null ? null : DateTime(goal.endDate!.year, goal.endDate!.month, goal.endDate!.day);
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setState) => AlertDialog(
-          title: const Text('Edit goal'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LTextField(controller: titleController, label: 'Title', outlined: true),
-                if (goal.targetValue != null) ...[
-                  const SizedBox(height: LifeSpace.s12),
-                  LTextField(controller: targetController, label: 'Target', outlined: true, keyboardType: TextInputType.number),
-                ],
-                const SizedBox(height: LifeSpace.s12),
-                LDatePicker(date: endDate, onChanged: (d) => setState(() => endDate = d)),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-            TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Save')),
-          ],
-        ),
-      ),
-    );
-    if (saved != true) return;
-    final title = titleController.text.trim();
-    if (title.isEmpty) return;
-    final target = goal.targetValue == null ? null : double.tryParse(targetController.text.trim());
-    await ref
-        .read(goalRepositoryProvider)
-        .updateGoal(
-          goal.copyWith(
-            title: title,
-            targetValue: target,
-            endDate: endDate == null ? null : CivilDate.fromDateTime(endDate!),
-            clearEndDate: endDate == null,
-          ),
-        );
-  }
-
   Future<void> _deleteGoal(BuildContext context, WidgetRef ref, AppGoal goal) async {
     final confirmed = await LConfirmDialog.show(
       context,
@@ -127,6 +81,90 @@ class GoalDetailScreen extends ConsumerWidget {
     await ref.read(goalRepositoryProvider).deleteGoal(goal.id);
     if (context.mounted) context.pop();
   }
+}
+
+/// Top-level (not a `GoalDetailScreen` method) so §12.3's "Adjust the
+/// target" off-track action can call the exact same flow from
+/// `_GoalDetailBody`, a separate widget class, without duplicating it.
+Future<void> _editGoal(BuildContext context, WidgetRef ref, AppGoal goal) async {
+  final titleController = TextEditingController(text: goal.title);
+  final targetController = TextEditingController(text: goal.targetValue == null ? '' : goal.targetValue!.toString());
+  var endDate = goal.endDate == null ? null : DateTime(goal.endDate!.year, goal.endDate!.month, goal.endDate!.day);
+
+  final saved = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setState) => AlertDialog(
+        title: const Text('Edit goal'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LTextField(controller: titleController, label: 'Title', outlined: true),
+              if (goal.targetValue != null) ...[
+                const SizedBox(height: LifeSpace.s12),
+                LTextField(controller: targetController, label: 'Target', outlined: true, keyboardType: TextInputType.number),
+              ],
+              const SizedBox(height: LifeSpace.s12),
+              LDatePicker(date: endDate, onChanged: (d) => setState(() => endDate = d)),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Save')),
+        ],
+      ),
+    ),
+  );
+  if (saved != true) return;
+  final title = titleController.text.trim();
+  if (title.isEmpty) return;
+  final target = goal.targetValue == null ? null : double.tryParse(targetController.text.trim());
+  await ref
+      .read(goalRepositoryProvider)
+      .updateGoal(
+        goal.copyWith(
+          title: title,
+          targetValue: target,
+          endDate: endDate == null ? null : CivilDate.fromDateTime(endDate!),
+          clearEndDate: endDate == null,
+        ),
+      );
+}
+
+/// §12.3's other off-track action: jump straight to editing a linked
+/// plan's rhythm. Reads the plans directly from the repository rather
+/// than `ref.read(plansForGoalProvider(goal.id).future)` — a one-off read
+/// of an autoDispose family provider from a button press, not an
+/// actively-watching widget, can be disposed mid-flight (see §16.5's
+/// "Fill from watchlist" decision for the live crash that taught this).
+Future<void> _increasePlanFrequency(BuildContext context, WidgetRef ref, AppGoal goal) async {
+  final plans = await firstValue(ref.read(goalPlanRepositoryProvider).watchByGoalId(goal.id));
+  if (!context.mounted) return;
+  if (plans.isEmpty) {
+    LToast.show(context, 'No plans linked to this goal yet.');
+    return;
+  }
+
+  AppPlan? target;
+  if (plans.length == 1) {
+    target = plans.first;
+  } else {
+    target = await showDialog<AppPlan>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Which plan?'),
+        children: [
+          for (final plan in plans)
+            SimpleDialogOption(onPressed: () => Navigator.of(dialogContext).pop(plan), child: Text(plan.title)),
+        ],
+      ),
+    );
+  }
+  if (target == null || !context.mounted) return;
+  await context.push(Routes.planEdit.replaceFirst(':id', target.id));
 }
 
 class _GoalDetailBody extends ConsumerWidget {
@@ -180,6 +218,25 @@ class _GoalDetailBody extends ConsumerWidget {
         if (goal.description != null && goal.description!.isNotEmpty) ...[
           const SizedBox(height: LifeSpace.s12),
           Text(goal.description!, style: context.textStyles.body.copyWith(color: colors.neutrals.ink2)),
+        ],
+        // §12.3's two specific off-track actions — only worth offering
+        // once there's an actual verdict to act on, not while onTrack is
+        // still null (not enough data to project yet).
+        if (projection.onTrack == false) ...[
+          const SizedBox(height: LifeSpace.s12),
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: LifeSpace.s8,
+            runSpacing: LifeSpace.s8,
+            children: [
+              LButton(label: 'Adjust the target', variant: LButtonVariant.tonal, onPressed: () => _editGoal(context, ref, goal)),
+              LButton(
+                label: 'Increase the plan frequency',
+                variant: LButtonVariant.tonal,
+                onPressed: () => _increasePlanFrequency(context, ref, goal),
+              ),
+            ],
+          ),
         ],
         // Milestone goals track progress by checking off a milestone
         // below, not by logging a numeric amount against currentValue —
