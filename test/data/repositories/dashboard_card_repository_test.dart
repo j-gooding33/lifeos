@@ -60,6 +60,33 @@ void main() {
     expect(spendingAfter.visible, isNot(spending.visible));
   });
 
+  test('ensureDefaults collapses duplicate rows for the same type, keeping the lowest position', () async {
+    await repository.ensureDefaults('u1');
+    final before = await repository.watchAll('u1').first;
+    final original = before.firstWhere((c) => c.type == DashboardCardType.goals);
+    // Simulate the live-observed corruption: two overlapping calls each
+    // inserting the same type before either saw the other's row.
+    await database
+        .into(database.dashboardCards)
+        .insert(
+          DashboardCardsCompanion.insert(
+            id: 'duplicate-goals',
+            userId: 'u1',
+            type: DashboardCardType.goals.name,
+            position: original.position,
+          ),
+        );
+    final duplicated = await repository.watchAll('u1').first;
+    expect(duplicated.where((c) => c.type == DashboardCardType.goals).length, 2);
+
+    await repository.ensureDefaults('u1');
+
+    final after = await repository.watchAll('u1').first;
+    expect(after.length, DashboardCardType.values.length);
+    final survivor = after.where((c) => c.type == DashboardCardType.goals).single;
+    expect(survivor.id, original.id);
+  });
+
   test('reorder persists new positions in the order given', () async {
     await repository.ensureDefaults('u1');
     final cards = await repository.watchAll('u1').first;

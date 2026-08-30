@@ -32,4 +32,6 @@ class DashboardCardDao extends DatabaseAccessor<AppDatabase> with _$DashboardCar
       (update(dashboardCards)..where((c) => c.id.equals(id))).write(patch);
 
   Future<void> deleteAllForUser(String userId) => (delete(dashboardCards)..where((c) => c.userId.equals(userId))).go();
+
+  Future<void> deleteById(String id) => (delete(dashboardCards)..where((c) => c.id.equals(id))).go();
 }

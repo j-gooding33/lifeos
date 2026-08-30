@@ -17,17 +17,32 @@ class DashboardCardRepository {
   /// Materialises one row per catalog type not already present for this
   /// user — the first time their dashboard is read (every type is
   /// "missing"), and again whenever the catalog itself grows (e.g.
-  /// `filmNext` added after this user's rows already existed), so the
-  /// customise screen always has every type to toggle on without ever
-  /// touching an existing row's position/visibility/size.
-  Future<void> ensureDefaults(String userId) async {
+  /// `filmNext` added after this user's rows already existed) — without
+  /// ever touching an existing row's position/visibility/size.
+  ///
+  /// Also self-heals duplicate rows for the same type (keeping the one at
+  /// the lowest position, deleting the rest): observed live where two
+  /// overlapping calls — most plausibly two app processes briefly alive
+  /// against the same database, or a hot-reload racing an in-flight call —
+  /// each read "type X is missing" before either had inserted it, so both
+  /// inserted it. The whole method runs in one transaction so a second,
+  /// truly concurrent call on the *same* connection now blocks until the
+  /// first commits, rather than interleaving with it — see DECISIONS.md.
+  Future<void> ensureDefaults(String userId) => _dao.transaction(() async {
     final existing = await _dao.getAll(userId);
-    // `existing` is the raw Drift row (`.type` is the stored string), not
-    // the domain model — comparing it directly against a `DashboardCardType`
-    // below would silently never match (a String is never `==` to an enum),
-    // so every type would look "missing" every time. Parse it first.
-    final existingTypes = existing.map((c) => DashboardCardType.values.byName(c.type)).toSet();
-    final missingTypes = dashboardCardTypeOrder.where((t) => !existingTypes.contains(t));
+    final byType = <DashboardCardType, List<db.DashboardCard>>{};
+    for (final row in existing) {
+      (byType[DashboardCardType.values.byName(row.type)] ??= []).add(row);
+    }
+    for (final rows in byType.values) {
+      if (rows.length <= 1) continue;
+      rows.sort((a, b) => a.position.compareTo(b.position));
+      for (final duplicate in rows.skip(1)) {
+        await _dao.deleteById(duplicate.id);
+      }
+    }
+
+    final missingTypes = dashboardCardTypeOrder.where((t) => !byType.containsKey(t));
     var nextPosition = existing.isEmpty ? 0 : existing.map((c) => c.position).reduce((a, b) => a > b ? a : b) + 1;
     for (final type in missingTypes) {
       await _save(
@@ -40,9 +55,9 @@ class DashboardCardRepository {
         ),
       );
     }
-  }
+  });
 
-  Future<void> resetToDefault(String userId) async {
+  Future<void> resetToDefault(String userId) => _dao.transaction(() async {
     await _dao.deleteAllForUser(userId);
     for (var i = 0; i < dashboardCardTypeOrder.length; i++) {
       final type = dashboardCardTypeOrder[i];
@@ -56,7 +71,7 @@ class DashboardCardRepository {
         ),
       );
     }
-  }
+  });
 
   Future<void> reorder(List<AppDashboardCard> orderedCards) async {
     for (var i = 0; i < orderedCards.length; i++) {
